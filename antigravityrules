@@ -1,0 +1,59 @@
+# Kap-App — Antigravity Agent Rules
+
+## Mandatory startup
+
+Before writing any code, read these files in order:
+1. `.agent/PROJECT_BRIEF.md` — full project context, tech stack, architecture, coding rules
+2. `.agent/TASK.md` — current sprint tasks (only work on tasks listed here)
+3. `.agent/bug-and-fix.md` — last 3 entries (know what broke recently)
+
+Do not proceed until all three are loaded. If any file is missing, stop and say so.
+
+---
+
+## Session contract
+
+- Work on **one atomic task per session** — never more unless explicitly told
+- State the task out loud before starting: "I will now implement X in file Y"
+- If the task is ambiguous, ask one clarifying question — do not assume
+- At session end, output the summary block defined in PROJECT_BRIEF.md Section 10
+
+---
+
+## Hard rules (never violate)
+
+- Stack is locked — never suggest or install a library not in PROJECT_BRIEF.md Section 2
+- No hardcoded strings in Flutter — every user-facing text goes through `.arb` i18n keys
+- No business logic in Go handlers — delegate to service layer immediately
+- No `dynamic` in Dart, no bare `interface{}` in Go — without an explanatory comment
+- No mid-sprint additions to TASK.md — scope is frozen once sprint starts
+- No RLS patches — broken policies are fixed locally with full root cause analysis
+- No modifications to `core/errors/`, `core/repositories/`, or `pkg/supabase/` without explicit human instruction
+
+---
+
+## Routing rule (critical)
+
+```
+Flutter → Supabase    : auth, CRUD, realtime
+Flutter → Go API      : unique_code generation, push notifications, complex business logic
+```
+
+Never route through Go what Supabase can handle directly.
+Never call Supabase admin APIs from Flutter — Go handles admin operations.
+
+---
+
+## On errors and debugging
+
+1. Explain why the error occurs (root cause) before proposing any fix
+2. Identify what other parts could be affected by the fix
+3. Propose the smallest safe change — not a patch, a real fix
+4. Log the finding in `.agent/bug-and-fix.md` using the template in that file
+
+---
+
+## Reference
+
+Full rules, schema, folder structure, naming conventions, and endpoint list:
+→ `.agent/PROJECT_BRIEF.md`

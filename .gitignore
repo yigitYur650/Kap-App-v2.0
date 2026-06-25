@@ -1,0 +1,57 @@
+# Root .gitignore for Kap-App-Full (V2)
+
+# Secrets & Environment Files
+*.env
+*.env.local
+*.env.*.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+.env
+.env.*
+!.env.example
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+.DS_Store
+Thumbs.db
+
+# Flutter & Dart (Frontend)
+kap-app-front/.dart_tool/
+kap-app-front/build/
+kap-app-front/.flutter-plugins
+kap-app-front/.flutter-plugins-dependencies
+kap-app-front/.pub/
+kap-app-front/.pub-cache/
+kap-app-front/ios/Flutter/.last_build_id
+kap-app-front/android/app/debug/
+kap-app-front/android/app/profile/
+kap-app-front/android/app/release/
+kap-app-front/app.*.symbols
+kap-app-front/app.*.map.json
+
+# Go (Backend)
+kap-app-back/bin/
+kap-app-back/dist/
+kap-app-back/*.exe
+kap-app-back/*.exe~
+kap-app-back/*.dll
+kap-app-back/*.so
+kap-app-back/*.dylib
+kap-app-back/*.test
+kap-app-back/*.out
+kap-app-back/vendor/
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+supabase/functions/*/node_modules/
