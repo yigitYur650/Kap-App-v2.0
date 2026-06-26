@@ -64,6 +64,9 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
     if (!hasError && mounted) {
       Navigator.of(context).pop();
     }
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -112,6 +115,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
               TextFormField(
                 controller: _itemNameController,
                 autofocus: true,
+                enabled: !_isSubmitting,
                 decoration: InputDecoration(
                   labelText: l10n.add_request_item_name_label,
                   border: const OutlineInputBorder(),
@@ -127,14 +131,16 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
               SwitchListTile(
                 title: Text(l10n.add_request_private_label),
                 value: _isPrivate,
-                onChanged: (val) {
-                  setState(() {
-                    _isPrivate = val;
-                    if (!val) {
-                      _selectedMemberId = null;
-                    }
-                  });
-                },
+                onChanged: _isSubmitting
+                    ? null
+                    : (val) {
+                        setState(() {
+                          _isPrivate = val;
+                          if (!val) {
+                            _selectedMemberId = null;
+                          }
+                        });
+                      },
               ),
               if (_isPrivate) ...[
                 const SizedBox(height: 8.0),
@@ -199,13 +205,15 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
                                       ),
                                       label: Text(member.user.displayName),
                                       selected: isSelected,
-                                      onSelected: (selected) {
-                                        if (selected) {
-                                          setState(() {
-                                            _selectedMemberId = member.user.id;
-                                          });
-                                        }
-                                      },
+                                      onSelected: _isSubmitting
+                                          ? null
+                                          : (selected) {
+                                              if (selected) {
+                                                setState(() {
+                                                  _selectedMemberId = member.user.id;
+                                                });
+                                              }
+                                            },
                                     ),
                                   );
                                 },
@@ -263,3 +271,4 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
     );
   }
 }
+
