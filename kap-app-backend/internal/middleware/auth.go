@@ -12,6 +12,11 @@ import (
 // AuthRequired returns a Fiber middleware that enforces Supabase JWT verification.
 func AuthRequired(jwtSecret string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		// Bypass authentication for preflight OPTIONS requests
+		if c.Method() == "OPTIONS" {
+			return c.Next()
+		}
+
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -43,6 +48,7 @@ func AuthRequired(jwtSecret string) fiber.Handler {
 		})
 
 		if err != nil || !token.Valid {
+			fmt.Printf("[DEBUG] JWT verification failed: %v (secret length: %d)\n", err, len(jwtSecret))
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid or expired authorization token",
 			})

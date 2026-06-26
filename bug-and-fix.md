@@ -337,5 +337,26 @@ None. Checked with `go test ./...` and confirmed all unit tests pass. Fully loca
 
 **Status:** resolved
 
+---
+
+## [2026-06-26] CORS Preflight OPTIONS failure and missing Auth Header on Web (401 Unauthorized)
+
+**Symptom:**
+When running the Flutter app on Web (Chrome/Edge), registration requests to the Go backend failed with HTTP status `401 Unauthorized` and response `{"error":"Missing authorization header"}`.
+
+**Root cause:**
+1. The Go backend had no CORS middleware configured, preventing cross-origin requests from the browser.
+2. The browser automatically sends a preflight `OPTIONS` request before the actual `POST` request. Since `OPTIONS` requests do not carry the `Authorization` header, the `AuthRequired` middleware intercepted and rejected the preflight request as unauthorized.
+
+**Fix:**
+1. Registered Fiber's `cors` middleware in `cmd/server/main.go` to support cross-origin requests.
+2. Modified `internal/middleware/auth.go` to bypass token validation specifically for `OPTIONS` requests by checking `if c.Method() == "OPTIONS" { return c.Next() }`.
+
+**Risk:**
+None. Checked with `go test ./...` and confirmed all unit tests pass.
+
+**Status:** resolved
+
+
 
 
