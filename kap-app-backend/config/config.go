@@ -17,9 +17,11 @@ type Config struct {
 
 // LoadConfig loads application configuration from environment variables and optionally a .env file.
 func LoadConfig() *Config {
-	// Attempt to load .env file if it exists, but don't fail if it's missing (e.g. in production environment)
+	// Attempt to load .env file from current directory or fallback to parent directory
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, reading configurations directly from environment variables")
+		if errParent := godotenv.Load("../.env"); errParent != nil {
+			log.Println("No .env file found in current or parent directory, reading configurations directly from environment variables")
+		}
 	}
 
 	port := os.Getenv("PORT")
