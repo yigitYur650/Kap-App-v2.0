@@ -1,33 +1,57 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kap_app_front/l10n/app_localizations.dart';
+import 'package:kap_app_front/features/auth/presentation/providers/auth_provider.dart';
+import 'package:kap_app_front/features/auth/presentation/screens/login_screen.dart';
+import 'package:kap_app_front/features/auth/presentation/screens/register_screen.dart';
+import 'package:kap_app_front/features/groups/presentation/screens/group_members_screen.dart';
+import 'package:kap_app_front/features/requests/presentation/screens/shopping_list_screen.dart';
 
-final goRouter = GoRouter(
-  initialLocation: '/',
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const _PlaceholderHomeScreen(),
-    ),
-  ],
-);
+/// Provider that exposes the GoRouter configuration and rebuilds on auth state changes.
+final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
 
-class _PlaceholderHomeScreen extends StatelessWidget {
-  const _PlaceholderHomeScreen();
+  return GoRouter(
+    initialLocation: '/',
+    redirect: (context, state) {
+      if (authState.isLoading) {
+        return null;
+      }
 
-  @override
-  Widget build(BuildContext context) {
-    // Localization usage to avoid hardcoded text
-    final l10n = AppLocalizations.of(context);
-    final title = l10n?.appTitle ?? 'Kap App';
+      final isLoggedIn = authState.value != null;
+      final isLoggingIn = state.matchedLocation == '/login';
+      final isRegistering = state.matchedLocation == '/register';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
+      if (!isLoggedIn) {
+        if (!isLoggingIn && !isRegistering) {
+          return '/login';
+        }
+      } else {
+        if (isLoggingIn || isRegistering) {
+          return '/';
+        }
+      }
+
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const ShoppingListScreen(),
       ),
-      body: const Center(
-        child: Placeholder(),
+      GoRoute(
+        path: '/members',
+        builder: (context, state) => const GroupMembersScreen(),
       ),
-    );
-  }
-}
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+    ],
+  );
+});
+
+

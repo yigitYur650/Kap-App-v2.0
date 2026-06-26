@@ -233,6 +233,67 @@ None. User deletes are safe from crashes, recipe editing is fully functional, an
 
 **Status:** resolved
 
+---
 
+## [2026-06-26] Ghost Session Deadlock on startup
 
+**Symptom:**
+If a user account was suspended or soft-deleted in Supabase, but the user had a locally cached auth token, the app would enter a deadlock/loading loop on startup because `supabase.auth.currentSession` existed, but user profile fetching from `public.users` returned null.
+
+**Root cause:**
+The Riverpod `AuthProvider` notifier's `build()` method checked if a session was present and returned a profile lookup, but did not handle the case where the lookup returns `null` (suspended or deleted profile). This left the session active on the client but profile data missing, causing presentation deadlocks.
+
+**Fix:**
+Modified `AuthProvider.build()` initialization logic to check if profile lookup returns `null` when a session is active. If so, it calls `await supabaseClient.auth.signOut()` to programmatically clean up the client-side session and returns `null`.
+
+**Risk:**
+Low. Resolves startup deadlock loop. The user will be correctly logged out. Verified with unit and integration tests.
+
+**Status:** resolved
+
+---
+
+## [2026-06-26] Request Repository functional lowercase index mapping
+
+**Symptom:**
+Inserting shopping requests with varying case or untrimmed whitespace might trigger unexpected unique constraint violations or bypass database optimization indexes designed to prevent duplicate pending list items.
+
+**Root cause:**
+The database is configured with a case-insensitive partial unique index `idx_unique_pending_item_per_group` on `LOWER(item_name)`. If the client does not normalize the item names when querying or inserting, PostgreSQL may not utilize the functional index efficiently or may throw duplicate errors on variations (e.g. "Milk" vs "milk").
+
+**Fix:**
+Enforced name normalization in the data layer inside `lib/features/requests/data/supabase_request_repository.dart` by executing `itemName.toLowerCase().trim()` before passing it to insert/update or check operations.
+
+**Risk:**
+Very low. It ensures all item requests are stored in a canonical, lowercase, and trimmed format which perfectly aligns with index constraints.
+
+**Status:** resolved
+
+---
+
+## [2026-06-26] Technical Debt Clearance Sweep
+
+**Symptom:**
+Several code smell issues and architectural flaws were found during technical auditing:
+1. `RequestController` was using `throw failure` inside folding, causing uncaught exceptions in the UI/Notifier layers (HATA-5).
+2. `AddRequestBottomSheet` lacked validation to check if `_selectedMemberId` is null when `isPrivate` is enabled, bypassing check constraints and risking DB error crashes (HATA-6).
+3. The auth repository masked all HTTP errors (such as unique code generation limits) as generic `NetworkFailure`, hiding collision errors (HATA-11).
+4. `getRequestsStream` streamed all rows and relied on in-memory soft-delete filtering due to API limitations without documenting it (HATA-12).
+
+**Root cause:**
+1. Error handling in riverpod was not properly projecting failures using state assignment.
+2. Form validator did not evaluate conditional inputs like private request recipients.
+3. Backend Go endpoint errors were parsed globally as network failures instead of decoding the response payload error fields.
+4. Supabase Realtime streams syntax only supports simple equality (`eq`) filters.
+
+**Fix:**
+1. Removed `throw failure` and assigned `state = AsyncError(failure, StackTrace.current)` in all mutations of `RequestController`.
+2. Disabled the submit button and added visual warning labels in `AddRequestBottomSheet` when `isPrivate` is true and `_selectedMemberId` is null.
+3. Added `ServerFailure` and `CollisionFailure` classes to `failure.dart` and implemented JSON decoding of error responses in `SupabaseAuthRepository`. Modified the Go handler in `auth_handler.go` to return specific `collision_limit_reached` JSON errors when appropriate.
+4. Added tradeoff documentation to `supabase_request_repository.dart` headers regarding client-side soft-deleted filtering.
+
+**Risk:**
+No regressions. All 113 front-end tests and backend Go tests successfully passed.
+
+**Status:** resolved
 

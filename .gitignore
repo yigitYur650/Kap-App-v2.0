@@ -40,16 +40,16 @@ kap-app-front/app.*.symbols
 kap-app-front/app.*.map.json
 
 # Go (Backend)
-kap-app-back/bin/
-kap-app-back/dist/
-kap-app-back/*.exe
-kap-app-back/*.exe~
-kap-app-back/*.dll
-kap-app-back/*.so
-kap-app-back/*.dylib
-kap-app-back/*.test
-kap-app-back/*.out
-kap-app-back/vendor/
+kap-app-backend/bin/
+kap-app-backend/dist/
+kap-app-backend/*.exe
+kap-app-backend/*.exe~
+kap-app-backend/*.dll
+kap-app-backend/*.so
+kap-app-backend/*.dylib
+kap-app-backend/*.test
+kap-app-backend/*.out
+kap-app-backend/vendor/
 
 # Supabase
 supabase/.branches/

@@ -208,29 +208,29 @@ BEGIN
         RETURN OLD;
     END IF;
 
-    -- Check total members left in the group after deletion
+    -- Check total members left in the group after deletion (excluding OLD.user_id)
     SELECT COUNT(*)
     INTO v_total_count
     FROM public.group_members
-    WHERE group_id = OLD.group_id;
+    WHERE group_id = OLD.group_id AND user_id <> OLD.user_id;
 
     -- If no members are left, gracefully exit to prevent deadlock
     IF v_total_count = 0 THEN
         RETURN OLD;
     END IF;
 
-    -- Check if any admins remain
+    -- Check if any admins remain (excluding OLD.user_id)
     SELECT COUNT(*)
     INTO v_admin_count
     FROM public.group_members
-    WHERE group_id = OLD.group_id AND role = 'admin';
+    WHERE group_id = OLD.group_id AND role = 'admin' AND user_id <> OLD.user_id;
 
     IF v_admin_count = 0 THEN
-        -- Find the oldest member in that group based on joined_at
+        -- Find the oldest member in that group based on joined_at (excluding OLD.user_id)
         SELECT user_id
         INTO v_oldest_member_id
         FROM public.group_members
-        WHERE group_id = OLD.group_id
+        WHERE group_id = OLD.group_id AND user_id <> OLD.user_id
         ORDER BY joined_at ASC, user_id ASC
         LIMIT 1;
 
@@ -246,6 +246,6 @@ END;
 $$;
 
 CREATE TRIGGER trg_ensure_admin_exists
-AFTER DELETE ON public.group_members
+BEFORE DELETE ON public.group_members
 FOR EACH ROW
 EXECUTE FUNCTION public.ensure_admin_exists_trigger();
