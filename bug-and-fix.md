@@ -319,4 +319,23 @@ None. All 113 front-end tests pass cleanly. Local submission state is fully isol
 
 **Status:** resolved
 
+---
+
+## [2026-06-26] Supabase JWT verification failure on Go backend (401 Unauthorized)
+
+**Symptom:**
+Authenticated requests from the Flutter client (such as generating a unique sharing code during registration) failed with HTTP status `401 Unauthorized` in the Go backend.
+
+**Root cause:**
+Supabase JWT tokens are signed using the base64-decoded raw bytes of the `SUPABASE_JWT_SECRET`. However, the Go backend's `AuthRequired` middleware was parsing the secret as a raw ASCII string literal via `[]byte(jwtSecret)`. Due to this signature key mismatch, signature verification failed.
+
+**Fix:**
+Modified `internal/middleware/auth.go` to attempt base64 decoding of the `jwtSecret` first. If decoding fails (like with raw test secrets in unit tests), it falls back to the original `[]byte(jwtSecret)` conversion to maintain backwards compatibility.
+
+**Risk:**
+None. Checked with `go test ./...` and confirmed all unit tests pass. Fully local to the authentication middleware.
+
+**Status:** resolved
+
+
 

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -32,7 +33,13 @@ func AuthRequired(jwtSecret string) fiber.Handler {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 			}
-			return []byte(jwtSecret), nil
+			
+			decodedSecret, err := base64.StdEncoding.DecodeString(jwtSecret)
+			if err != nil {
+				// Fallback to raw secret bytes for non-base64 keys (like in unit tests)
+				decodedSecret = []byte(jwtSecret)
+			}
+			return decodedSecret, nil
 		})
 
 		if err != nil || !token.Valid {
