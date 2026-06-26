@@ -357,6 +357,28 @@ None. Checked with `go test ./...` and confirmed all unit tests pass.
 
 **Status:** resolved
 
+---
+
+## [2026-06-26] Supabase ES256 Asymmetric Signature Verification Failure (401 Unauthorized)
+
+**Symptom:**
+After resolving CORS and preflight check issues, registration requests from the Web frontend still failed with HTTP status `401 Unauthorized` and console log `unexpected signing method: ES256`.
+
+**Root cause:**
+Modern Supabase projects enforce asymmetric ECDSA signing (`ES256`) for client JWT access tokens instead of legacy symmetric shared secrets (`HS256`). The Go backend's `AuthRequired` middleware was hardcoded to only accept HMAC (`HS256`), rejecting `ES256` and failing signature validation because it lacked public key verification.
+
+**Fix:**
+1. Modified `internal/middleware/auth.go` to detect if the JWT signing method is `ES256`.
+2. Implemented dynamic fetching and parsing of Supabase's public key from the project's JWKS endpoint (`https://<project-id>.supabase.co/auth/v1/.well-known/jwks.json`) on demand.
+3. Created a thread-safe in-memory cache using `sync.RWMutex` to cache the parsed ECDSA public keys in RAM to maintain high-performance verification.
+4. Maintained backwards compatibility with unit tests by falling back to symmetric `HS256` key verification if the token uses HMAC.
+
+**Risk:**
+None. All 113 frontend tests and all Go backend tests successfully pass.
+
+**Status:** resolved
+
+
 
 
 
