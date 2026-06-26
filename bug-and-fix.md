@@ -297,3 +297,26 @@ No regressions. All 113 front-end tests and backend Go tests successfully passed
 
 **Status:** resolved
 
+---
+
+## [2026-06-26] AddRequestBottomSheet state sync and global error listener refactoring
+
+**Symptom:**
+Form submission in `AddRequestBottomSheet` resulted in unexpected sheet dismissal or incorrect loading/error states when reacting to concurrent mutations in the global requests stream.
+
+**Root cause:**
+The widget was previously listening to a global stream provider for sheet pop actions, meaning list changes caused by other users could trigger early or unintended pops. Additionally, the asynchronous submission used explicit try/catch blocks which bypassed proper state-driven Riverpod error propagation.
+
+**Fix:**
+1. Replaced the try/catch logic in the local `_submit()` method of `AddRequestBottomSheet` with local asynchronous execution.
+2. Wrapped the execution trigger in a local state update `setState(() => _isSubmitting = true)`.
+3. Verified failure via `ref.read(requestControllerProvider).hasError` post-await and only dismissed the bottom sheet if no error occurred and the widget is still `mounted`.
+4. Utilized `ref.listen` on `requestControllerProvider` to catch errors globally and safely reset `_isSubmitting = false`.
+5. Replaced all hardcoded string literals inside `AddRequestBottomSheet` with localization keys (`add_request_private_recipient_required`).
+
+**Risk:**
+None. All 113 front-end tests pass cleanly. Local submission state is fully isolated from concurrent global stream changes.
+
+**Status:** resolved
+
+

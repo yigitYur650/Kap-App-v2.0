@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/models/request_model.dart';
 import '../../../groups/presentation/providers/active_group_provider.dart';
 import '../../../groups/presentation/providers/group_members_provider.dart';
 import '../providers/request_controller.dart';
@@ -20,6 +21,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
   final _itemNameController = TextEditingController();
   bool _isPrivate = false;
   String? _selectedMemberId;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -36,34 +38,31 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
     if (activeGroup == null) return;
 
     if (_isPrivate && _selectedMemberId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)?.errorGeneric ?? 'Please select a recipient for the private request.'),
-        ),
-      );
+      final l10n = AppLocalizations.of(context);
+      if (l10n != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.add_request_private_recipient_required),
+          ),
+        );
+      }
       return;
     }
 
     final trimmedName = _itemNameController.text.trim();
     if (trimmedName.isEmpty) return;
 
-    try {
-      await ref.read(requestControllerProvider.notifier).createRequest(
-            itemName: trimmedName,
-            isPrivate: _isPrivate,
-            privateTo: _isPrivate ? _selectedMemberId : null,
-          );
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)?.errorGeneric ?? e.toString()),
-          ),
+    setState(() => _isSubmitting = true);
+
+    await ref.read(requestControllerProvider.notifier).createRequest(
+          itemName: trimmedName,
+          isPrivate: _isPrivate,
+          privateTo: _isPrivate ? _selectedMemberId : null,
         );
-      }
+
+    final hasError = ref.read(requestControllerProvider).hasError;
+    if (!hasError && mounted) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -72,6 +71,15 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
     final l10n = AppLocalizations.of(context)!;
     final activeGroup = ref.watch(activeGroupProvider);
     final authUser = ref.watch(authProvider).value;
+
+    ref.listen<AsyncValue<List<RequestModel>>>(
+      requestControllerProvider,
+      (previous, next) {
+        if (next.hasError) {
+          setState(() => _isSubmitting = false);
+        }
+      },
+    );
 
     if (activeGroup == null) {
       return Padding(
@@ -166,7 +174,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
                         }
 
                         return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             SizedBox(
@@ -206,7 +214,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
                             if (_selectedMemberId == null) ...[
                               const SizedBox(height: 8.0),
                               Text(
-                                'A recipient must be selected for private requests.',
+                                l10n.add_request_private_recipient_required,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.error,
                                   fontSize: 12,
@@ -232,13 +240,19 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
                     child: Text(l10n.add_request_cancel_button),
                   ),
                   const SizedBox(width: 8.0),
                   ElevatedButton(
-                    onPressed: (_isPrivate && _selectedMemberId == null) ? null : _submit,
-                    child: Text(l10n.add_request_submit_button),
+                    onPressed: (_isSubmitting || (_isPrivate && _selectedMemberId == null)) ? null : _submit,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(l10n.add_request_submit_button),
                   ),
                 ],
               ),

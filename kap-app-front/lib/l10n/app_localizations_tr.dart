@@ -123,6 +123,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get add_request_cancel_button => 'İptal';
 
   @override
+  String get add_request_private_recipient_required =>
+      'Gizli istekler için bir alıcı seçilmelidir.';
+
+  @override
   String get group_members_title => 'Grup Üyeleri';
 
   @override

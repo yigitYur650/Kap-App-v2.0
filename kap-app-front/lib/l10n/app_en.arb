@@ -42,6 +42,7 @@
   "add_request_private_to_label": "Private To",
   "add_request_submit_button": "Add",
   "add_request_cancel_button": "Cancel",
+  "add_request_private_recipient_required": "A recipient must be selected for private requests.",
   "group_members_title": "Group Members",
   "auth_sign_out": "Sign Out",
   "group_members_login_prompt": "Please log in to view members.",

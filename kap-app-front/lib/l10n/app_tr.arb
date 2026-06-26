@@ -36,6 +36,7 @@
   "add_request_private_to_label": "Şu Üyeye Gizle",
   "add_request_submit_button": "Ekle",
   "add_request_cancel_button": "İptal",
+  "add_request_private_recipient_required": "Gizli istekler için bir alıcı seçilmelidir.",
   "group_members_title": "Grup Üyeleri",
   "auth_sign_out": "Çıkış Yap",
   "group_members_login_prompt": "Üyeleri görüntülemek için lütfen giriş yapın.",

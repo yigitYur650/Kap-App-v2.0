@@ -123,6 +123,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add_request_cancel_button => 'Cancel';
 
   @override
+  String get add_request_private_recipient_required =>
+      'A recipient must be selected for private requests.';
+
+  @override
   String get group_members_title => 'Group Members';
 
   @override

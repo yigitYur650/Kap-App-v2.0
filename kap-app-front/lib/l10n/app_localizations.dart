@@ -320,6 +320,12 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get add_request_cancel_button;
 
+  /// No description provided for @add_request_private_recipient_required.
+  ///
+  /// In en, this message translates to:
+  /// **'A recipient must be selected for private requests.'**
+  String get add_request_private_recipient_required;
+
   /// No description provided for @group_members_title.
   ///
   /// In en, this message translates to:
