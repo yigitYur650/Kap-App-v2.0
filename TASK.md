@@ -252,8 +252,8 @@ These are out of scope for Sprint 1. Do not implement.
   - Realtime stream subscription (same pattern as `RequestController`)
   - `itemName` normalized: `toLowerCase().trim()` before insert (same rule as requests)
 - [x] Riverpod `inventoryProvider` — `AsyncValue<List<InventoryItem>>`
-- [ ] Unit test: stream emissions, stock status mapping, name normalization
-- [ ] Commit: `feat(inventory): core service + realtime stream'`
+- [x] Unit test: stream emissions, stock status mapping, name normalization
+- [x] Commit: `feat(inventory): core service + realtime stream'`
 
 ---
 
