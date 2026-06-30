@@ -48,5 +48,15 @@
   "group_members_select_group_prompt": "Üyeleri görüntülemek için önce bir gruba katılın veya seçin.",
   "group_members_empty": "Bu grupta üye yok.",
   "group_members_load_failed": "Üyeler yüklenemedi",
-  "group_members_profile_load_failed": "Profil yüklenirken hata oluştu"
+  "group_members_profile_load_failed": "Profil yüklenirken hata oluştu",
+  "inventoryTitle": "Evde Ne Var?",
+  "inventoryEmptyState": "Burada henüz hiçbir şey yok.",
+  "inventoryStatusInStock": "Var",
+  "inventoryStatusLow": "Azaldı",
+  "inventoryStatusOutOfStock": "Yok",
+  "inventoryAddItemTitle": "Yeni Ürün Ekle",
+  "inventoryItemNameHint": "Ürün adı girin...",
+  "inventoryButtonAdd": "Ekle",
+  "inventoryButtonCancel": "İptal"
 }
+

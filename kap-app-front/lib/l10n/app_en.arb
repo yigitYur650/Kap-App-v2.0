@@ -54,5 +54,15 @@
   "group_members_select_group_prompt": "Select or join a group first to view members.",
   "group_members_empty": "No members in this group.",
   "group_members_load_failed": "Failed to load members",
-  "group_members_profile_load_failed": "Error loading profile"
+  "group_members_profile_load_failed": "Error loading profile",
+  "inventoryTitle": "Home Inventory",
+  "inventoryEmptyState": "Nothing here yet.",
+  "inventoryStatusInStock": "In Stock",
+  "inventoryStatusLow": "Low Stock",
+  "inventoryStatusOutOfStock": "Out of Stock",
+  "inventoryAddItemTitle": "Add New Item",
+  "inventoryItemNameHint": "Enter item name...",
+  "inventoryButtonAdd": "Add",
+  "inventoryButtonCancel": "Cancel"
 }
+
