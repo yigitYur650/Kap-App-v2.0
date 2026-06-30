@@ -219,6 +219,7 @@ These are out of scope for Sprint 1. Do not implement.
   - [x] Inject `userID` into Fiber context
   - [x] Return 401 on invalid/missing token
 - [x] `cmd/server/main.go` — wire Fiber app, register middleware, start server
+  - [x] Configure CORS middleware for local frontend origins (localhost subports, AllowCredentials=true, AllowedMethods/Headers)
 - [x] Health check route: `GET /health` → `{ "status": "ok" }`
 - [x] Unit test: JWT middleware with valid + invalid + missing token
 - [x] Commit: `feat(go): backend scaffold + JWT middleware`
@@ -238,19 +239,19 @@ These are out of scope for Sprint 1. Do not implement.
 - [x] Commit: `feat(go): unique_code generation service`
 
 ### W1-4: Inventory — core service
-- [ ] `InventoryRepository` interface in `core/repositories/`
+- [x] `InventoryRepository` interface in `core/repositories/`
   - `getInventoryStream(groupId)` → `Stream<List<InventoryItem>>`
-  - `addInventoryItem(groupId, itemName)` → `({InventoryItem? data, AppError? error})`
-  - `updateStockStatus(itemId, StockStatus status)` → `({bool? data, AppError? error})`
-  - `deleteInventoryItem(itemId)` → `({bool? data, AppError? error})`
-- [ ] `StockStatus` enum in `core/models/` — `inStock`, `low`, `outOfStock`
+  - `addInventoryItem(groupId, itemName)` → `({InventoryItem? data, AppError? error})` // Implemented using functional Either
+  - `updateStockStatus(itemId, StockStatus status)` → `({bool? data, AppError? error})` // Implemented using functional Either
+  - `deleteInventoryItem(itemId)` → `({bool? data, AppError? error})` // Implemented using functional Either
+- [x] `StockStatus` enum in `core/models/` — `inStock`, `low`, `outOfStock`
   - i18n keys: `inventory.status.in_stock`, `inventory.status.low`, `inventory.status.out_of_stock`
   - DB mapping: `'var'` → `inStock`, `'azaldı'` → `low`, `'yok'` → `outOfStock`
-- [ ] `InventoryItem` model in `core/models/`
-- [ ] `SupabaseInventoryRepository` in `features/inventory/data/`
+- [x] `InventoryItem` model in `core/models/`
+- [x] `SupabaseInventoryRepository` in `features/inventory/data/`
   - Realtime stream subscription (same pattern as `RequestController`)
   - `itemName` normalized: `toLowerCase().trim()` before insert (same rule as requests)
-- [ ] Riverpod `inventoryProvider` — `AsyncValue<List<InventoryItem>>`
+- [x] Riverpod `inventoryProvider` — `AsyncValue<List<InventoryItem>>`
 - [ ] Unit test: stream emissions, stock status mapping, name normalization
 - [ ] Commit: `feat(inventory): core service + realtime stream'`
 
@@ -357,6 +358,12 @@ These are out of scope for Sprint 1. Do not implement.
 - Blocked: [task ID] — reason
 - Notes: [anything relevant]
 ```
+### [2026-06-30]
+- Completed: W1-2 (CORS middleware subset), TST-G3 (CORS integration tests)
+- In progress: W1-4
+- Notes: Configured CORS middleware in `kap-app-backend/cmd/server/main.go` to support specific local origins (localhost ports 3000, 8080, 49825, 5000) for Flutter web/native. Added isolated integration test in `internal/integration/cors_flow_test.go` to verify preflight OPTIONS and standard cross-origin requests, running test cases successfully.
+
+---
 
 ---
 
@@ -487,6 +494,12 @@ These are out of scope for Sprint 1. Do not implement.
 - [ ] NOT: Bu integration test olacağı için `.env.test` veya `testcontainers-go` gerekebilir
 - [ ] NOT: Sprint 2'ye ertelenebilir, önce handler ve service testleri tamamlanmalı
 - [ ] Commit: `test(go): user repository integration tests`
+
+### TST-G3: Go — CORS Middleware entegrasyon testi
+- [x] Dosya: `internal/integration/cors_flow_test.go`
+- [x] Senaryo: browser preflight OPTIONS isteği (Origin, Access-Control-Request-Method/Headers ile) -> HTTP 200/204 ve doğru Access-Control-* başlıkları
+- [x] Senaryo: normal cross-origin POST isteği -> HTTP 200 ve doğru Access-Control-* başlıkları
+- [x] Commit: `test(go): CORS flow integration tests`
 
 ---
 

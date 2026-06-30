@@ -2,15 +2,19 @@ package repository
 
 import (
 	"kap-app-backend/internal/domain"
-	"kap-app-backend/pkg/supabase"
 )
 
+// codeExistsChecker abstracts the Supabase client for testability.
+type codeExistsChecker interface {
+	CheckCodeExists(code string) (bool, error)
+}
+
 type supabaseUserRepository struct {
-	client *supabase.Client
+	client codeExistsChecker
 }
 
 // NewSupabaseUserRepository creates a new UserRepository using Supabase REST API client.
-func NewSupabaseUserRepository(client *supabase.Client) domain.UserRepository {
+func NewSupabaseUserRepository(client codeExistsChecker) domain.UserRepository {
 	return &supabaseUserRepository{
 		client: client,
 	}

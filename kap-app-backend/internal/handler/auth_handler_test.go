@@ -100,6 +100,27 @@ func TestGenerateCode(t *testing.T) {
 		assert.Contains(t, body["error"], "collision_limit_reached")
 	})
 
+	t.Run("Should return 200 with Origin header set (simulating CORS POST after preflight)", func(t *testing.T) {
+		svc := &mockAuthService{
+			mockGenerateUniqueCode: func(userID string) (string, error) {
+				return "ABCD-EFGH", nil
+			},
+		}
+		app := buildTestApp(svc, true)
+
+		req := httptest.NewRequest(http.MethodPost, "/auth/unique-code", nil)
+		req.Header.Set("Origin", "http://localhost:3000")
+
+		resp, err := app.Test(req)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var body GenerateCodeResponse
+		err = json.NewDecoder(resp.Body).Decode(&body)
+		assert.NoError(t, err)
+		assert.Equal(t, "ABCD-EFGH", body.UniqueCode)
+	})
+
 	t.Run("Should return 500 on any generic service error", func(t *testing.T) {
 		svc := &mockAuthService{
 			mockGenerateUniqueCode: func(userID string) (string, error) {

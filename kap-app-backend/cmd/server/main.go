@@ -26,9 +26,10 @@ func main() {
 
 	// Add CORS middleware to support browser cross-origin requests
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
-		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
+		AllowOrigins:     "http://localhost:3000, http://localhost:8080, http://localhost:49825, http://localhost:5000",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+		AllowCredentials: true,
 	}))
 
 	// Supabase Client
