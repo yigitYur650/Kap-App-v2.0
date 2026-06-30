@@ -12,28 +12,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
   SupabaseInventoryRepository(this._supabaseClient);
 
   @override
-  Future<Either<Failure, List<InventoryItem>>> getInventory({
-    required String groupId,
-  }) async {
-    try {
-      final response = await _supabaseClient
-          .from('inventory')
-          .select()
-          .eq('group_id', groupId)
-          .isFilter('deleted_at', null);
-
-      final list = (response as List)
-          .map((json) => InventoryItem.fromJson(json as Map<String, dynamic>))
-          .toList();
-
-      return Right(list);
-    } catch (e) {
-      return Left(_mapException(e));
-    }
-  }
-
-  @override
-  Stream<List<InventoryItem>> getInventoryStream({required String groupId}) {
+  Stream<List<InventoryItem>> getInventoryStream(String groupId) {
     return _supabaseClient
         .from('inventory')
         .stream(primaryKey: ['id'])
@@ -45,11 +24,10 @@ class SupabaseInventoryRepository implements InventoryRepository {
   }
 
   @override
-  Future<Either<Failure, InventoryItem>> addInventoryItem({
-    required String groupId,
-    required String itemName,
-    StockStatus status = StockStatus.inStock,
-  }) async {
+  Future<Either<Failure, InventoryItem>> addInventoryItem(
+    String groupId,
+    String itemName,
+  ) async {
     final currentUser = _supabaseClient.auth.currentUser;
     if (currentUser == null) {
       return const Left(UnknownFailure('User is not authenticated'));
@@ -63,7 +41,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
           .insert({
             'group_id': groupId,
             'item_name': normalizedItemName,
-            'status': status.toDbString(),
+            'status': StockStatus.inStock.toDbString(),
           })
           .select()
           .single();
@@ -75,10 +53,10 @@ class SupabaseInventoryRepository implements InventoryRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateStockStatus({
-    required String itemId,
-    required StockStatus status,
-  }) async {
+  Future<Either<Failure, bool>> updateStockStatus(
+    String itemId,
+    StockStatus status,
+  ) async {
     try {
       await _supabaseClient
           .from('inventory')
@@ -86,16 +64,14 @@ class SupabaseInventoryRepository implements InventoryRepository {
             'status': status.toDbString(),
           })
           .eq('id', itemId);
-      return const Right(null);
+      return const Right(true);
     } catch (e) {
       return Left(_mapException(e));
     }
   }
 
   @override
-  Future<Either<Failure, void>> deleteInventoryItem({
-    required String itemId,
-  }) async {
+  Future<Either<Failure, bool>> deleteInventoryItem(String itemId) async {
     try {
       await _supabaseClient
           .from('inventory')
@@ -103,7 +79,7 @@ class SupabaseInventoryRepository implements InventoryRepository {
             'deleted_at': DateTime.now().toUtc().toIso8601String(),
           })
           .eq('id', itemId);
-      return const Right(null);
+      return const Right(true);
     } catch (e) {
       return Left(_mapException(e));
     }

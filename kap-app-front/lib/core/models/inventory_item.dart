@@ -26,7 +26,7 @@ class InventoryItem {
       id: json['id'] as String,
       groupId: json['group_id'] as String,
       itemName: json['item_name'] as String,
-      status: StockStatus.fromString(json['status'] as String),
+      status: StockStatus.fromString(json['status'] as String? ?? 'var'),
       lastUpdatedBy: json['last_updated_by'] as String?,
       lastUpdatedAt: json['last_updated_at'] != null
           ? DateTime.parse(json['last_updated_at'] as String)
