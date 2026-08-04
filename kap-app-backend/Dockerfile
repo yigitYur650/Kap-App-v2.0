@@ -3,8 +3,8 @@
 # Multi-stage build for minimal image size and maximum speed
 # ============================================================
 
-# Step 1: Build stage
-FROM golang:1.22-alpine AS builder
+# Step 1: Build stage (using golang:alpine for latest Go 1.24+ compatibility)
+FROM golang:alpine AS builder
 
 WORKDIR /app
 
@@ -31,7 +31,7 @@ WORKDIR /root/
 # Copy binary from builder
 COPY --from=builder /app/server .
 
-# Expose port (Cloud providers set PORT environment variable dynamically)
+# Expose port
 EXPOSE 8080
 
 # Run the Go binary
