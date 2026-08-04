@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"kap-app-backend/config"
 	"kap-app-backend/internal/handler"
@@ -12,7 +17,6 @@ import (
 	"kap-app-backend/pkg/supabase"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -24,13 +28,17 @@ func main() {
 		AppName: "Kap-App Backend v2.0",
 	})
 
-	// Add CORS middleware to support browser cross-origin requests
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000, http://localhost:8080, http://localhost:49825, http://localhost:5000",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowMethods:     "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-		AllowCredentials: true,
-	}))
+	// Manual CORS middleware — replaces Fiber's cors.New which has bugs with wildcard origins in preflight.
+	// WARNING: In production, replace "*" with explicit origins from cfg.CORSAllowedOrigins.
+	app.Use(func(c *fiber.Ctx) error {
+		c.Set("Access-Control-Allow-Origin", "*")
+		c.Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
+		c.Set("Access-Control-Allow-Headers", "Origin,Content-Type,Authorization,Accept")
+		if c.Method() == "OPTIONS" {
+			return c.SendStatus(204)
+		}
+		return c.Next()
+	})
 
 	// Supabase Client
 	sbClient, err := supabase.NewClient(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey)
@@ -52,11 +60,11 @@ func main() {
 	v1 := api.Group("/v1")
 
 	// Protected Auth Routes
-	authGroup := v1.Group("/auth", middleware.AuthRequired(cfg.SupabaseJWTSecret))
+	authGroup := v1.Group("/auth", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))
 	authHandler.RegisterRoutes(authGroup)
 
 	// Protected Routes Group
-	protectedGroup := v1.Group("/protected", middleware.AuthRequired(cfg.SupabaseJWTSecret))
+	protectedGroup := v1.Group("/protected", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))
 	protectedGroup.Get("/user", func(c *fiber.Ctx) error {
 		userID := c.Locals("userID")
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -71,10 +79,53 @@ func main() {
 		})
 	})
 
-	// Start server
+	// ============================================================
+	// Graceful Shutdown: Signal Interception & Lifecycle Management
+	// ============================================================
+	// The server is started asynchronously in a goroutine so that
+	// the main thread can block on signal reception. When a
+	// termination signal (SIGINT, SIGTERM, os.Interrupt) arrives,
+	// a 10-second graceful shutdown window is initiated to allow
+	// all in-flight requests (e.g., unique_code generation with
+	// database writes) to complete before the process exits.
+	// ============================================================
+
 	addr := fmt.Sprintf(":%s", cfg.Port)
-	log.Printf("Server is running on port %s", cfg.Port)
-	if err := app.Listen(addr); err != nil {
+	log.Printf("[INFO] Server is starting on port %s", cfg.Port)
+
+	// Channel to capture server startup errors (e.g., port in use)
+	serverErr := make(chan error, 1)
+
+	// Start the Fiber server asynchronously
+	go func() {
+		if err := app.Listen(addr); err != nil {
+			serverErr <- err
+		}
+	}()
+
+	// Set up signal interception: SIGINT (Ctrl+C), SIGTERM (deployment kill), os.Interrupt
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	// Block until either a signal is received or the server fails to start
+	select {
+	case sig := <-sigChan:
+		log.Printf("[INFO] Received signal: %v. Shutting down server gracefully...", sig)
+	case err := <-serverErr:
 		log.Fatalf("Failed to start server: %v", err)
 	}
+
+	// Create a context with a 10-second timeout for the shutdown window.
+	// This ensures in-flight requests (unique_code generation, DB writes, etc.)
+	// have time to complete before the process exits.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Initiate graceful shutdown — Fiber stops accepting new requests
+	// and waits for active handlers to finish (up to the timeout).
+	if err := app.ShutdownWithContext(ctx); err != nil {
+		log.Printf("[ERROR] Server shutdown encountered an error: %v", err)
+	}
+
+	log.Printf("[INFO] Server stopped completely on port %s", cfg.Port)
 }

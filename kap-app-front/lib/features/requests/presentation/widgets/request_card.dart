@@ -1,104 +1,146 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/models/request_model.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../groups/presentation/providers/group_members_provider.dart';
-import '../providers/request_controller.dart';
+import 'package:kap_app_front/core/models/request_model.dart';
+import 'package:kap_app_front/features/requests/presentation/providers/request_controller.dart';
+import 'package:kap_app_front/shared/theme/app_colors.dart';
+import 'package:kap_app_front/shared/theme/app_typography.dart';
 
-/// A Material 3 card representing a shopping request, allowing status updates
-/// via checkbox for owners and admins, showing privacy locks, and letting the creator delete it.
 class RequestCard extends ConsumerWidget {
   final RequestModel request;
-  final String requesterName;
 
   const RequestCard({
     super.key,
     required this.request,
-    required this.requesterName,
   });
-
-  String _capitalize(String s) {
-    if (s.isEmpty) return s;
-    return s.split(' ').map((word) {
-      if (word.isEmpty) return '';
-      return word[0].toUpperCase() + word.substring(1);
-    }).join(' ');
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authUser = ref.watch(authProvider).value;
-    final isOwner = authUser != null && authUser.id == request.requestedBy;
     final isDone = request.status == 'done';
 
-    // Watch group members to resolve if the current user is an admin of this group
-    final membersAsync = ref.watch(groupMembersProvider(request.groupId));
-    final isAdmin = membersAsync.maybeWhen(
-      data: (members) => members.any((m) => m.user.id == authUser?.id && m.role == 'admin'),
-      orElse: () => false,
-    );
-
-    // Hardened activation boundary condition
-    final canToggle = isOwner || isAdmin;
-
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-      child: ListTile(
-        leading: Checkbox(
-          value: isDone,
-          onChanged: canToggle
-              ? (value) {
-                  if (value != null) {
-                    final newStatus = value ? 'done' : 'pending';
-                    ref.read(requestControllerProvider.notifier).updateRequestStatus(
-                          requestId: request.id,
-                          status: newStatus,
-                        );
-                  }
-                }
-              : null, // Disabled if user lacks permissions
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141414),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.05),
         ),
-        title: Text(
-          _capitalize(request.itemName),
-          style: TextStyle(
-            decoration: isDone ? TextDecoration.lineThrough : null,
-            fontWeight: FontWeight.w600,
-            color: isDone ? Theme.of(context).colorScheme.outline : null,
-          ),
-        ),
-        subtitle: Text(
-          requesterName,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (request.isPrivate) ...[
-              Icon(
-                Icons.lock_outline,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 8.0),
-            ],
-            if (isOwner)
-              IconButton(
-                icon: Icon(
-                  Icons.delete_outline,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () {
-                  ref.read(requestControllerProvider.notifier).deleteRequest(
-                        requestId: request.id,
-                      );
+      ),
+      child: Row(
+        children: [
+          // Checkbox status toggle
+          GestureDetector(
+            onTap: () async {
+              final result = await ref.read(requestControllerProvider.notifier).updateRequestStatus(
+                    requestId: request.id,
+                    status: isDone ? 'pending' : 'done',
+                  );
+              result.fold(
+                (failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(failure.message),
+                      backgroundColor: AppColors.primary,
+                    ),
+                  );
                 },
-                tooltip: 'Delete Request',
+                (_) {},
+              );
+            },
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isDone ? AppColors.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: isDone ? AppColors.primary : const Color(0xFF2A2A2A),
+                  width: 2,
+                ),
               ),
-          ],
-        ),
+              child: isDone
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 16,
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Item name, quantity/unit badge & private tag
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Item name row
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        request.itemName,
+                        style: AppTypography.bodyLg.copyWith(
+                          decoration: isDone ? TextDecoration.lineThrough : null,
+                          color: isDone
+                              ? AppColors.secondary.withOpacity(0.4)
+                              : AppColors.text,
+                        ),
+                      ),
+                    ),
+                    if (request.isPrivate) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.lock_outline,
+                        size: 16,
+                        color: AppColors.secondary.withOpacity(0.5),
+                      ),
+                    ],
+                  ],
+                ),
+                // Quantity/unit badge (shown beneath item name)
+                if (request.quantity != null || request.unit != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '${request.quantity ?? ''}${request.quantity != null && request.unit != null ? ' ' : ''}${request.unit ?? ''}',
+                      style: AppTypography.labelSm.copyWith(
+                        color: AppColors.secondary.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Delete button (accessible to any group member)
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(
+              Icons.delete_outline,
+              size: 20,
+              color: AppColors.primary.withOpacity(0.8),
+            ),
+            onPressed: () async {
+              final result = await ref.read(requestControllerProvider.notifier).deleteRequest(
+                    requestId: request.id,
+                  );
+              result.fold(
+                (failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(failure.message),
+                      backgroundColor: AppColors.primary,
+                    ),
+                  );
+                },
+                (_) {},
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
-

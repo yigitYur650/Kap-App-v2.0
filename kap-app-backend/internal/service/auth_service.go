@@ -4,10 +4,12 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 
 	"kap-app-backend/internal/domain"
+	"kap-app-backend/pkg/supabase"
 )
 
 // ErrCollisionLimitReached is returned when unique code generation fails after maximum retries.
@@ -27,7 +29,10 @@ func NewAuthService(userRepo domain.UserRepository) domain.AuthService {
 // Explanatory comment: We exclude easily confused characters (like '0', 'O', '1', 'I', 'L') to make the generated code user-friendly.
 const charset = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
-// GenerateUniqueCode generates a secure, readable unique code in the format XXXX-XXXX, checking for collisions up to 5 times.
+// GenerateUniqueCode generates a secure, readable unique code in the format XXXX-XXXX,
+// and atomically inserts it into the database. On unique constraint violation (23505),
+// it retries up to 5 times. This eliminates the race window between "check if code exists"
+// (old approach) and "insert code" (new atomic approach).
 func (s *authService) GenerateUniqueCode(userID string) (string, error) {
 	for attempt := 1; attempt <= 5; attempt++ {
 		code, err := s.generateRawCode()
@@ -35,14 +40,21 @@ func (s *authService) GenerateUniqueCode(userID string) (string, error) {
 			return "", fmt.Errorf("failed to generate raw code on attempt %d: %w", attempt, err)
 		}
 
-		exists, err := s.userRepo.IsCodeExists(code)
-		if err != nil {
-			return "", fmt.Errorf("failed to check code uniqueness on attempt %d: %w", attempt, err)
-		}
-
-		if !exists {
+		// Atomically attempt to insert the code. If the code is already taken,
+		// the database will return a unique constraint violation (23505).
+		err = s.userRepo.InsertUserWithCode(userID, code)
+		if err == nil {
 			return code, nil
 		}
+
+		// Check if the error is a unique constraint violation — retry if so
+		if supabase.IsUniqueViolation(err) {
+			log.Printf("[WARN] Unique code collision on attempt %d (code: %s), retrying...", attempt, code)
+			continue
+		}
+
+		// Any other error (network, permission, etc.) is fatal — abort immediately
+		return "", fmt.Errorf("failed to insert unique code on attempt %d: %w", attempt, err)
 	}
 
 	return "", ErrCollisionLimitReached

@@ -5,21 +5,37 @@ import (
 	"regexp"
 	"testing"
 
+	"kap-app-backend/pkg/supabase"
+
 	"github.com/stretchr/testify/assert"
 )
 
+// mockUserRepository implements domain.UserRepository for testing.
+// It provides configurable behavior for IsCodeExists and InsertUserWithCode.
 type mockUserRepository struct {
-	mockIsCodeExists func(code string) (bool, error)
+	mockIsCodeExists       func(code string) (bool, error)
+	mockInsertUserWithCode func(userID, code string) error
 }
 
 func (m *mockUserRepository) IsCodeExists(code string) (bool, error) {
-	return m.mockIsCodeExists(code)
+	if m.mockIsCodeExists != nil {
+		return m.mockIsCodeExists(code)
+	}
+	return false, nil
+}
+
+func (m *mockUserRepository) InsertUserWithCode(userID, code string) error {
+	if m.mockInsertUserWithCode != nil {
+		return m.mockInsertUserWithCode(userID, code)
+	}
+	return nil
 }
 
 func TestGenerateUniqueCode(t *testing.T) {
 	mockRepo := &mockUserRepository{
-		mockIsCodeExists: func(code string) (bool, error) {
-			return false, nil
+		mockInsertUserWithCode: func(userID, code string) error {
+			// Always succeed on first attempt
+			return nil
 		},
 	}
 	svc := NewAuthService(mockRepo)
@@ -48,15 +64,12 @@ func TestGenerateUniqueCode(t *testing.T) {
 }
 
 func TestGenerateUniqueCode_Collisions(t *testing.T) {
-	t.Run("Should succeed after 3 collisions (4th attempt)", func(t *testing.T) {
+	t.Run("Should succeed on 1st attempt (no collision)", func(t *testing.T) {
 		calls := 0
 		mockRepo := &mockUserRepository{
-			mockIsCodeExists: func(code string) (bool, error) {
+			mockInsertUserWithCode: func(userID, code string) error {
 				calls++
-				if calls <= 3 {
-					return true, nil // Collision
-				}
-				return false, nil // Unique
+				return nil // Success
 			},
 		}
 		svc := NewAuthService(mockRepo)
@@ -64,15 +77,44 @@ func TestGenerateUniqueCode_Collisions(t *testing.T) {
 		code, err := svc.GenerateUniqueCode("test-user-id")
 		assert.NoError(t, err)
 		assert.NotEmpty(t, code)
-		assert.Equal(t, 4, calls)
+		assert.Equal(t, 1, calls)
 	})
 
-	t.Run("Should fail after 5 collisions", func(t *testing.T) {
+	t.Run("Should succeed on 2nd attempt after 1 collision (23505)", func(t *testing.T) {
 		calls := 0
 		mockRepo := &mockUserRepository{
-			mockIsCodeExists: func(code string) (bool, error) {
+			mockInsertUserWithCode: func(userID, code string) error {
 				calls++
-				return true, nil // Always collide
+				if calls <= 1 {
+					// Simulate PostgreSQL unique constraint violation (code 23505)
+					return &supabase.PostgresError{
+						Code:    "23505",
+						Message: `duplicate key value violates unique constraint "users_unique_code_key"`,
+						Details: `Key (unique_code)=(` + code + `) already exists.`,
+					}
+				}
+				return nil // Success on 2nd attempt
+			},
+		}
+		svc := NewAuthService(mockRepo)
+
+		code, err := svc.GenerateUniqueCode("test-user-id")
+		assert.NoError(t, err)
+		assert.NotEmpty(t, code)
+		assert.Equal(t, 2, calls)
+	})
+
+	t.Run("Should fail after 5 consecutive collisions (23505)", func(t *testing.T) {
+		calls := 0
+		mockRepo := &mockUserRepository{
+			mockInsertUserWithCode: func(userID, code string) error {
+				calls++
+				// Always collide — simulate unique constraint violation
+				return &supabase.PostgresError{
+					Code:    "23505",
+					Message: `duplicate key value violates unique constraint "users_unique_code_key"`,
+					Details: `Key (unique_code)=(` + code + `) already exists.`,
+				}
 			},
 		}
 		svc := NewAuthService(mockRepo)
@@ -83,17 +125,17 @@ func TestGenerateUniqueCode_Collisions(t *testing.T) {
 		assert.Equal(t, 5, calls)
 	})
 
-	t.Run("Should abort immediately on repository check error", func(t *testing.T) {
-		expectedErr := errors.New("db error")
+	t.Run("Should abort immediately on non-23505 error", func(t *testing.T) {
+		expectedErr := errors.New("network timeout")
 		mockRepo := &mockUserRepository{
-			mockIsCodeExists: func(code string) (bool, error) {
-				return false, expectedErr
+			mockInsertUserWithCode: func(userID, code string) error {
+				return expectedErr
 			},
 		}
 		svc := NewAuthService(mockRepo)
 
 		code, err := svc.GenerateUniqueCode("test-user-id")
-		assert.ErrorContains(t, err, "failed to check code uniqueness on attempt 1")
+		assert.ErrorContains(t, err, "failed to insert unique code on attempt 1")
 		assert.Empty(t, code)
 	})
 }

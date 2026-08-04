@@ -67,7 +67,7 @@ $$;
 CREATE POLICY "Allow members to select groups"
 ON public.groups FOR SELECT
 TO authenticated
-USING (public.is_group_member(id));
+USING ((public.is_group_member(id) OR created_by = auth.uid()) AND (deleted_at IS NULL));
 
 CREATE POLICY "Allow authenticated to create group"
 ON public.groups FOR INSERT

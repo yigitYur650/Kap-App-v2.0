@@ -7,6 +7,7 @@ import (
 // codeExistsChecker abstracts the Supabase client for testability.
 type codeExistsChecker interface {
 	CheckCodeExists(code string) (bool, error)
+	InsertCode(userID, code string) error
 }
 
 type supabaseUserRepository struct {
@@ -22,4 +23,8 @@ func NewSupabaseUserRepository(client codeExistsChecker) domain.UserRepository {
 
 func (r *supabaseUserRepository) IsCodeExists(code string) (bool, error) {
 	return r.client.CheckCodeExists(code)
+}
+
+func (r *supabaseUserRepository) InsertUserWithCode(userID, code string) error {
+	return r.client.InsertCode(userID, code)
 }

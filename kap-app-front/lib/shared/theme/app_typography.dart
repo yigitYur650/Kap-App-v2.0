@@ -1,34 +1,57 @@
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
-/// Design system typography tokens mapping standard typographic scales.
 class AppTypography {
-  static const display = TextStyle(
-    fontSize: 48.0,
-    fontWeight: FontWeight.w700, // bold
-    height: 1.15,
-  );
+  static TextStyle get display => const TextStyle(
+        fontSize: 34,
+        fontWeight: FontWeight.w800,
+        height: 40 / 34,
+        letterSpacing: -0.04,
+        color: AppColors.text,
+      );
 
-  static const headline = TextStyle(
-    fontSize: 32.0,
-    fontWeight: FontWeight.w700, // bold
-    height: 1.25,
-  );
+  static TextStyle get headlineLg => const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        height: 32 / 24,
+        letterSpacing: -0.02,
+        color: AppColors.text,
+      );
 
-  static const title = TextStyle(
-    fontSize: 20.0,
-    fontWeight: FontWeight.w600, // semibold
-    height: 1.4,
-  );
+  static TextStyle get headlineMd => const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        height: 28 / 20,
+        color: AppColors.text,
+      );
 
-  static const body = TextStyle(
-    fontSize: 16.0,
-    fontWeight: FontWeight.w400, // regular
-    height: 1.5,
-  );
+  static TextStyle get bodyLg => const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.normal,
+        height: 24 / 16,
+        color: AppColors.text,
+      );
 
-  static const label = TextStyle(
-    fontSize: 13.0,
-    fontWeight: FontWeight.w500, // medium
-    height: 1.38,
-  );
+  static TextStyle get bodyMd => const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.normal,
+        height: 20 / 14,
+        color: AppColors.text,
+      );
+
+  static TextStyle get labelLg => const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        height: 16 / 12,
+        letterSpacing: 0.05,
+        color: AppColors.text,
+      );
+
+  static TextStyle get labelSm => const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        height: 14 / 10,
+        letterSpacing: 0.02,
+        color: AppColors.text,
+      );
 }

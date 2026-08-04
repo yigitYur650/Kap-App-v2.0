@@ -13,6 +13,7 @@ type Config struct {
 	SupabaseURL            string
 	SupabaseServiceRoleKey string
 	SupabaseJWTSecret      string
+	CORSAllowedOrigins     string
 }
 
 // LoadConfig loads application configuration from environment variables and optionally a .env file.
@@ -32,11 +33,16 @@ func LoadConfig() *Config {
 	supabaseURL := os.Getenv("SUPABASE_URL")
 	supabaseServiceRoleKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	supabaseJWTSecret := os.Getenv("SUPABASE_JWT_SECRET")
+	corsAllowedOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if corsAllowedOrigins == "" {
+		corsAllowedOrigins = "http://localhost:3000,http://localhost:8080,http://localhost:9000"
+	}
 
 	return &Config{
 		Port:                   port,
 		SupabaseURL:            supabaseURL,
 		SupabaseServiceRoleKey: supabaseServiceRoleKey,
 		SupabaseJWTSecret:      supabaseJWTSecret,
+		CORSAllowedOrigins:     corsAllowedOrigins,
 	}
 }

@@ -20,10 +20,11 @@ func generateTestToken(secret string, claims jwt.MapClaims) (string, error) {
 
 func TestAuthRequired(t *testing.T) {
 	secret := "test_jwt_secret_key_12345"
+	supabaseURL := "https://test.supabase.co"
 	app := fiber.New()
 
 	// Register a dummy protected endpoint
-	app.Get("/protected", AuthRequired(secret), func(c *fiber.Ctx) error {
+	app.Get("/protected", AuthRequired(secret, supabaseURL), func(c *fiber.Ctx) error {
 		userID := c.Locals("userID")
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"userID": userID,

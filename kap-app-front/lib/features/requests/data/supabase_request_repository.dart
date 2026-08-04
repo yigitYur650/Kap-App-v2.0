@@ -60,6 +60,8 @@ class SupabaseRequestRepository implements RequestRepository {
     required String itemName,
     bool isPrivate = false,
     String? privateTo,
+    String? quantity,
+    String? unit,
   }) async {
     final currentUser = _supabaseClient.auth.currentUser;
     if (currentUser == null) {
@@ -79,6 +81,8 @@ class SupabaseRequestRepository implements RequestRepository {
             'is_private': isPrivate,
             'private_to': isPrivate ? privateTo : null,
             'status': 'pending',
+            if (quantity != null && quantity.trim().isNotEmpty) 'quantity': quantity.trim(),
+            if (unit != null && unit.trim().isNotEmpty) 'unit': unit.trim(),
           })
           .select()
           .single();
@@ -93,6 +97,7 @@ class SupabaseRequestRepository implements RequestRepository {
   Future<Either<Failure, void>> updateRequestStatus({
     required String requestId,
     required String status,
+    required String groupId,
   }) async {
     try {
       await _supabaseClient
@@ -100,7 +105,8 @@ class SupabaseRequestRepository implements RequestRepository {
           .update({
             'status': status,
           })
-          .eq('id', requestId);
+          .eq('id', requestId)
+          .eq('group_id', groupId);
       return const Right(null);
     } catch (e) {
       return Left(_mapException(e));
@@ -110,6 +116,7 @@ class SupabaseRequestRepository implements RequestRepository {
   @override
   Future<Either<Failure, void>> deleteRequest({
     required String requestId,
+    required String groupId,
   }) async {
     try {
       // Soft delete: update deleted_at instead of executing physical deletion
@@ -118,7 +125,8 @@ class SupabaseRequestRepository implements RequestRepository {
           .update({
             'deleted_at': DateTime.now().toUtc().toIso8601String(),
           })
-          .eq('id', requestId);
+          .eq('id', requestId)
+          .eq('group_id', groupId);
       return const Right(null);
     } catch (e) {
       return Left(_mapException(e));
@@ -128,7 +136,10 @@ class SupabaseRequestRepository implements RequestRepository {
   Failure _mapException(Object e) {
     if (e is PostgrestException) {
       if (e.code == '23505') {
-        return UnknownFailure('Database unique constraint violation: ${e.message}');
+        // Map unique constraint violations to a user-friendly duplicate item failure.
+        // This occurs when the same pending item is inserted twice in the same group
+        // (idx_unique_pending_item_per_group partial unique index).
+        return const DuplicateItemFailure();
       }
       return UnknownFailure('Database error: ${e.message}');
     }

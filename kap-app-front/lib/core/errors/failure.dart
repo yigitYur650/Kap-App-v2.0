@@ -29,3 +29,7 @@ class ServerFailure extends Failure {
 class CollisionFailure extends Failure {
   const CollisionFailure([super.message = 'Unique code collision limit reached. Please try again.']);
 }
+
+class DuplicateItemFailure extends Failure {
+  const DuplicateItemFailure([super.message = 'This item is already in your shopping list.']);
+}

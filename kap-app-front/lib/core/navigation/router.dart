@@ -1,10 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kap_app_front/features/auth/presentation/providers/auth_provider.dart';
 import 'package:kap_app_front/features/auth/presentation/screens/login_screen.dart';
 import 'package:kap_app_front/features/auth/presentation/screens/register_screen.dart';
-import 'package:kap_app_front/features/groups/presentation/screens/group_members_screen.dart';
+import 'package:kap_app_front/features/groups/presentation/screens/hub_screen.dart';
+import 'package:kap_app_front/features/groups/presentation/screens/settings_screen.dart';
 import 'package:kap_app_front/features/requests/presentation/screens/shopping_list_screen.dart';
+import 'package:kap_app_front/core/navigation/shell_screen.dart';
 
 /// Provider that exposes the GoRouter configuration and rebuilds on auth state changes.
 final routerProvider = Provider<GoRouter>((ref) {
@@ -34,14 +37,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const ShoppingListScreen(),
-      ),
-      GoRoute(
-        path: '/members',
-        builder: (context, state) => const GroupMembersScreen(),
-      ),
+      // Authentication Routes
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
@@ -50,8 +46,44 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
+      
+      // Bottom Navigation Stateful Shell Route
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return ShellScreen(navigationShell: navigationShell);
+        },
+        branches: [
+          // Tab 0: Hub Dashboard
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (context, state) => const HubScreen(),
+              ),
+            ],
+          ),
+          
+          // Tab 1: Shopping List
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/list',
+                builder: (context, state) => const ShoppingListScreen(),
+              ),
+            ],
+          ),
+          
+          // Tab 2: Settings
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (context, state) => const SettingsScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
   );
 });
-
-

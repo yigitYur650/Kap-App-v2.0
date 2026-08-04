@@ -55,3 +55,14 @@ kap-app-backend/vendor/
 supabase/.branches/
 supabase/.temp/
 supabase/functions/*/node_modules/
+
+# Node & E2E (Playwright)
+node_modules/
+kap-app-front/node_modules/
+kap-app-front/test-results/
+kap-app-front/deployed_app/
+kap-app-front/android/build/
+
+# Local Agent Configs & IDE Caches
+.continue/
+.agent/

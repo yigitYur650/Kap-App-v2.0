@@ -9,6 +9,9 @@ class RequestModel {
   final String status;
   final DateTime createdAt;
   final DateTime? deletedAt;
+  final String? quantity;
+  final String? unit;
+  final String? category;
 
   const RequestModel({
     required this.id,
@@ -20,7 +23,40 @@ class RequestModel {
     required this.status,
     required this.createdAt,
     this.deletedAt,
+    this.quantity,
+    this.unit,
+    this.category,
   });
+
+  RequestModel copyWith({
+    String? id,
+    String? groupId,
+    String? requestedBy,
+    String? itemName,
+    bool? isPrivate,
+    String? privateTo,
+    String? status,
+    DateTime? createdAt,
+    DateTime? deletedAt,
+    String? quantity,
+    String? unit,
+    String? category,
+  }) {
+    return RequestModel(
+      id: id ?? this.id,
+      groupId: groupId ?? this.groupId,
+      requestedBy: requestedBy ?? this.requestedBy,
+      itemName: itemName ?? this.itemName,
+      isPrivate: isPrivate ?? this.isPrivate,
+      privateTo: privateTo ?? this.privateTo,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      quantity: quantity ?? this.quantity,
+      unit: unit ?? this.unit,
+      category: category ?? this.category,
+    );
+  }
 
   /// Explanatory comment: dynamic is used here because JSON payload values can represent multiple different Dart types (e.g. String, bool, num, null).
   factory RequestModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +72,9 @@ class RequestModel {
       deletedAt: json['deleted_at'] != null
           ? DateTime.parse(json['deleted_at'] as String)
           : null,
+      quantity: json['quantity'] as String?,
+      unit: json['unit'] as String?,
+      category: json['category'] as String?,
     );
   }
 
@@ -51,6 +90,9 @@ class RequestModel {
       'status': status,
       'created_at': createdAt.toIso8601String(),
       'deleted_at': deletedAt?.toIso8601String(),
+      'quantity': quantity,
+      'unit': unit,
+      'category': category,
     };
   }
 }

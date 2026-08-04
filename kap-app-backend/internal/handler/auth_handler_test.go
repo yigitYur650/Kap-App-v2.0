@@ -81,7 +81,7 @@ func TestGenerateCode(t *testing.T) {
 		assert.Contains(t, body["error"], "Unauthorized")
 	})
 
-	t.Run("Should return 500 when ErrCollisionLimitReached is returned", func(t *testing.T) {
+	t.Run("Should return 503 when ErrCollisionLimitReached is returned (retryable)", func(t *testing.T) {
 		svc := &mockAuthService{
 			mockGenerateUniqueCode: func(userID string) (string, error) {
 				return "", service.ErrCollisionLimitReached
@@ -92,12 +92,17 @@ func TestGenerateCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/auth/unique-code", nil)
 		resp, err := app.Test(req)
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		assert.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
 
 		var body map[string]interface{}
 		err = json.NewDecoder(resp.Body).Decode(&body)
 		assert.NoError(t, err)
-		assert.Contains(t, body["error"], "collision_limit_reached")
+		assert.Equal(t, "collision_limit_reached", body["error"])
+		assert.Contains(t, body["message"], "Unable to generate a unique code")
+		// retry_after should be present and be a number (the client should back-off)
+		retryAfter, ok := body["retry_after"].(float64)
+		assert.True(t, ok, "retry_after should be a numeric value")
+		assert.Greater(t, int(retryAfter), 0, "retry_after should be a positive number of seconds")
 	})
 
 	t.Run("Should return 200 with Origin header set (simulating CORS POST after preflight)", func(t *testing.T) {

@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failure.dart';
 import '../../../../core/models/request_model.dart';
 import '../../../groups/presentation/providers/active_group_provider.dart';
 import '../../providers/request_repository_provider.dart';
@@ -42,13 +44,17 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
   }
 
   /// Creates a new shopping request.
-  Future<void> createRequest({
+  Future<Either<Failure, void>> createRequest({
     required String itemName,
     bool isPrivate = false,
     String? privateTo,
+    String? quantity,
+    String? unit,
   }) async {
     final activeGroup = ref.read(activeGroupProvider);
-    if (activeGroup == null) return;
+    if (activeGroup == null) {
+      return Left(ServerFailure('No active group selected.'));
+    }
 
     final repository = ref.read(requestRepositoryProvider);
     final result = await repository.createRequest(
@@ -56,44 +62,77 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
       itemName: itemName,
       isPrivate: isPrivate,
       privateTo: privateTo,
+      quantity: quantity,
+      unit: unit,
     );
 
     result.fold(
-      (failure) => state = AsyncError(failure, StackTrace.current),
-      (_) {},
+      (failure) {},
+      (newRequest) {
+        final currentList = state.value ?? [];
+        state = AsyncData([newRequest, ...currentList.where((r) => r.id != newRequest.id)]);
+      },
     );
+
+    return result;
   }
 
   /// Updates the status of a shopping request ('pending', 'done').
-  Future<void> updateRequestStatus({
+  Future<Either<Failure, void>> updateRequestStatus({
     required String requestId,
     required String status,
   }) async {
+    final activeGroup = ref.read(activeGroupProvider);
+    if (activeGroup == null) {
+      return Left(ServerFailure('No active group selected.'));
+    }
+
     final repository = ref.read(requestRepositoryProvider);
     final result = await repository.updateRequestStatus(
       requestId: requestId,
       status: status,
+      groupId: activeGroup.id,
     );
 
     result.fold(
-      (failure) => state = AsyncError(failure, StackTrace.current),
-      (_) {},
+      (failure) {},
+      (_) {
+        final currentList = state.value ?? [];
+        state = AsyncData(
+          currentList
+              .map((r) => r.id == requestId ? r.copyWith(status: status) : r)
+              .toList(),
+        );
+      },
     );
+
+    return result;
   }
 
   /// Deletes (soft-deletes) a shopping request.
-  Future<void> deleteRequest({
+  Future<Either<Failure, void>> deleteRequest({
     required String requestId,
   }) async {
+    final activeGroup = ref.read(activeGroupProvider);
+    if (activeGroup == null) {
+      return Left(ServerFailure('No active group selected.'));
+    }
+
     final repository = ref.read(requestRepositoryProvider);
     final result = await repository.deleteRequest(
       requestId: requestId,
+      groupId: activeGroup.id,
     );
 
     result.fold(
-      (failure) => state = AsyncError(failure, StackTrace.current),
-      (_) {},
+      (failure) {},
+      (_) {
+        final currentList = state.value ?? [];
+        state = AsyncData(currentList.where((r) => r.id != requestId).toList());
+      },
     );
+
+    return result;
   }
 }
 

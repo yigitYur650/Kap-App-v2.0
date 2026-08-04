@@ -1,0 +1,13 @@
+{
+  "name": "kap-app-front-e2e",
+  "version": "1.0.0",
+  "description": "E2E tests for Kap-App frontend using Playwright",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.1",
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.12"
+  }
+}

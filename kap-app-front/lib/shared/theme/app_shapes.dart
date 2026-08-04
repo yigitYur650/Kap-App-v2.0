@@ -1,88 +1,49 @@
 import 'package:flutter/material.dart';
 
-/// A CustomPainter that renders organic, smooth background blobs using cubic bezier curves.
 class BlobPainter extends CustomPainter {
   final Color color;
   final double opacity;
-  final double scale;
-  final Offset offset;
 
   BlobPainter({
     required this.color,
-    this.opacity = 0.15,
-    this.scale = 1.0,
-    this.offset = Offset.zero,
+    required this.opacity,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withValues(alpha: opacity)
-      ..style = PaintingStyle.fill;
+      ..color = color.withOpacity(opacity)
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 80); // Glow blur
 
     final path = Path();
-
-    // Center of the blob calculation incorporating dynamic offset
-    final center = Offset(size.width / 2, size.height / 2) + offset;
-    final radius = (size.width < size.height ? size.width : size.height) / 2 * scale;
-
-    // Core organic shape nodes
-    final p1 = Offset(center.dx, center.dy - radius * 0.95);
-    final p2 = Offset(center.dx + radius * 0.85, center.dy - radius * 0.15);
-    final p3 = Offset(center.dx + radius * 0.45, center.dy + radius * 0.85);
-    final p4 = Offset(center.dx - radius * 0.85, center.dy + radius * 0.25);
-
-    path.moveTo(p1.dx, p1.dy);
-
-    // Segment 1: Upper-right curve
+    path.moveTo(size.width * 0.15, size.height * 0.2);
+    
     path.cubicTo(
-      center.dx + radius * 0.5,
-      center.dy - radius * 0.95,
-      center.dx + radius * 0.85,
-      center.dy - radius * 0.6,
-      p2.dx,
-      p2.dy,
+      size.width * 0.4, size.height * 0.05,
+      size.width * 0.7, size.height * 0.1,
+      size.width * 0.85, size.height * 0.35,
     );
-
-    // Segment 2: Lower-right curve
     path.cubicTo(
-      center.dx + radius * 0.85,
-      center.dy + radius * 0.3,
-      center.dx + radius * 0.7,
-      center.dy + radius * 0.75,
-      p3.dx,
-      p3.dy,
+      size.width * 0.95, size.height * 0.6,
+      size.width * 0.8, size.height * 0.85,
+      size.width * 0.5, size.height * 0.9,
     );
-
-    // Segment 3: Lower-left curve
     path.cubicTo(
-      center.dx + radius * 0.2,
-      center.dy + radius * 0.95,
-      center.dx - radius * 0.55,
-      center.dy + radius * 0.75,
-      p4.dx,
-      p4.dy,
+      size.width * 0.2, size.height * 0.95,
+      size.width * 0.05, size.height * 0.7,
+      size.width * 0.1, size.height * 0.45,
     );
-
-    // Segment 4: Upper-left curve back to start
     path.cubicTo(
-      center.dx - radius * 0.95,
-      center.dy - radius * 0.25,
-      center.dx - radius * 0.4,
-      center.dy - radius * 0.95,
-      p1.dx,
-      p1.dy,
+      size.width * 0.12, size.height * 0.3,
+      size.width * 0.08, size.height * 0.25,
+      size.width * 0.15, size.height * 0.2,
     );
-
     path.close();
+
     canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(covariant BlobPainter oldDelegate) {
-    return oldDelegate.color != color ||
-        oldDelegate.opacity != opacity ||
-        oldDelegate.scale != scale ||
-        oldDelegate.offset != offset;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

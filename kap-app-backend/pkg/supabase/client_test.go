@@ -1,6 +1,7 @@
 package supabase
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,4 +38,31 @@ func TestNewClient_DefaultTimeout(t *testing.T) {
 	assert.NotNil(t, client)
 	assert.Equal(t, int64(10), client.HTTPClient.Timeout.Milliseconds()/1000,
 		"Default timeout should be 10 seconds")
+}
+
+func TestIsUniqueViolation(t *testing.T) {
+	t.Run("Should return true for 23505 PostgresError", func(t *testing.T) {
+		err := &PostgresError{
+			Code:    "23505",
+			Message: `duplicate key value violates unique constraint`,
+		}
+		assert.True(t, IsUniqueViolation(err))
+	})
+
+	t.Run("Should return false for non-23505 PostgresError", func(t *testing.T) {
+		err := &PostgresError{
+			Code:    "42703",
+			Message: "column does not exist",
+		}
+		assert.False(t, IsUniqueViolation(err))
+	})
+
+	t.Run("Should return false for generic error", func(t *testing.T) {
+		err := errors.New("network timeout")
+		assert.False(t, IsUniqueViolation(err))
+	})
+
+	t.Run("Should return false for nil", func(t *testing.T) {
+		assert.False(t, IsUniqueViolation(nil))
+	})
 }

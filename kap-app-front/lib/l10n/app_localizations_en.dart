@@ -163,4 +163,161 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get group_members_profile_load_failed => 'Error loading profile';
+
+  @override
+  String get inventoryTitle => 'Home Inventory';
+
+  @override
+  String get inventoryEmptyState => 'Nothing here yet.';
+
+  @override
+  String get inventoryStatusInStock => 'In Stock';
+
+  @override
+  String get inventoryStatusLow => 'Low Stock';
+
+  @override
+  String get inventoryStatusOutOfStock => 'Out of Stock';
+
+  @override
+  String get inventoryAddItemTitle => 'Add New Item';
+
+  @override
+  String get inventoryItemNameHint => 'Enter item name...';
+
+  @override
+  String get inventoryButtonAdd => 'Add';
+
+  @override
+  String get inventoryButtonCancel => 'Cancel';
+
+  @override
+  String get group_create_success => 'Home created successfully!';
+
+  @override
+  String get group_join_success => 'Joined home successfully!';
+
+  @override
+  String get group_create_title => 'Create New Home';
+
+  @override
+  String get group_create_name_hint => 'Home/Group Name';
+
+  @override
+  String get group_type_family => 'Family';
+
+  @override
+  String get group_type_community => 'Community';
+
+  @override
+  String get dialog_cancel => 'Cancel';
+
+  @override
+  String get dialog_create => 'Create';
+
+  @override
+  String get group_join_title => 'Join Home';
+
+  @override
+  String get group_join_code_hint => 'Join Code (e.g. XK7M2R9P)';
+
+  @override
+  String get dialog_join => 'Join';
+
+  @override
+  String get group_none_selected => 'No Home Selected';
+
+  @override
+  String get group_type_family_label => 'Family Group';
+
+  @override
+  String get group_type_community_label => 'Community Group';
+
+  @override
+  String get hub_active_list_summary => 'ACTIVE LIST SUMMARY';
+
+  @override
+  String get hub_no_pending_requests => 'No pending shopping requests.';
+
+  @override
+  String hub_more_items(Object count) {
+    return '+$count More';
+  }
+
+  @override
+  String get hub_members_header => 'HOME MEMBERS';
+
+  @override
+  String get group_role_admin => 'Admin';
+
+  @override
+  String get group_role_member => 'Member';
+
+  @override
+  String get hub_no_group_joined => 'You are not part of any home yet.';
+
+  @override
+  String get hub_create_group_button => 'Create Home';
+
+  @override
+  String get hub_join_group_button => 'Join Home';
+
+  @override
+  String shopping_list_items_count(Object count) {
+    return '$count Items';
+  }
+
+  @override
+  String get settings_title => 'Settings';
+
+  @override
+  String get settings_active_group_info => 'ACTIVE GROUP INFO';
+
+  @override
+  String get settings_join_code => 'Join Code';
+
+  @override
+  String get settings_no_code => 'NO-CODE';
+
+  @override
+  String get settings_my_groups => 'MY HOME GROUPS';
+
+  @override
+  String get settings_no_groups_found => 'No groups found.';
+
+  @override
+  String get nav_tab_hub => 'Hub';
+
+  @override
+  String get nav_tab_list => 'List';
+
+  @override
+  String get nav_tab_settings => 'Settings';
+
+  @override
+  String get add_request_item_name_hint => 'What is needed? (e.g. Milk)';
+
+  @override
+  String get add_request_quantity_label => 'Quantity';
+
+  @override
+  String get add_request_quantity_hint => 'e.g. 2, 500';
+
+  @override
+  String get add_request_unit_label => 'Unit';
+
+  @override
+  String get add_request_unit_hint => 'e.g. pcs, kg, L';
+
+  @override
+  String get settings_delete_group_title => 'Delete Home?';
+
+  @override
+  String get settings_delete_group_confirm => 'Are you sure you want to delete';
+
+  @override
+  String get settings_delete_group_success => 'Home deleted successfully.';
+
+  @override
+  String get dialog_delete => 'Delete';
 }

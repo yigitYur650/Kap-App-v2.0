@@ -13,7 +13,7 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
     // 1. Check current Supabase Auth session
     final session = supabaseClient.auth.currentSession;
     if (session != null) {
-      // 2. Hydration pull user metadata from public.users
+      // 2. Hydrate user metadata from public.users table
       final userProfile = await _fetchUserProfile(supabaseClient, session.user.id);
       if (userProfile == null) {
         // Safe sign-out / cleanup to prevent deadlocks (Ghost Session Hotfix)

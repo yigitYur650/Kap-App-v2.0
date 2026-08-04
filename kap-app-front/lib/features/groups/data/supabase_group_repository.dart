@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as dart_math;
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/failure.dart';
@@ -14,52 +15,90 @@ class SupabaseGroupRepository implements GroupRepository {
   @override
   Future<Either<Failure, GroupModel>> createGroup({
     required String name,
-    required String type,
   }) async {
     final currentUser = _supabaseClient.auth.currentUser;
     if (currentUser == null) {
       return const Left(UnknownFailure('User is not authenticated'));
     }
 
-    String? createdGroupId;
     try {
-      // 1. Insert the new group row
+      // Generate a 12-char hex join code (6 random bytes → 12 hex chars)
+      // This uses Supabase's gen_random_bytes() via a raw RPC call,
+      // or we generate it client-side using Dart's Random.secure().
+      final joinCode = _generateJoinCode();
+
+      // 1. Insert the new group row with join_code
       final groupResponse = await _supabaseClient
           .from('groups')
           .insert({
             'name': name,
-            'type': type,
             'created_by': currentUser.id,
+            'join_code': joinCode,
           })
           .select()
           .single();
 
-      createdGroupId = groupResponse['id'] as String;
+      final groupId = groupResponse['id'] as String;
 
-      // 2. Insert the creator into group_members as admin
+      // 2. Insert the creator into group_members
       await _supabaseClient.from('group_members').insert({
         'user_id': currentUser.id,
-        'group_id': createdGroupId,
-        'role': 'admin',
+        'group_id': groupId,
       });
 
       return Right(GroupModel.fromJson(groupResponse));
     } catch (e) {
-      // Rollback newly created group if membership insertion failed
-      if (createdGroupId != null) {
-        try {
-          await _supabaseClient.from('groups').delete().eq('id', createdGroupId);
-        } catch (_) {
-          // Do not mask primary failure
-        }
+      return Left(_mapException(e));
+    }
+  }
+
+  /// Generates an 8-character join code in 4-4 format (e.g. XK7M-2R9P).
+  /// Uses 4 random bytes → hex encode → split into XXXX-XXXX.
+  String _generateJoinCode() {
+    final random = dart_math.Random.secure();
+    final bytes = List<int>.generate(4, (_) => random.nextInt(256));
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join().toUpperCase();
+    return '${hex.substring(0, 4)}-${hex.substring(4, 8)}';
+  }
+
+  @override
+  Future<Either<Failure, void>> joinGroup({
+    required String joinCode,
+  }) async {
+    final currentUser = _supabaseClient.auth.currentUser;
+    if (currentUser == null) {
+      return const Left(UnknownFailure('User is not authenticated'));
+    }
+
+    try {
+      // 1. Query groups by join_code to find the target group
+      final groupResponse = await _supabaseClient
+          .from('groups')
+          .select('id')
+          .eq('join_code', joinCode)
+          .isFilter('deleted_at', null)
+          .maybeSingle();
+
+      if (groupResponse == null) {
+        return const Left(UnknownFailure('No active group found with this join code'));
       }
+      final groupId = groupResponse['id'] as String;
+
+      // 2. Insert the joining user into group_members
+      await _supabaseClient.from('group_members').insert({
+        'user_id': currentUser.id,
+        'group_id': groupId,
+      });
+
+      return const Right(null);
+    } catch (e) {
       return Left(_mapException(e));
     }
   }
 
   @override
-  Future<Either<Failure, void>> joinGroup({
-    required String uniqueCode,
+  Future<Either<Failure, void>> deleteGroup({
+    required String groupId,
   }) async {
     final currentUser = _supabaseClient.auth.currentUser;
     if (currentUser == null) {
@@ -67,39 +106,12 @@ class SupabaseGroupRepository implements GroupRepository {
     }
 
     try {
-      // 1. Query public_user_lookup to find the owner's id
-      final userResponse = await _supabaseClient
-          .from('public_user_lookup')
-          .select('id')
-          .eq('unique_code', uniqueCode)
-          .maybeSingle();
-
-      if (userResponse == null) {
-        return const Left(UnknownFailure('User with unique code not found'));
-      }
-      final ownerId = userResponse['id'] as String;
-
-      // 2. Query groups to find the active family group created by this owner
-      final groupResponse = await _supabaseClient
+      // Soft delete: set deleted_at to now
+      // RLS will check is_group_admin(id) before allowing the update
+      await _supabaseClient
           .from('groups')
-          .select('id')
-          .eq('created_by', ownerId)
-          .eq('type', 'family')
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
-      if (groupResponse == null) {
-        return const Left(UnknownFailure('No active family group found for the user'));
-      }
-      final groupId = groupResponse['id'] as String;
-
-      // 3. Insert the joining user into group_members as member
-      await _supabaseClient.from('group_members').insert({
-        'user_id': currentUser.id,
-        'group_id': groupId,
-        'role': 'member',
-      });
+          .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+          .eq('id', groupId);
 
       return const Right(null);
     } catch (e) {
@@ -118,7 +130,8 @@ class SupabaseGroupRepository implements GroupRepository {
       final response = await _supabaseClient
           .from('groups')
           .select('*, group_members!inner(user_id)')
-          .eq('group_members.user_id', currentUser.id);
+          .eq('group_members.user_id', currentUser.id)
+          .isFilter('deleted_at', null);
       // Explanatory comment: dynamic is used here because JSON payload values can represent multiple different Dart types (e.g. String, bool, num, null).
       final list = (response as List)
           .map((json) => GroupModel.fromJson(json as Map<String, dynamic>))

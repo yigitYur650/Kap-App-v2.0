@@ -397,6 +397,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error loading profile'**
   String get group_members_profile_load_failed;
+
+  /// No description provided for @inventoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home Inventory'**
+  String get inventoryTitle;
+
+  /// No description provided for @inventoryEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet.'**
+  String get inventoryEmptyState;
+
+  /// No description provided for @inventoryStatusInStock.
+  ///
+  /// In en, this message translates to:
+  /// **'In Stock'**
+  String get inventoryStatusInStock;
+
+  /// No description provided for @inventoryStatusLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock'**
+  String get inventoryStatusLow;
+
+  /// No description provided for @inventoryStatusOutOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of Stock'**
+  String get inventoryStatusOutOfStock;
+
+  /// No description provided for @inventoryAddItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Item'**
+  String get inventoryAddItemTitle;
+
+  /// No description provided for @inventoryItemNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter item name...'**
+  String get inventoryItemNameHint;
+
+  /// No description provided for @inventoryButtonAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get inventoryButtonAdd;
+
+  /// No description provided for @inventoryButtonCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get inventoryButtonCancel;
+
+  /// No description provided for @group_create_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Home created successfully!'**
+  String get group_create_success;
+
+  /// No description provided for @group_join_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined home successfully!'**
+  String get group_join_success;
+
+  /// No description provided for @group_create_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Home'**
+  String get group_create_title;
+
+  /// No description provided for @group_create_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Home/Group Name'**
+  String get group_create_name_hint;
+
+  /// No description provided for @group_type_family.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get group_type_family;
+
+  /// No description provided for @group_type_community.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get group_type_community;
+
+  /// No description provided for @dialog_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get dialog_cancel;
+
+  /// No description provided for @dialog_create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get dialog_create;
+
+  /// No description provided for @group_join_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Home'**
+  String get group_join_title;
+
+  /// No description provided for @group_join_code_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Code (e.g. XK7M2R9P)'**
+  String get group_join_code_hint;
+
+  /// No description provided for @dialog_join.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get dialog_join;
+
+  /// No description provided for @group_none_selected.
+  ///
+  /// In en, this message translates to:
+  /// **'No Home Selected'**
+  String get group_none_selected;
+
+  /// No description provided for @group_type_family_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Group'**
+  String get group_type_family_label;
+
+  /// No description provided for @group_type_community_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Group'**
+  String get group_type_community_label;
+
+  /// No description provided for @hub_active_list_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE LIST SUMMARY'**
+  String get hub_active_list_summary;
+
+  /// No description provided for @hub_no_pending_requests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending shopping requests.'**
+  String get hub_no_pending_requests;
+
+  /// No description provided for @hub_more_items.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} More'**
+  String hub_more_items(Object count);
+
+  /// No description provided for @hub_members_header.
+  ///
+  /// In en, this message translates to:
+  /// **'HOME MEMBERS'**
+  String get hub_members_header;
+
+  /// No description provided for @group_role_admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get group_role_admin;
+
+  /// No description provided for @group_role_member.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get group_role_member;
+
+  /// No description provided for @hub_no_group_joined.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not part of any home yet.'**
+  String get hub_no_group_joined;
+
+  /// No description provided for @hub_create_group_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Home'**
+  String get hub_create_group_button;
+
+  /// No description provided for @hub_join_group_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Home'**
+  String get hub_join_group_button;
+
+  /// No description provided for @shopping_list_items_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Items'**
+  String shopping_list_items_count(Object count);
+
+  /// No description provided for @settings_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings_title;
+
+  /// No description provided for @settings_active_group_info.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE GROUP INFO'**
+  String get settings_active_group_info;
+
+  /// No description provided for @settings_join_code.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Code'**
+  String get settings_join_code;
+
+  /// No description provided for @settings_no_code.
+  ///
+  /// In en, this message translates to:
+  /// **'NO-CODE'**
+  String get settings_no_code;
+
+  /// No description provided for @settings_my_groups.
+  ///
+  /// In en, this message translates to:
+  /// **'MY HOME GROUPS'**
+  String get settings_my_groups;
+
+  /// No description provided for @settings_no_groups_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups found.'**
+  String get settings_no_groups_found;
+
+  /// No description provided for @nav_tab_hub.
+  ///
+  /// In en, this message translates to:
+  /// **'Hub'**
+  String get nav_tab_hub;
+
+  /// No description provided for @nav_tab_list.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get nav_tab_list;
+
+  /// No description provided for @nav_tab_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get nav_tab_settings;
+
+  /// No description provided for @add_request_item_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'What is needed? (e.g. Milk)'**
+  String get add_request_item_name_hint;
+
+  /// No description provided for @add_request_quantity_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get add_request_quantity_label;
+
+  /// No description provided for @add_request_quantity_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 2, 500'**
+  String get add_request_quantity_hint;
+
+  /// No description provided for @add_request_unit_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get add_request_unit_label;
+
+  /// No description provided for @add_request_unit_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. pcs, kg, L'**
+  String get add_request_unit_hint;
+
+  /// No description provided for @settings_delete_group_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Home?'**
+  String get settings_delete_group_title;
+
+  /// No description provided for @settings_delete_group_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete'**
+  String get settings_delete_group_confirm;
+
+  /// No description provided for @settings_delete_group_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Home deleted successfully.'**
+  String get settings_delete_group_success;
+
+  /// No description provided for @dialog_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get dialog_delete;
 }
 
 class _AppLocalizationsDelegate

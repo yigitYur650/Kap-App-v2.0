@@ -165,4 +165,162 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get group_members_profile_load_failed =>
       'Profil yüklenirken hata oluştu';
+
+  @override
+  String get inventoryTitle => 'Evde Ne Var?';
+
+  @override
+  String get inventoryEmptyState => 'Burada henüz hiçbir şey yok.';
+
+  @override
+  String get inventoryStatusInStock => 'Var';
+
+  @override
+  String get inventoryStatusLow => 'Azaldı';
+
+  @override
+  String get inventoryStatusOutOfStock => 'Yok';
+
+  @override
+  String get inventoryAddItemTitle => 'Yeni Ürün Ekle';
+
+  @override
+  String get inventoryItemNameHint => 'Ürün adı girin...';
+
+  @override
+  String get inventoryButtonAdd => 'Ekle';
+
+  @override
+  String get inventoryButtonCancel => 'İptal';
+
+  @override
+  String get group_create_success => 'Ev başarıyla oluşturuldu!';
+
+  @override
+  String get group_join_success => 'Eve başarıyla katıldınız!';
+
+  @override
+  String get group_create_title => 'Yeni Ev Oluştur';
+
+  @override
+  String get group_create_name_hint => 'Ev/Grup İsmi';
+
+  @override
+  String get group_type_family => 'Aile';
+
+  @override
+  String get group_type_community => 'Topluluk';
+
+  @override
+  String get dialog_cancel => 'İptal';
+
+  @override
+  String get dialog_create => 'Oluştur';
+
+  @override
+  String get group_join_title => 'Eve Katıl';
+
+  @override
+  String get group_join_code_hint => 'Katılım Kodu (Örn: XK7M2R9P)';
+
+  @override
+  String get dialog_join => 'Katıl';
+
+  @override
+  String get group_none_selected => 'Ev Seçilmedi';
+
+  @override
+  String get group_type_family_label => 'Aile Grubu';
+
+  @override
+  String get group_type_community_label => 'Topluluk Grubu';
+
+  @override
+  String get hub_active_list_summary => 'AKTİF LİSTE ÖZETİ';
+
+  @override
+  String get hub_no_pending_requests => 'Bekleyen alışveriş talebi yok.';
+
+  @override
+  String hub_more_items(Object count) {
+    return '+$count Daha';
+  }
+
+  @override
+  String get hub_members_header => 'EV ÜYELERİ';
+
+  @override
+  String get group_role_admin => 'Yönetici';
+
+  @override
+  String get group_role_member => 'Üye';
+
+  @override
+  String get hub_no_group_joined => 'Henüz bir eve dahil değilsiniz.';
+
+  @override
+  String get hub_create_group_button => 'Ev Oluştur';
+
+  @override
+  String get hub_join_group_button => 'Eve Katıl';
+
+  @override
+  String shopping_list_items_count(Object count) {
+    return '$count Ürün';
+  }
+
+  @override
+  String get settings_title => 'Ayarlar';
+
+  @override
+  String get settings_active_group_info => 'AKTİF GRUP BİLGİSİ';
+
+  @override
+  String get settings_join_code => 'Katılım Kodu';
+
+  @override
+  String get settings_no_code => 'KOD-YOK';
+
+  @override
+  String get settings_my_groups => 'EV GRUPLARIM';
+
+  @override
+  String get settings_no_groups_found => 'Kayıtlı grup bulunmuyor.';
+
+  @override
+  String get nav_tab_hub => 'Hub';
+
+  @override
+  String get nav_tab_list => 'Liste';
+
+  @override
+  String get nav_tab_settings => 'Ayarlar';
+
+  @override
+  String get add_request_item_name_hint => 'Ne lazım? (Örn: Süt)';
+
+  @override
+  String get add_request_quantity_label => 'Miktar';
+
+  @override
+  String get add_request_quantity_hint => 'Örn: 2, 500';
+
+  @override
+  String get add_request_unit_label => 'Birim';
+
+  @override
+  String get add_request_unit_hint => 'Örn: adet, kg, L';
+
+  @override
+  String get settings_delete_group_title => 'Ev Silinsin mi?';
+
+  @override
+  String get settings_delete_group_confirm =>
+      'Bu evi silmek istediğinize emin misiniz:';
+
+  @override
+  String get settings_delete_group_success => 'Ev başarıyla silindi.';
+
+  @override
+  String get dialog_delete => 'Sil';
 }

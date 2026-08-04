@@ -42,8 +42,10 @@ func (h *AuthHandler) GenerateCode(c *fiber.Ctx) error {
 	code, err := h.authService.GenerateUniqueCode(userID)
 	if err != nil {
 		if errors.Is(err, service.ErrCollisionLimitReached) {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "collision_limit_reached",
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+				"error":       "collision_limit_reached",
+				"message":     "Unable to generate a unique code at this time due to high contention. Please try again.",
+				"retry_after": 30,
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

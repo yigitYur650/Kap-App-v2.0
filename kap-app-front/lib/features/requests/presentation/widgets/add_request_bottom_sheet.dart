@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../../core/models/request_model.dart';
-import '../../../groups/presentation/providers/active_group_provider.dart';
-import '../../../groups/presentation/providers/group_members_provider.dart';
-import '../providers/request_controller.dart';
+import 'package:kap_app_front/features/groups/presentation/providers/active_group_provider.dart';
+import 'package:kap_app_front/features/groups/presentation/providers/group_members_provider.dart';
+import 'package:kap_app_front/features/requests/presentation/providers/request_controller.dart';
+import 'package:kap_app_front/l10n/app_localizations.dart';
+import 'package:kap_app_front/shared/theme/app_colors.dart';
+import 'package:kap_app_front/shared/theme/app_typography.dart';
 
-/// A Material 3 bottom sheet for adding a new shopping request.
-/// Includes support for private requests with a member picker excluding the current user.
 class AddRequestBottomSheet extends ConsumerStatefulWidget {
   const AddRequestBottomSheet({super.key});
 
@@ -17,258 +15,343 @@ class AddRequestBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _itemNameController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _quantityController = TextEditingController();
+  String? _selectedUnit;
   bool _isPrivate = false;
   String? _selectedMemberId;
   bool _isSubmitting = false;
 
+  static const List<String> _unitOptions = [
+    'pcs', 'kg', 'g', 'L', 'mL', 'tsp', 'tbsp', 'cup',
+  ];
+
   @override
   void dispose() {
-    _itemNameController.dispose();
+    _nameController.dispose();
+    _quantityController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    final activeGroup = ref.read(activeGroupProvider);
-    if (activeGroup == null) return;
+    final itemName = _nameController.text.trim();
+    if (itemName.isEmpty) return;
 
     if (_isPrivate && _selectedMemberId == null) {
-      final l10n = AppLocalizations.of(context);
-      if (l10n != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.add_request_private_recipient_required),
-          ),
-        );
-      }
+      final localizations = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(localizations.add_request_private_recipient_required),
+          backgroundColor: AppColors.primary,
+        ),
+      );
       return;
     }
-
-    final trimmedName = _itemNameController.text.trim();
-    if (trimmedName.isEmpty) return;
 
     setState(() => _isSubmitting = true);
 
-    await ref.read(requestControllerProvider.notifier).createRequest(
-          itemName: trimmedName,
+    final result = await ref.read(requestControllerProvider.notifier).createRequest(
+          itemName: itemName,
           isPrivate: _isPrivate,
-          privateTo: _isPrivate ? _selectedMemberId : null,
+          privateTo: _selectedMemberId,
+          quantity: _quantityController.text.trim().isNotEmpty
+              ? _quantityController.text.trim()
+              : null,
+          unit: _selectedUnit,
         );
 
-    final hasError = ref.read(requestControllerProvider).hasError;
-    if (!hasError && mounted) {
-      Navigator.of(context).pop();
-    }
     if (mounted) {
-      setState(() => _isSubmitting = false);
+      result.fold(
+        (failure) {
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        },
+        (_) {
+          Navigator.of(context).pop();
+        },
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final activeGroup = ref.watch(activeGroupProvider);
-    final authUser = ref.watch(authProvider).value;
-
-    ref.listen<AsyncValue<List<RequestModel>>>(
-      requestControllerProvider,
-      (previous, next) {
-        if (next.hasError) {
-          setState(() => _isSubmitting = false);
-        }
-      },
-    );
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final localizations = AppLocalizations.of(context)!;
 
     if (activeGroup == null) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(l10n.shopping_list_no_active_group),
-      );
+      return const SizedBox.shrink();
     }
 
-    return Padding(
+    final membersAsync = ref.watch(groupMembersProvider(activeGroup.id));
+
+    return Container(
       padding: EdgeInsets.only(
-        left: 16.0,
-        right: 16.0,
-        top: 16.0,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: bottomPadding + 24,
       ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      decoration: const BoxDecoration(
+        color: Color(0xFF141414),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        border: Border(
+          top: BorderSide(
+            color: Color(0xFF242424),
+            width: 1.0,
+          ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF555555),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          Text(
+            localizations.add_request_title,
+            style: AppTypography.headlineLg,
+          ),
+          const SizedBox(height: 20),
+
+          // Name Input
+          TextField(
+            controller: _nameController,
+            style: AppTypography.bodyLg,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: localizations.add_request_item_name_hint,
+              hintStyle: TextStyle(
+                color: AppColors.secondary.withOpacity(0.4),
+              ),
+              filled: true,
+              fillColor: const Color(0xFF1A1A1A),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2A2A2A),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Quantity & Unit Row
+          Row(
             children: [
-              Text(
-                l10n.add_request_title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+              // Quantity Input
+              Expanded(
+                flex: 2,
+                child: TextField(
+                  controller: _quantityController,
+                  style: AppTypography.bodyLg,
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(
+                    labelText: localizations.add_request_quantity_label,
+                    hintText: localizations.add_request_quantity_hint,
+                    hintStyle: TextStyle(
+                      color: AppColors.secondary.withOpacity(0.4),
                     ),
-              ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                controller: _itemNameController,
-                autofocus: true,
-                enabled: !_isSubmitting,
-                decoration: InputDecoration(
-                  labelText: l10n.add_request_item_name_label,
-                  border: const OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return l10n.add_request_item_name_empty;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16.0),
-              SwitchListTile(
-                title: Text(l10n.add_request_private_label),
-                value: _isPrivate,
-                onChanged: _isSubmitting
-                    ? null
-                    : (val) {
-                        setState(() {
-                          _isPrivate = val;
-                          if (!val) {
-                            _selectedMemberId = null;
-                          }
-                        });
-                      },
-              ),
-              if (_isPrivate) ...[
-                const SizedBox(height: 8.0),
-                Text(
-                  l10n.add_request_private_to_label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    labelStyle: TextStyle(
+                      color: AppColors.secondary.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF1A1A1A),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF2A2A2A),
                       ),
-                ),
-                const SizedBox(height: 8.0),
-                ref.watch(groupMembersProvider(activeGroup.id)).when(
-                      data: (members) {
-                        // Member Picker Exclusion Rule: filter out current user (auth.uid())
-                        final otherMembers = members
-                            .where((m) => m.user.id != authUser?.id)
-                            .toList();
-
-                        if (otherMembers.isEmpty) {
-                          // Clean localized indicator fallback
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              l10n.shopping_list_no_items, // Use appropriate i18n
-                            ),
-                          );
-                        }
-
-                        // Set default selection if empty
-                        if (_selectedMemberId == null && otherMembers.isNotEmpty) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (mounted && _selectedMemberId == null) {
-                              setState(() {
-                                _selectedMemberId = otherMembers.first.user.id;
-                              });
-                            }
-                          });
-                        }
-
-                        return Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              height: 50,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: otherMembers.length,
-                                itemBuilder: (context, index) {
-                                  final member = otherMembers[index];
-                                  final isSelected = _selectedMemberId == member.user.id;
-
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: ChoiceChip(
-                                      avatar: CircleAvatar(
-                                        radius: 12,
-                                        child: Text(
-                                          member.user.displayName.isNotEmpty
-                                              ? member.user.displayName[0].toUpperCase()
-                                              : '?',
-                                        ),
-                                      ),
-                                      label: Text(member.user.displayName),
-                                      selected: isSelected,
-                                      onSelected: _isSubmitting
-                                          ? null
-                                          : (selected) {
-                                              if (selected) {
-                                                setState(() {
-                                                  _selectedMemberId = member.user.id;
-                                                });
-                                              }
-                                            },
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            if (_selectedMemberId == null) ...[
-                              const SizedBox(height: 8.0),
-                              Text(
-                                l10n.add_request_private_recipient_required,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ],
-                        );
-                      },
-                      loading: () => const Center(
-                        child: CircularProgressIndicator(),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
                       ),
-                      error: (err, _) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          l10n.errorGeneric,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Unit Dropdown
+              Expanded(
+                flex: 2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1A1A),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF2A2A2A),
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedUnit,
+                      isExpanded: true,
+                      hint: Text(
+                        localizations.add_request_unit_label,
+                        style: TextStyle(
+                          color: AppColors.secondary.withOpacity(0.4),
+                          fontSize: 14,
                         ),
                       ),
+                      dropdownColor: const Color(0xFF141414),
+                      style: AppTypography.bodyLg,
+                      items: _unitOptions.map((unit) {
+                        return DropdownMenuItem<String>(
+                          value: unit,
+                          child: Text(unit),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedUnit = val;
+                        });
+                      },
                     ),
-              ],
-              const SizedBox(height: 24.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-                    child: Text(l10n.add_request_cancel_button),
                   ),
-                  const SizedBox(width: 8.0),
-                  ElevatedButton(
-                    onPressed: (_isSubmitting || (_isPrivate && _selectedMemberId == null)) ? null : _submit,
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.add_request_submit_button),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+
+          // Private Toggle Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.lock_outline,
+                    color: AppColors.secondary.withOpacity(0.7),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    localizations.request_card_private_label,
+                    style: AppTypography.bodyLg,
+                  ),
+                ],
+              ),
+              Switch(
+                value: _isPrivate,
+                activeColor: AppColors.primary,
+                onChanged: (val) {
+                  setState(() {
+                    _isPrivate = val;
+                    if (!val) {
+                      _selectedMemberId = null;
+                    }
+                  });
+                },
+              ),
+            ],
+          ),
+
+          // Member Picker dropdown if private is active
+          if (_isPrivate) ...[
+            const SizedBox(height: 16),
+            membersAsync.when(
+              data: (members) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1A1A),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF2A2A2A),
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedMemberId,
+                      hint: Text(
+                        localizations.add_request_private_to_label,
+                        style: TextStyle(
+                          color: AppColors.secondary.withOpacity(0.4),
+                        ),
+                      ),
+                      dropdownColor: const Color(0xFF141414),
+                      style: AppTypography.bodyLg,
+                      isExpanded: true,
+                      items: members.map((m) {
+                        return DropdownMenuItem<String>(
+                          value: m.user.id,
+                          child: Text(m.user.displayName),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedMemberId = val;
+                        });
+                      },
+                    ),
+                  ),
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+              error: (err, _) => Text('${localizations.errorGeneric}: $err'),
+            ),
+          ],
+          const SizedBox(height: 24),
+
+          // Submit / Add Button
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isSubmitting
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      localizations.add_request_submit_button,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ),
+          // Bottom safe area padding to prevent overlap with navigation bar
+          SizedBox(
+            height: MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16.0,
+          ),
+        ],
       ),
     );
   }
 }
-

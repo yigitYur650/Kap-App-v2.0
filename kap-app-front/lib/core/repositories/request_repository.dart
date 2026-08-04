@@ -20,16 +20,24 @@ abstract class RequestRepository {
     required String itemName,
     bool isPrivate = false,
     String? privateTo,
+    String? quantity,
+    String? unit,
   });
 
   /// Updates status of a shopping request ('pending', 'done').
+  /// Requires [groupId] to verify the request belongs to the current active group,
+  /// providing defense-in-depth against cross-group mutations.
   Future<Either<Failure, void>> updateRequestStatus({
     required String requestId,
     required String status,
+    required String groupId,
   });
 
   /// Deletes (soft-deletes) a shopping request.
+  /// Requires [groupId] to verify the request belongs to the current active group,
+  /// providing defense-in-depth against cross-group mutations.
   Future<Either<Failure, void>> deleteRequest({
     required String requestId,
+    required String groupId,
   });
 }
