@@ -71,11 +71,11 @@ class SupabaseGroupRepository implements GroupRepository {
     }
 
     try {
-      // 1. Query groups by join_code to find the target group
+      // 1. Query groups by join_code to find the target group (case-insensitive)
       final groupResponse = await _supabaseClient
           .from('groups')
           .select('id')
-          .eq('join_code', joinCode)
+          .ilike('join_code', joinCode.trim())
           .isFilter('deleted_at', null)
           .maybeSingle();
 

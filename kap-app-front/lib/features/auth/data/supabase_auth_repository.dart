@@ -36,8 +36,11 @@ class SupabaseAuthRepository implements AuthRepository {
 
       // 2. Fetch the unique sharing code from local Go backend using authenticated request
       const backendUrl = String.fromEnvironment(
-        'BACKEND_URL',
-        defaultValue: 'http://localhost:8080',
+        'GO_BACKEND_URL',
+        defaultValue: String.fromEnvironment(
+          'BACKEND_URL',
+          defaultValue: 'http://localhost:8080',
+        ),
       );
 
       final jwtToken = _supabaseClient.auth.currentSession?.accessToken;
@@ -127,11 +130,58 @@ class SupabaseAuthRepository implements AuthRepository {
       }
 
       // 2. Fetch user profile from public.users table
-      final profile = await _supabaseClient
+      var profile = await _supabaseClient
           .from('users')
           .select()
           .eq('id', user.id)
           .maybeSingle();
+
+      // Recovery: If auth user exists but public.users profile is missing (e.g. previous signup failed at step 2/3)
+      if (profile == null) {
+        final displayName = (user.userMetadata?['display_name'] as String?) ??
+            email.split('@').first;
+
+        final jwtToken = _supabaseClient.auth.currentSession?.accessToken;
+        if (jwtToken != null) {
+          try {
+            const backendUrl = String.fromEnvironment(
+              'GO_BACKEND_URL',
+              defaultValue: String.fromEnvironment(
+                'BACKEND_URL',
+                defaultValue: 'http://localhost:8080',
+              ),
+            );
+
+            final httpResponse = await _httpClient.post(
+              Uri.parse('$backendUrl/api/v1/auth/unique-code'),
+              headers: {
+                'Authorization': 'Bearer $jwtToken',
+                'Content-Type': 'application/json',
+              },
+            );
+
+            if (httpResponse.statusCode == 200) {
+              final responseData = jsonDecode(httpResponse.body) as Map<String, dynamic>;
+              final uniqueCode = responseData['unique_code'] as String?;
+              if (uniqueCode != null && uniqueCode.isNotEmpty) {
+                await _supabaseClient.from('users').insert({
+                  'id': user.id,
+                  'display_name': displayName,
+                  'unique_code': uniqueCode,
+                  'email': email,
+                  'email_verified': false,
+                });
+
+                profile = await _supabaseClient
+                    .from('users')
+                    .select()
+                    .eq('id', user.id)
+                    .maybeSingle();
+              }
+            }
+          } catch (_) {}
+        }
+      }
 
       if (profile == null) {
         return const Left(UnknownFailure('User profile not found in database'));

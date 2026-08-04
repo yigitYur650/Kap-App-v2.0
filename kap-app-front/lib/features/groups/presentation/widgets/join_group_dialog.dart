@@ -30,7 +30,7 @@ class _JoinGroupDialogState extends ConsumerState<JoinGroupDialog> {
     setState(() => _isLoading = true);
     final repo = ref.read(groupRepositoryProvider);
     final result = await repo.joinGroup(
-      joinCode: code.toLowerCase(),
+      joinCode: code.toUpperCase(),
     );
 
     if (!mounted) return;
