@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -58,7 +59,7 @@ func IsUniqueViolation(err error) bool {
 
 // CheckCodeExists queries public.users REST endpoint via Supabase API to check if a code is taken.
 func (c *Client) CheckCodeExists(code string) (bool, error) {
-	reqURL := fmt.Sprintf("%s/rest/v1/users?unique_code=eq.%s&select=id", c.URL, code)
+	reqURL := fmt.Sprintf("%s/rest/v1/users?unique_code=eq.%s&select=id", c.URL, url.QueryEscape(code))
 	req, err := http.NewRequest(http.MethodGet, reqURL, nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create check request: %w", err)
@@ -91,7 +92,7 @@ func (c *Client) CheckCodeExists(code string) (bool, error) {
 // which is parsed into a PostgresError with code "23505" (unique_violation).
 func (c *Client) InsertCode(userID, code string) error {
 	// PATCH /rest/v1/users?id=eq.{userID} with body {"unique_code": "{code}"}
-	reqURL := fmt.Sprintf("%s/rest/v1/users?id=eq.%s", c.URL, userID)
+	reqURL := fmt.Sprintf("%s/rest/v1/users?id=eq.%s", c.URL, url.QueryEscape(userID))
 
 	body := map[string]string{
 		"unique_code": code,

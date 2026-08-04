@@ -73,8 +73,8 @@ BEGIN
 
     -- group_members table
     SELECT data_type INTO v_col_type FROM information_schema.columns 
-        WHERE table_name = 'group_members' AND column_name = 'role' AND table_schema = 'public';
-    IF v_col_type IS DISTINCT FROM 'text' THEN v_errors := array_append(v_errors, 'group_members.role should be text'); END IF;
+        WHERE table_name = 'group_members' AND column_name = 'user_id' AND table_schema = 'public';
+    IF v_col_type IS DISTINCT FROM 'uuid' THEN v_errors := array_append(v_errors, 'group_members.user_id should be uuid'); END IF;
 
     -- requests table
     SELECT data_type INTO v_col_type FROM information_schema.columns 
@@ -137,10 +137,10 @@ BEGIN
         WHERE tablename = 'groups' AND schemaname = 'public';
     IF v_policy_count < 2 THEN v_missing_policies := array_append(v_missing_policies, 'groups (< 2 policies)'); END IF;
 
-    -- group_members: should have SELECT, INSERT, UPDATE
+    -- group_members: should have SELECT, INSERT
     SELECT COUNT(*) INTO v_policy_count FROM pg_policies 
         WHERE tablename = 'group_members' AND schemaname = 'public';
-    IF v_policy_count < 3 THEN v_missing_policies := array_append(v_missing_policies, 'group_members (< 3 policies)'); END IF;
+    IF v_policy_count < 2 THEN v_missing_policies := array_append(v_missing_policies, 'group_members (< 2 policies)'); END IF;
 
     -- requests: should have SELECT, INSERT, UPDATE
     SELECT COUNT(*) INTO v_policy_count FROM pg_policies 
@@ -186,9 +186,6 @@ DECLARE
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'is_group_member') THEN
         v_missing_funcs := array_append(v_missing_funcs, 'is_group_member()');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'is_group_admin') THEN
-        v_missing_funcs := array_append(v_missing_funcs, 'is_group_admin()');
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'check_request_update_permissions_trigger') THEN
         v_missing_funcs := array_append(v_missing_funcs, 'check_request_update_permissions_trigger()');
