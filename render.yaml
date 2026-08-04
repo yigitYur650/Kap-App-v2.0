@@ -1,0 +1,18 @@
+# ============================================================
+# KAP-APP v2.0 — Render Infrastructure Blueprint Configuration
+# ============================================================
+services:
+  - type: web
+    name: kap-app-backend
+    env: docker
+    dockerContext: ./kap-app-backend
+    dockerfilePath: ./kap-app-backend/Dockerfile
+    region: frankfurt
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
