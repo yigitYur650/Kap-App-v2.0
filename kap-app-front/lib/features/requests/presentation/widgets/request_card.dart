@@ -17,18 +17,22 @@ class RequestCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDone = request.status == 'done';
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOutCubic,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF141414),
+        color: isDone ? const Color(0xFF0F1011) : const Color(0xFF141414),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: Colors.white.withOpacity(0.05),
+          color: isDone
+              ? AppColors.primary.withOpacity(0.15)
+              : Colors.white.withOpacity(0.05),
         ),
       ),
       child: Row(
         children: [
-          // Checkbox status toggle
+          // Animated Checkbox status toggle
           GestureDetector(
             onTap: () async {
               final result = await ref.read(requestControllerProvider.notifier).updateRequestStatus(
@@ -47,24 +51,38 @@ class RequestCard extends ConsumerWidget {
                 (_) {},
               );
             },
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOutCubic,
               width: 24,
               height: 24,
               decoration: BoxDecoration(
                 color: isDone ? AppColors.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: isDone ? AppColors.primary : const Color(0xFF2A2A2A),
+                  color: isDone ? AppColors.primary : const Color(0xFF333333),
                   width: 2,
                 ),
               ),
-              child: isDone
-                  ? const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 16,
-                    )
-                  : null,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                child: isDone
+                    ? const Icon(
+                        Icons.check_rounded,
+                        key: ValueKey('check_icon'),
+                        color: Colors.white,
+                        size: 16,
+                      )
+                    : const SizedBox(key: ValueKey('empty_icon')),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -79,14 +97,17 @@ class RequestCard extends ConsumerWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        request.itemName,
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOutCubic,
                         style: AppTypography.bodyLg.copyWith(
-                          decoration: isDone ? TextDecoration.lineThrough : null,
+                          decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                          decorationColor: AppColors.secondary.withOpacity(0.5),
                           color: isDone
                               ? AppColors.secondary.withOpacity(0.4)
                               : AppColors.text,
                         ),
+                        child: Text(request.itemName),
                       ),
                     ),
                     if (request.isPrivate) ...[
@@ -103,10 +124,15 @@ class RequestCard extends ConsumerWidget {
                 if (request.quantity != null || request.unit != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '${request.quantity ?? ''}${request.quantity != null && request.unit != null ? ' ' : ''}${request.unit ?? ''}',
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 250),
                       style: AppTypography.labelSm.copyWith(
-                        color: AppColors.secondary.withOpacity(0.5),
+                        color: isDone
+                            ? AppColors.secondary.withOpacity(0.3)
+                            : AppColors.secondary.withOpacity(0.5),
+                      ),
+                      child: Text(
+                        '${request.quantity ?? ''}${request.quantity != null && request.unit != null ? ' ' : ''}${request.unit ?? ''}',
                       ),
                     ),
                   ),
@@ -118,9 +144,9 @@ class RequestCard extends ConsumerWidget {
           const SizedBox(width: 8),
           IconButton(
             icon: Icon(
-              Icons.delete_outline,
+              Icons.delete_outline_rounded,
               size: 20,
-              color: AppColors.primary.withOpacity(0.8),
+              color: AppColors.primary.withOpacity(0.7),
             ),
             onPressed: () async {
               final result = await ref.read(requestControllerProvider.notifier).deleteRequest(

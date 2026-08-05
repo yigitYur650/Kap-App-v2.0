@@ -41,12 +41,26 @@ class ShellScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Content with horizontal swipe gesture navigation
+          // Content with horizontal swipe gesture navigation & soft page transitions
           Positioned.fill(
             child: GestureDetector(
               onHorizontalDragEnd: _handleSwipe,
               behavior: HitTestBehavior.translucent,
-              child: navigationShell,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey(navigationShell.currentIndex),
+                  child: navigationShell,
+                ),
+              ),
             ),
           ),
           
