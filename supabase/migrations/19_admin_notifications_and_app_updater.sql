@@ -24,12 +24,12 @@ AS $$
     );
 $$;
 
--- RLS for system_admins: Only admins can view the admin list
+-- RLS for system_admins: Users can check if they themselves are system admins
 DROP POLICY IF EXISTS "system_admins_select_policy" ON public.system_admins;
 CREATE POLICY "system_admins_select_policy"
 ON public.system_admins FOR SELECT
 TO authenticated
-USING (public.is_system_admin());
+USING (user_id = auth.uid());
 
 
 -- 2. Create app_versions table (OTA In-App Auto-Updater)
