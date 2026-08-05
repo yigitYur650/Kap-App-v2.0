@@ -287,6 +287,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     try {
       final client = Supabase.instance.client;
       final currentUser = client.auth.currentUser;
+      final jwtToken = client.auth.currentSession?.accessToken;
 
       // 1. Record in Supabase database
       await client.from('push_notifications').insert({
@@ -297,32 +298,29 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         'created_by': currentUser?.id,
       });
 
-      // 2. Instant 0-second Google FCM Push to ALL devices (open or closed!)
-      const fcmKey = 'AIzaSyBFsCBCnESnkgw3LoYHqzZWBIZ1dE4-J-I';
+      // 2. Dispatch via Go Backend (server-to-server, bypasses browser CORS)
+      const backendUrl = String.fromEnvironment(
+        'GO_BACKEND_URL',
+        defaultValue: String.fromEnvironment(
+          'BACKEND_URL',
+          defaultValue: 'http://localhost:8080',
+        ),
+      );
+
       try {
         await http.post(
-          Uri.parse('https://fcm.googleapis.com/fcm/send'),
+          Uri.parse('$backendUrl/api/v1/admin/push-notification'),
           headers: {
+            'Authorization': 'Bearer $jwtToken',
             'Content-Type': 'application/json',
-            'Authorization': 'key=$fcmKey',
           },
           body: jsonEncode({
-            'to': '/topics/all_users',
-            'priority': 'high',
-            'notification': {
-              'title': title,
-              'body': body,
-              'sound': 'default',
-            },
-            'data': {
-              'title': title,
-              'body': body,
-              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-            },
+            'title': title,
+            'body': body,
           }),
         );
-      } catch (fcmError) {
-        debugPrint('FCM direct push warning: $fcmError');
+      } catch (backendErr) {
+        debugPrint('Go Backend push dispatch warning: $backendErr');
       }
 
       if (!mounted) return;

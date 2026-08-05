@@ -71,6 +71,7 @@ func main() {
 	adminGroup := v1.Group("/admin", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL), middleware.AdminRequired(sbClient))
 	adminGroup.Post("/app-version", versionHandler.CreateVersionHandler)
 	adminGroup.Delete("/app-version/:id", versionHandler.DeleteVersionHandler)
+	adminGroup.Post("/push-notification", versionHandler.SendPushNotificationHandler)
 
 	// Protected Routes Group
 	protectedGroup := v1.Group("/protected", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))
