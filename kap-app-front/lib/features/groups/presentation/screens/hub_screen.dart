@@ -11,6 +11,8 @@ import 'package:kap_app_front/shared/theme/app_colors.dart';
 import 'package:kap_app_front/shared/theme/app_shapes.dart';
 import 'package:kap_app_front/shared/theme/app_typography.dart';
 
+import 'package:kap_app_front/features/updater/presentation/app_update_checker.dart';
+
 class HubScreen extends ConsumerWidget {
   const HubScreen({super.key});
 
@@ -33,6 +35,10 @@ class HubScreen extends ConsumerWidget {
     final activeGroup = ref.watch(activeGroupProvider);
     final size = MediaQuery.of(context).size;
     final localizations = AppLocalizations.of(context)!;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppUpdateChecker.check(context);
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,

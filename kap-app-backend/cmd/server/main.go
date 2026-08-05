@@ -54,14 +54,22 @@ func main() {
 
 	// Handlers
 	authHandler := handler.NewAuthHandler(authSvc)
+	versionHandler := handler.NewAppVersionHandler(sbClient)
 
 	// API Routing Groups
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 
+	// Public App Update Route
+	v1.Get("/app/check-update", versionHandler.CheckUpdateHandler)
+
 	// Protected Auth Routes
 	authGroup := v1.Group("/auth", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))
 	authHandler.RegisterRoutes(authGroup)
+
+	// Protected System Admin Routes
+	adminGroup := v1.Group("/admin", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL), middleware.AdminRequired(sbClient))
+	adminGroup.Post("/app-version", versionHandler.CreateVersionHandler)
 
 	// Protected Routes Group
 	protectedGroup := v1.Group("/protected", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))

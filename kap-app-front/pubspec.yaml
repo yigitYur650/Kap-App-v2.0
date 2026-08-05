@@ -23,6 +23,8 @@ dependencies:
     sdk: flutter
   intl: ^0.20.2
   shadcn_flutter: ^0.0.52
+  url_launcher: ^6.3.1
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
