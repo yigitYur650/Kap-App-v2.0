@@ -1,15 +1,17 @@
 -- ============================================================
--- KAP-APP v2.0 — Migration 18: Complete RLS Purge & Reset for requests Table
+-- KAP-APP v2.0 — Migration 18: Complete RLS Purge & Soft-Delete Fix for requests Table
 -- ============================================================
 -- Problem:
--- Legacy or duplicate RLS policies on `public.requests` (e.g. with `requested_by = auth.uid()`
--- in WITH CHECK) caused PostgreSQL to reject updates on requests created by other group members,
--- throwing: "new row violates row-level security policy for table requests".
+-- When soft-deleting a request (`deleted_at = NOW()`), PostgREST checks the SELECT
+-- policy on the updated row. If SELECT policy requires `deleted_at IS NULL`, setting
+-- `deleted_at = NOW()` causes the updated row to fail SELECT RLS, throwing:
+-- "new row violates row-level security policy for table requests".
 --
 -- Solution:
 -- 1. Dynamically purge ALL existing RLS policies on `public.requests` regardless of name.
--- 2. Re-create clean, non-conflicting policies for SELECT, INSERT, UPDATE, DELETE.
--- 3. Notify PostgREST to instantly reload schema cache.
+-- 2. Remove `deleted_at IS NULL` constraint from SELECT RLS policy (client filters soft-deleted).
+-- 3. Re-create clean, non-conflicting policies for SELECT, INSERT, UPDATE, DELETE.
+-- 4. Notify PostgREST to instantly reload schema cache.
 
 -- Step 1: Dynamically purge ALL policies on public.requests table
 DO $$
@@ -28,14 +30,11 @@ END $$;
 -- Step 2: Ensure RLS is enabled
 ALTER TABLE public.requests ENABLE ROW LEVEL SECURITY;
 
--- Step 3: Re-create clean SELECT policy
+-- Step 3: Re-create clean SELECT policy (allows members to read, soft-delete filtering done by client/query)
 CREATE POLICY "requests_select_policy"
 ON public.requests FOR SELECT
 TO authenticated
-USING (
-    public.is_group_member(group_id) 
-    AND deleted_at IS NULL
-);
+USING (public.is_group_member(group_id));
 
 -- Step 4: Re-create clean INSERT policy
 CREATE POLICY "requests_insert_policy"
@@ -46,7 +45,7 @@ WITH CHECK (
     AND requested_by = auth.uid()
 );
 
--- Step 5: Re-create clean UPDATE policy (All group members can update status/check boxes)
+-- Step 5: Re-create clean UPDATE policy (All group members can update status/check boxes/soft-delete)
 CREATE POLICY "requests_update_policy"
 ON public.requests FOR UPDATE
 TO authenticated
@@ -73,5 +72,5 @@ BEGIN
     ) THEN
         RAISE EXCEPTION 'Migration 18 failed: requests_update_policy was not created';
     END IF;
-    RAISE NOTICE 'Migration 18 verified: ALL legacy policies purged and clean RLS policies applied!';
+    RAISE NOTICE 'Migration 18 verified: Soft-delete RLS fix applied successfully!';
 END $$;
