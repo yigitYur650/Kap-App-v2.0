@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.kap_app_front"
+    namespace = "com.kapapp.kap_app_front"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -17,7 +17,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.kap_app_front"
+        applicationId = "com.kapapp.kap_app_front"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
