@@ -11,8 +11,8 @@ import 'package:kap_app_front/shared/theme/app_colors.dart';
 import 'package:kap_app_front/shared/theme/app_shapes.dart';
 import 'package:kap_app_front/shared/theme/app_typography.dart';
 import 'package:kap_app_front/shared/widgets/kap_app_brand_logo.dart';
-
 import 'package:kap_app_front/features/updater/presentation/app_update_checker.dart';
+import 'package:kap_app_front/core/services/notification_service.dart';
 
 class HubScreen extends ConsumerWidget {
   const HubScreen({super.key});
@@ -39,6 +39,7 @@ class HubScreen extends ConsumerWidget {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppUpdateChecker.check(context);
+      NotificationService().startListening(context);
     });
 
     return Scaffold(
