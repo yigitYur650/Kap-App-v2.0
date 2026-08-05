@@ -118,8 +118,12 @@ func (h *AppVersionHandler) SendPushNotificationHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Dispatch server-to-server FCM push to Google FCM
-	fcmKey := "AIzaSyBFsCBCnESnkgw3LoYHqzZWBIZ1dE4-J-I"
+	// Dispatch server-to-server FCM push to Google FCM using Tarayıcı Anahtarı (Browser Key)
+	fcmKeys := []string{
+		"AIzaSyBXmavb3JjPURUXDB8LVFPRFiYFV_3gWuU", // Tarayıcı Anahtarı (Firebase tarafından otomatik olarak oluşturulmuştur)
+		"AIzaSyBFsCBCnESnkgw3LoYHqzZWBIZ1dE4-J-I", // Android Anahtarı
+	}
+
 	payload := map[string]interface{}{
 		"to":       "/topics/all_users",
 		"priority": "high",
@@ -136,19 +140,22 @@ func (h *AppVersionHandler) SendPushNotificationHandler(c *fiber.Ctx) error {
 	}
 
 	jsonBytes, _ := json.Marshal(payload)
-	httpReq, err := http.NewRequest("POST", "https://fcm.googleapis.com/fcm/send", bytes.NewBuffer(jsonBytes))
-	if err == nil {
-		httpReq.Header.Set("Content-Type", "application/json")
-		httpReq.Header.Set("Authorization", "key="+fcmKey)
 
-		client := &http.Client{Timeout: 10 * time.Second}
-		resp, err := client.Do(httpReq)
+	for _, fcmKey := range fcmKeys {
+		httpReq, err := http.NewRequest("POST", "https://fcm.googleapis.com/fcm/send", bytes.NewBuffer(jsonBytes))
 		if err == nil {
-			defer resp.Body.Close()
-			bodyBytes, _ := io.ReadAll(resp.Body)
-			log.Printf("[FCM Server-to-Server Result] status=%d body=%s", resp.StatusCode, string(bodyBytes))
-		} else {
-			log.Printf("[FCM Server-to-Server Error] %v", err)
+			httpReq.Header.Set("Content-Type", "application/json")
+			httpReq.Header.Set("Authorization", "key="+fcmKey)
+
+			client := &http.Client{Timeout: 10 * time.Second}
+			resp, err := client.Do(httpReq)
+			if err == nil {
+				defer resp.Body.Close()
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				log.Printf("[FCM Server-to-Server Result (Key: %s...)] status=%d body=%s", fcmKey[:10], resp.StatusCode, string(bodyBytes))
+			} else {
+				log.Printf("[FCM Server-to-Server Error] %v", err)
+			}
 		}
 	}
 
