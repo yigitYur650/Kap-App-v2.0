@@ -25,7 +25,7 @@ dependencies:
   shadcn_flutter: ^0.0.52
   url_launcher: ^6.3.1
   http: ^1.2.2
-  package_info_plus: ^8.0.0
+  package_info_plus: ^10.2.1
   path_provider: ^2.1.2
   open_filex: ^4.5.0
 
