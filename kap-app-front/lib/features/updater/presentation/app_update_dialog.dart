@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/app_version_model.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -207,7 +208,13 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
         actions: [
           if (!widget.version.isMandatory && !_isDownloading)
             TextButton(
-              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setInt('dismissed_version_code', widget.version.versionCode);
+                if (context.mounted) {
+                  Navigator.of(context, rootNavigator: true).pop();
+                }
+              },
               child: const Text('Daha Sonra', style: TextStyle(color: Colors.white54, fontSize: 16)),
             ),
           if (!_isDownloading)
