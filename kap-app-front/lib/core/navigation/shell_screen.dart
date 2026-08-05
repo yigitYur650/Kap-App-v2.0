@@ -49,46 +49,17 @@ class _ShellScreenState extends State<ShellScreen> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final localizations = AppLocalizations.of(context)!;
     final currentIndex = widget.navigationShell.currentIndex;
-    final isMovingRight = currentIndex >= _previousIndex;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Content with Instagram-style horizontal slide & fade transitions
+          // Content area with swipe gesture support
           Positioned.fill(
             child: GestureDetector(
               onHorizontalDragEnd: _handleSwipe,
               behavior: HitTestBehavior.translucent,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) {
-                  final isNewChild = (child.key as ValueKey<int>?)?.value == currentIndex;
-                  final beginOffset = isNewChild
-                      ? (isMovingRight ? const Offset(0.25, 0.0) : const Offset(-0.25, 0.0))
-                      : (isMovingRight ? const Offset(-0.25, 0.0) : const Offset(0.25, 0.0));
-
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: beginOffset,
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.fastOutSlowIn,
-                    )),
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
-                  );
-                },
-                child: KeyedSubtree(
-                  key: ValueKey(currentIndex),
-                  child: widget.navigationShell,
-                ),
-              ),
+              child: widget.navigationShell,
             ),
           ),
           
