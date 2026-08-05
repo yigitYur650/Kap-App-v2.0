@@ -8,6 +8,7 @@ import 'package:kap_app_front/features/groups/presentation/providers/active_grou
 import 'package:kap_app_front/features/groups/presentation/providers/user_groups_provider.dart';
 import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:kap_app_front/shared/theme/app_colors.dart';
+import 'package:kap_app_front/shared/theme/app_typography.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:kap_app_front/features/updater/presentation/app_update_checker.dart';
 
