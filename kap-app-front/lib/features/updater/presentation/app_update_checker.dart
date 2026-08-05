@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +14,8 @@ class AppUpdateChecker {
   /// Checks for available updates and shows the update dialog if a newer version exists.
   /// Set [isManual] = true for user-triggered check from Settings.
   static Future<void> check(BuildContext context, {bool isManual = false}) async {
+    // Web browsers do not download/install APK updates
+    if (kIsWeb && !isManual) return;
     if (isManual && context.mounted) {
       _alreadyShownVersionCode = null;
       ScaffoldMessenger.of(context).showSnackBar(
