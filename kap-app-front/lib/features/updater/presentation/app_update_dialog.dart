@@ -14,16 +14,32 @@ class AppUpdateDialog extends StatelessWidget {
 
   Future<void> _downloadAndInstall(BuildContext context) async {
     final url = Uri.parse(version.apkUrl);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('İndirme bağlantısı açılamadı.'),
-            backgroundColor: AppColors.primary,
-          ),
+    try {
+      final launched = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.platformDefault,
         );
+      }
+    } catch (_) {
+      try {
+        await launchUrl(
+          url,
+          mode: LaunchMode.inAppWebView,
+        );
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('İndirme bağlantısı açılamadı: $e'),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
       }
     }
   }
@@ -109,8 +125,8 @@ class AppUpdateDialog extends StatelessWidget {
         actions: [
           if (!version.isMandatory)
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Daha Sonra', style: TextStyle(color: Colors.white54)),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+              child: const Text('Daha Sonra', style: TextStyle(color: Colors.white54, fontSize: 16)),
             ),
           ElevatedButton.icon(
             onPressed: () => _downloadAndInstall(context),
