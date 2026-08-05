@@ -73,7 +73,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
       }
 
       // Trigger native Package Installer
-      final result = await OpenFilePlus.open(
+      final result = await OpenFile.open(
         filePath,
         type: 'application/vnd.android.package-archive',
       );
