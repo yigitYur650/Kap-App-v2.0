@@ -1,0 +1,5 @@
+# Service account credentials
+service-account.json
+*.json
+!config.json
+*.exe
