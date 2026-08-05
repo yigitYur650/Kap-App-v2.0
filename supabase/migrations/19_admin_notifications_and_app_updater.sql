@@ -98,10 +98,10 @@ USING (public.is_system_admin())
 WITH CHECK (public.is_system_admin());
 
 
--- 4. Create Public Supabase Storage Bucket for App Releases
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('app-releases', 'app-releases', true)
-ON CONFLICT (id) DO NOTHING;
+-- 4. Create Public Supabase Storage Bucket for App Releases (Limit set to 500 MB)
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('app-releases', 'app-releases', true, 524288000)
+ON CONFLICT (id) DO UPDATE SET file_size_limit = 524288000;
 
 -- Storage Policies for app-releases bucket
 DROP POLICY IF EXISTS "app_releases_public_read" ON storage.objects;
