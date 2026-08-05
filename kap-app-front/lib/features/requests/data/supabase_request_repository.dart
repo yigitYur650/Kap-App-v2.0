@@ -43,15 +43,38 @@ class SupabaseRequestRepository implements RequestRepository {
   }
 
   @override
-  Stream<List<RequestModel>> getRequestsStream({required String groupId}) {
-    return _supabaseClient
-        .from('requests')
-        .stream(primaryKey: ['id'])
-        .eq('group_id', groupId)
-        .map((list) => list
-            .map((json) => RequestModel.fromJson(json))
-            .where((r) => r.deletedAt == null)
-            .toList());
+  Stream<List<RequestModel>> getRequestsStream({required String groupId}) async* {
+    try {
+      yield* _supabaseClient
+          .from('requests')
+          .stream(primaryKey: ['id'])
+          .eq('group_id', groupId)
+          .map((list) => list
+              .map((json) => RequestModel.fromJson(json))
+              .where((r) => r.deletedAt == null)
+              .toList())
+          .handleError((error) async* {
+            final data = await _supabaseClient
+                .from('requests')
+                .select('*')
+                .eq('group_id', groupId)
+                .is_('deleted_at', null);
+            final items = (data as List)
+                .map((json) => RequestModel.fromJson(json))
+                .toList();
+            yield items;
+          });
+    } catch (_) {
+      final data = await _supabaseClient
+          .from('requests')
+          .select('*')
+          .eq('group_id', groupId)
+          .is_('deleted_at', null);
+      final items = (data as List)
+          .map((json) => RequestModel.fromJson(json))
+          .toList();
+      yield items;
+    }
   }
 
   @override
