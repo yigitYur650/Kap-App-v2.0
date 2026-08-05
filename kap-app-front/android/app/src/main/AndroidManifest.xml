@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 
     <application
-        android:label="kap_app_front"
+        android:label="Kap"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
