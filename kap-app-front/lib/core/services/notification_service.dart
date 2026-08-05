@@ -70,8 +70,10 @@ class NotificationService {
           }
         });
 
+        await messaging.subscribeToTopic('all_users');
+
         final fcmToken = await messaging.getToken();
-        debugPrint('[FCM Token] $fcmToken');
+        debugPrint('[FCM Token] $fcmToken (Subscribed to topic: all_users)');
       } catch (e) {
         debugPrint('[FCM] Initialization warning: $e');
       }
