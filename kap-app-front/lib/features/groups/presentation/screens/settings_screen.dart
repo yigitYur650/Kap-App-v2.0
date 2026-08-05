@@ -298,7 +298,8 @@ class SettingsScreen extends ConsumerWidget {
               future: PackageInfo.fromPlatform(),
               builder: (context, snapshot) {
                 final versionName = snapshot.data?.version ?? '2.2.0';
-                final buildNumber = snapshot.data?.buildNumber ?? '106';
+                final rawBuild = int.tryParse(snapshot.data?.buildNumber ?? '') ?? 102;
+                final cleanBuildNumber = (rawBuild >= 1000) ? (rawBuild % 1000) : rawBuild;
 
                 return Container(
                   width: double.infinity,
@@ -333,7 +334,7 @@ class SettingsScreen extends ConsumerWidget {
                                     style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
                                   ),
                                   Text(
-                                    'v$versionName (Build $buildNumber)',
+                                    'v$versionName (Build $cleanBuildNumber)',
                                     style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
                                 ],

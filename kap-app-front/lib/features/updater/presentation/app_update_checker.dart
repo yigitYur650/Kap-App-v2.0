@@ -29,14 +29,17 @@ class AppUpdateChecker {
 
     final latestVersion = await _repository.checkUpdate();
 
-    // Dynamic Installed Version Check
-    int currentCode = 100;
+    // Dynamic Installed Version Check & ABI Split Normalization (e.g. 2102 -> 102)
+    int rawCode = 100;
     String versionName = '1.0.0';
     try {
       final info = await PackageInfo.fromPlatform();
-      currentCode = int.tryParse(info.buildNumber) ?? 100;
+      rawCode = int.tryParse(info.buildNumber) ?? 100;
       versionName = info.version;
     } catch (_) {}
+
+    // Handle Gradle ABI split offsets (e.g., arm64 adds 2000 -> 2102 % 1000 = 102)
+    final int currentCode = (rawCode >= 1000) ? (rawCode % 1000) : rawCode;
 
     if (latestVersion == null) {
       if (isManual && context.mounted) {
