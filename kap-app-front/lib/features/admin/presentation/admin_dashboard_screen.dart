@@ -221,7 +221,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('Admin Paneli', style: AppTypography.headlineLg),
+          title: Text('Admin Paneli', style: AppTypography.headlineLg),
         ),
         body: Center(
           child: Column(

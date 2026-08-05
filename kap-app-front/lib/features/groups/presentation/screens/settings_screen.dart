@@ -289,7 +289,33 @@ class SettingsScreen extends ConsumerWidget {
               error: (err, _) => Text('${localizations.errorGeneric}: $err'),
             ),
 
-            const SizedBox(height: 32),
+            // Admin Dashboard Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.push('/admin');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1F2022),
+                  side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                icon: const Icon(Icons.admin_panel_settings_rounded, color: AppColors.primary),
+                label: const Text(
+                  '🛡️ Admin Paneline Git',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // Sign Out Button
             SizedBox(

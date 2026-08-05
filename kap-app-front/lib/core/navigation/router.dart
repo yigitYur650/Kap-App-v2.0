@@ -8,6 +8,7 @@ import 'package:kap_app_front/features/groups/presentation/screens/hub_screen.da
 import 'package:kap_app_front/features/groups/presentation/screens/settings_screen.dart';
 import 'package:kap_app_front/features/requests/presentation/screens/shopping_list_screen.dart';
 import 'package:kap_app_front/features/admin/presentation/admin_dashboard_screen.dart';
+import 'package:kap_app_front/core/navigation/shell_screen.dart';
 
 /// Provider that exposes the GoRouter configuration and rebuilds on auth state changes.
 final routerProvider = Provider<GoRouter>((ref) {
