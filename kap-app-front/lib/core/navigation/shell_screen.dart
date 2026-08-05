@@ -20,6 +20,18 @@ class ShellScreen extends StatelessWidget {
     );
   }
 
+  void _handleSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    final current = navigationShell.currentIndex;
+    if (velocity < -250 && current < 2) {
+      // Swiped Left -> Go to next tab
+      _onTabSelect(current + 1);
+    } else if (velocity > 250 && current > 0) {
+      // Swiped Right -> Go to previous tab
+      _onTabSelect(current - 1);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
@@ -29,9 +41,13 @@ class ShellScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Content
+          // Content with horizontal swipe gesture navigation
           Positioned.fill(
-            child: navigationShell,
+            child: GestureDetector(
+              onHorizontalDragEnd: _handleSwipe,
+              behavior: HitTestBehavior.translucent,
+              child: navigationShell,
+            ),
           ),
           
           // Bottom Navigation Bar

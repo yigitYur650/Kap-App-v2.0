@@ -77,7 +77,7 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
     return result;
   }
 
-  /// Updates the status of a shopping request ('pending', 'done').
+  /// Updates the status of a shopping request ('pending', 'done') with instant optimistic UI update.
   Future<Either<Failure, void>> updateRequestStatus({
     required String requestId,
     required String status,
@@ -87,6 +87,16 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
       return Left(ServerFailure('No active group selected.'));
     }
 
+    final previousList = state.value ?? [];
+
+    // 1. Optimistic UI update (0ms instant UI feedback)
+    state = AsyncData(
+      previousList
+          .map((r) => r.id == requestId ? r.copyWith(status: status) : r)
+          .toList(),
+    );
+
+    // 2. Network write
     final repository = ref.read(requestRepositoryProvider);
     final result = await repository.updateRequestStatus(
       requestId: requestId,
@@ -94,22 +104,18 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
       groupId: activeGroup.id,
     );
 
+    // 3. Rollback on failure
     result.fold(
-      (failure) {},
-      (_) {
-        final currentList = state.value ?? [];
-        state = AsyncData(
-          currentList
-              .map((r) => r.id == requestId ? r.copyWith(status: status) : r)
-              .toList(),
-        );
+      (failure) {
+        state = AsyncData(previousList);
       },
+      (_) {},
     );
 
     return result;
   }
 
-  /// Deletes (soft-deletes) a shopping request.
+  /// Deletes (soft-deletes) a shopping request with instant optimistic UI update.
   Future<Either<Failure, void>> deleteRequest({
     required String requestId,
   }) async {
@@ -118,18 +124,24 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
       return Left(ServerFailure('No active group selected.'));
     }
 
+    final previousList = state.value ?? [];
+
+    // 1. Optimistic UI update (0ms instant removal)
+    state = AsyncData(previousList.where((r) => r.id != requestId).toList());
+
+    // 2. Network write
     final repository = ref.read(requestRepositoryProvider);
     final result = await repository.deleteRequest(
       requestId: requestId,
       groupId: activeGroup.id,
     );
 
+    // 3. Rollback on failure
     result.fold(
-      (failure) {},
-      (_) {
-        final currentList = state.value ?? [];
-        state = AsyncData(currentList.where((r) => r.id != requestId).toList());
+      (failure) {
+        state = AsyncData(previousList);
       },
+      (_) {},
     );
 
     return result;
