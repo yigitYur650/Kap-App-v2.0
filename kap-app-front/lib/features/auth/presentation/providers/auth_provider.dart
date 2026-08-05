@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/models/app_user.dart';
 import '../../../../core/network/supabase_client.dart';
+import '../../../../core/providers/shared_preferences_provider.dart';
+import '../../../groups/presentation/providers/active_group_provider.dart';
+import '../../../groups/presentation/providers/user_groups_provider.dart';
 
 /// Notifier that manages and projects the current user authentication session state.
 class AuthNotifier extends AsyncNotifier<AppUser?> {
@@ -62,6 +65,15 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   Future<void> signOut() async {
     final supabaseClient = ref.read(supabaseClientProvider);
     await supabaseClient.auth.signOut();
+
+    // Clear local storage active group cache on logout
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.remove(kActiveGroupIdKey);
+
+    // Invalidate group providers so fresh user session doesn't inherit old group cache
+    ref.invalidate(userGroupsProvider);
+    ref.invalidate(activeGroupProvider);
+
     updateState(null);
   }
 }
