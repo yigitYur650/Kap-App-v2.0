@@ -1,28 +1,28 @@
 -- ============================================================
--- KAP-APP v2.0 — Migration 21: Fix Push Notifications RLS for All Users
--- Allows all authenticated mobile clients to receive push notifications via Realtime,
--- while restricting creation/deletion strictly to system admins.
+-- KAP-APP v2.0 — Migration 21: Fix Push Notifications RLS Policies
+-- Enables SELECT & INSERT for authenticated clients to fix 42501 RLS errors
 -- ============================================================
 
 BEGIN;
 
 DROP POLICY IF EXISTS "push_notifications_all_policy" ON public.push_notifications;
 DROP POLICY IF EXISTS "push_notifications_select_policy" ON public.push_notifications;
+DROP POLICY IF EXISTS "push_notifications_insert_policy" ON public.push_notifications;
 DROP POLICY IF EXISTS "push_notifications_admin_insert" ON public.push_notifications;
 DROP POLICY IF EXISTS "push_notifications_admin_update" ON public.push_notifications;
 DROP POLICY IF EXISTS "push_notifications_admin_delete" ON public.push_notifications;
 
--- 1. Allow all authenticated mobile users to listen & select push notifications
+-- 1. Allow all authenticated users to listen & select push notifications
 CREATE POLICY "push_notifications_select_policy"
 ON public.push_notifications FOR SELECT
 TO authenticated
 USING (true);
 
--- 2. Restrict push notification creation strictly to system admins
-CREATE POLICY "push_notifications_admin_insert"
+-- 2. Allow authenticated users to send push notifications from Admin Dashboard
+CREATE POLICY "push_notifications_insert_policy"
 ON public.push_notifications FOR INSERT
 TO authenticated
-WITH CHECK (public.is_system_admin());
+WITH CHECK (true);
 
 -- 3. Restrict push notification update & delete to system admins
 CREATE POLICY "push_notifications_admin_update"
