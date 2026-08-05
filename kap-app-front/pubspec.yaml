@@ -2,7 +2,7 @@ name: kap_app_front
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 2.4.0+109
+version: 2.4.0+110
 
 environment:
   sdk: ^3.12.2
@@ -29,6 +29,8 @@ dependencies:
   path_provider: ^2.1.2
   open_filex: ^4.5.0
   flutter_local_notifications: ^18.0.1
+  firebase_core: ^3.13.1
+  firebase_messaging: ^15.2.4
 
 dev_dependencies:
   flutter_test:

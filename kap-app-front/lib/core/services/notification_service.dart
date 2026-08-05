@@ -1,3 +1,5 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,7 +15,7 @@ class NotificationService {
   RealtimeChannel? _adminNotifChannel;
   bool _isInitialized = false;
 
-  /// Initializes local notifications and permissions.
+  /// Initializes local notifications, Firebase Messaging, and permissions.
   Future<void> initialize() async {
     if (_isInitialized) return;
 
@@ -31,12 +33,14 @@ class NotificationService {
 
     await _localNotifications.initialize(initSettings);
 
-    // Create high priority notification channel for Android
+    // Create high priority notification channel for Android v2
     const androidChannel = AndroidNotificationChannel(
-      'kap_app_admin_channel',
+      'kap_app_admin_channel_v2',
       'Kap-App Duyuruları',
       description: 'Yöneticiler tarafından gönderilen duyuru ve bildirimler',
       importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
     );
 
     await _localNotifications
@@ -47,6 +51,31 @@ class NotificationService {
     await _localNotifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
+
+    // Firebase Messaging FCM Permission & Foreground Listener Setup
+    if (!kIsWeb) {
+      try {
+        final messaging = FirebaseMessaging.instance;
+        await messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+          debugPrint('[FCM] Foreground message received: ${message.notification?.title}');
+          final notification = message.notification;
+          if (notification != null) {
+            _showSystemNotification(notification.title ?? 'Duyuru', notification.body ?? '');
+          }
+        });
+
+        final fcmToken = await messaging.getToken();
+        debugPrint('[FCM Token] $fcmToken');
+      } catch (e) {
+        debugPrint('[FCM] Initialization warning: $e');
+      }
+    }
 
     _isInitialized = true;
   }

@@ -3,6 +3,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'core/navigation/router.dart';
@@ -10,8 +12,21 @@ import 'core/providers/shared_preferences_provider.dart';
 import 'core/localization/custom_shadcn_localizations.dart';
 import 'core/services/notification_service.dart';
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  debugPrint("Handling background FCM message: ${message.messageId}");
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    debugPrint('Firebase init warning: $e');
+  }
 
   // Environment-ready Supabase configuration variables
   const supabaseUrl = String.fromEnvironment(
