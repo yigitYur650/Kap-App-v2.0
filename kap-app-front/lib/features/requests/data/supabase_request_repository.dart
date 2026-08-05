@@ -58,7 +58,7 @@ class SupabaseRequestRepository implements RequestRepository {
                 .from('requests')
                 .select('*')
                 .eq('group_id', groupId)
-                .is_('deleted_at', null);
+                .filter('deleted_at', 'is', null);
             final items = (data as List)
                 .map((json) => RequestModel.fromJson(json))
                 .toList();
@@ -69,7 +69,7 @@ class SupabaseRequestRepository implements RequestRepository {
           .from('requests')
           .select('*')
           .eq('group_id', groupId)
-          .is_('deleted_at', null);
+          .filter('deleted_at', 'is', null);
       final items = (data as List)
           .map((json) => RequestModel.fromJson(json))
           .toList();
