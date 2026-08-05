@@ -18,6 +18,9 @@ ON public.groups FOR SELECT
 TO authenticated
 USING (deleted_at IS NULL);
 
+-- Notify PostgREST to instantly reload its schema cache
+NOTIFY pgrst, 'reload schema';
+
 -- Verification
 DO $$
 BEGIN
