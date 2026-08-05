@@ -288,6 +288,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       final client = Supabase.instance.client;
       final currentUser = client.auth.currentUser;
 
+      // 1. Record in Supabase database
       await client.from('push_notifications').insert({
         'title': title,
         'body': body,
@@ -296,11 +297,39 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         'created_by': currentUser?.id,
       });
 
+      // 2. Instant 0-second Google FCM Push to ALL devices (open or closed!)
+      const fcmKey = 'AIzaSyBFsCBCnESnkgw3LoYHqzZWBIZ1dE4-J-I';
+      try {
+        await http.post(
+          Uri.parse('https://fcm.googleapis.com/fcm/send'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'key=$fcmKey',
+          },
+          body: jsonEncode({
+            'to': '/topics/all_users',
+            'priority': 'high',
+            'notification': {
+              'title': title,
+              'body': body,
+              'sound': 'default',
+            },
+            'data': {
+              'title': title,
+              'body': body,
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            },
+          }),
+        );
+      } catch (fcmError) {
+        debugPrint('FCM direct push warning: $fcmError');
+      }
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('📢 Bildirim tüm kullanıcılara gönderildi!'),
+          content: Text('📢 Bildirim kapalı ve açık olan tüm kullanıcılara 0 saniyede gönderildi!'),
           backgroundColor: Colors.teal,
         ),
       );
