@@ -10,6 +10,7 @@ import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:kap_app_front/shared/theme/app_colors.dart';
 import 'package:kap_app_front/shared/theme/app_shapes.dart';
 import 'package:kap_app_front/shared/theme/app_typography.dart';
+import 'package:kap_app_front/shared/widgets/kap_app_brand_logo.dart';
 
 import 'package:kap_app_front/features/updater/presentation/app_update_checker.dart';
 
@@ -64,18 +65,20 @@ class HubScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
+                  // Header with modern KapAppBrandLogo
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const KapAppBrandLogo(fontSize: 22, showBadge: false),
+                          const SizedBox(height: 4),
                           Text(
                             activeGroup?.name ?? localizations.group_none_selected,
-                            style: AppTypography.headlineLg.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.text,
+                            style: AppTypography.headlineMd.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
                             ),
                           ),
                         ],

@@ -7,6 +7,7 @@ import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:kap_app_front/shared/theme/app_colors.dart';
 import 'package:kap_app_front/shared/theme/app_shapes.dart';
 import 'package:kap_app_front/shared/theme/app_typography.dart';
+import 'package:kap_app_front/shared/widgets/kap_app_brand_logo.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -62,20 +63,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // App Title / Branding
-                  Text(
-                    'KAP-APP',
-                    style: AppTypography.display.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w900,
-                      shadows: [
-                        Shadow(
-                          color: AppColors.primary.withOpacity(0.6),
-                          blurRadius: 20,
-                        )
-                      ],
-                    ),
-                  ),
+                  // Modern App Title / Branding
+                  const KapAppBrandLogo(),
                   const SizedBox(height: 32),
 
                   // Glassmorphic Card

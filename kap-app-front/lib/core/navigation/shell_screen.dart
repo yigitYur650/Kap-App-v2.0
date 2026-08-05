@@ -5,7 +5,7 @@ import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:kap_app_front/shared/theme/app_colors.dart';
 import 'package:kap_app_front/shared/theme/app_typography.dart';
 
-class ShellScreen extends StatelessWidget {
+class ShellScreen extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
   const ShellScreen({
@@ -13,16 +13,28 @@ class ShellScreen extends StatelessWidget {
     required this.navigationShell,
   });
 
+  @override
+  State<ShellScreen> createState() => _ShellScreenState();
+}
+
+class _ShellScreenState extends State<ShellScreen> {
+  int _previousIndex = 0;
+
   void _onTabSelect(int index) {
-    navigationShell.goBranch(
+    if (index != widget.navigationShell.currentIndex) {
+      setState(() {
+        _previousIndex = widget.navigationShell.currentIndex;
+      });
+    }
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
   }
 
   void _handleSwipe(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
-    final current = navigationShell.currentIndex;
+    final current = widget.navigationShell.currentIndex;
     if (velocity < -250 && current < 2) {
       // Swiped Left -> Go to next tab
       _onTabSelect(current + 1);
@@ -36,29 +48,45 @@ class ShellScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final localizations = AppLocalizations.of(context)!;
-    
+    final currentIndex = widget.navigationShell.currentIndex;
+    final isMovingRight = currentIndex >= _previousIndex;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Content with horizontal swipe gesture navigation & soft page transitions
+          // Content with Instagram-style horizontal slide & fade transitions
           Positioned.fill(
             child: GestureDetector(
               onHorizontalDragEnd: _handleSwipe,
               behavior: HitTestBehavior.translucent,
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 300),
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: child,
+                  final isNewChild = (child.key as ValueKey<int>?)?.value == currentIndex;
+                  final beginOffset = isNewChild
+                      ? (isMovingRight ? const Offset(0.25, 0.0) : const Offset(-0.25, 0.0))
+                      : (isMovingRight ? const Offset(-0.25, 0.0) : const Offset(0.25, 0.0));
+
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: beginOffset,
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.fastOutSlowIn,
+                    )),
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
                   );
                 },
                 child: KeyedSubtree(
-                  key: ValueKey(navigationShell.currentIndex),
-                  child: navigationShell,
+                  key: ValueKey(currentIndex),
+                  child: widget.navigationShell,
                 ),
               ),
             ),
@@ -129,7 +157,7 @@ class ShellScreen extends StatelessWidget {
   }) {
     return Builder(
       builder: (context) {
-        final isActive = navigationShell.currentIndex == index;
+        final isActive = widget.navigationShell.currentIndex == index;
         final color = isActive ? AppColors.primary : AppColors.secondary.withOpacity(0.5);
 
         return GestureDetector(
@@ -154,7 +182,7 @@ class ShellScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                // Netflix-style active glowing dot indicator
+                // Glowing active dot indicator
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: isActive ? 4 : 0,
