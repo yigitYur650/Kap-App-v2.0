@@ -11,28 +11,48 @@ class AppUpdateChecker {
   static int? _alreadyShownVersionCode;
 
   /// Checks for available updates and shows the update dialog if a newer version exists.
-  static Future<void> check(BuildContext context) async {
+  /// Set [isManual] = true for user-triggered check from Settings.
+  static Future<void> check(BuildContext context, {bool isManual = false}) async {
+    if (isManual && context.mounted) {
+      _alreadyShownVersionCode = null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🔍 Güncellemeler denetleniyor...'),
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF1F2022),
+        ),
+      );
+    }
+
     final latestVersion = await _repository.checkUpdate();
-    if (latestVersion == null) return;
 
-    // 1. Session Guard: Don't show again if already shown during this app run
-    if (_alreadyShownVersionCode == latestVersion.versionCode) {
-      return;
-    }
-
-    // 2. SharedPreferences Guard: Don't show if user clicked "Daha Sonra" for this version
-    final prefs = await SharedPreferences.getInstance();
-    final dismissedVersionCode = prefs.getInt('dismissed_version_code') ?? 0;
-    if (!latestVersion.isMandatory && latestVersion.versionCode <= dismissedVersionCode) {
-      return;
-    }
-
-    // 3. Dynamic Installed Version Check
+    // Dynamic Installed Version Check
     int currentCode = 100;
+    String versionName = '1.0.0';
     try {
       final info = await PackageInfo.fromPlatform();
       currentCode = int.tryParse(info.buildNumber) ?? 100;
+      versionName = info.version;
     } catch (_) {}
+
+    if (latestVersion == null) {
+      if (isManual && context.mounted) {
+        _showUpToDateSnackBar(context, versionName, currentCode);
+      }
+      return;
+    }
+
+    // 1. Session Guard (Skip for automatic background check)
+    if (!isManual && _alreadyShownVersionCode == latestVersion.versionCode) {
+      return;
+    }
+
+    // 2. SharedPreferences Guard (Skip for automatic background check)
+    final prefs = await SharedPreferences.getInstance();
+    final dismissedVersionCode = prefs.getInt('dismissed_version_code') ?? 0;
+    if (!isManual && !latestVersion.isMandatory && latestVersion.versionCode <= dismissedVersionCode) {
+      return;
+    }
 
     if (latestVersion.versionCode > currentCode) {
       _alreadyShownVersionCode = latestVersion.versionCode;
@@ -43,7 +63,32 @@ class AppUpdateChecker {
           builder: (context) => AppUpdateDialog(version: latestVersion),
         );
       }
+    } else {
+      if (isManual && context.mounted) {
+        _showUpToDateSnackBar(context, versionName, currentCode);
+      }
     }
+  }
+
+  static void _showUpToDateSnackBar(BuildContext context, String versionName, int currentCode) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.teal,
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '🎉 Uygulamanız en güncel sürümde! (v$versionName - Build $currentCode)',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Reset session guard (e.g. after manual check)
