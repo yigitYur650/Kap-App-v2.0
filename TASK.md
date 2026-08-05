@@ -298,9 +298,20 @@ These are out of scope for Sprint 1. Do not implement.
 
 ---
 
-### [2026-08-05]
-- Completed: W3-6 (Flat Permission Model Architecture & Removal of Admin Roles / Group Types)
-- Notes: Created and applied Database Migration 15. Removed admin role and family/community group type distinctions across database schema, RLS policies, Flutter frontend models/providers/UI components, and Go backend integration tests. Verified 0 flutter analyze errors and 100% passing Go test suite (`go test ./...`).
+### W4-1: System Admins, In-App Auto-Updater (OTA) & Push Notifications
+- [x] Create Migrations 19, 20 & 21 (`19_admin_notifications_and_app_updater.sql`, `21_fix_push_notifications_rls.sql`): `system_admins`, `app_versions`, `push_notifications` tables, storage bucket `app-releases`, RLS policies, and Realtime publication.
+- [x] Go Backend Admin Endpoints: `POST /api/v1/admin/app-version`, `GET /api/v1/app-version/latest`, `POST /api/v1/admin/push-notification`, `systemAdminMiddleware`.
+- [x] Flutter Admin Dashboard: Web dashboard with system admin guard, version release tab, and push notification broadcast tab.
+- [x] Flutter OTA In-App Updater: `AppUpdateChecker`, `AppUpdateDialog`, direct APK download via `Dio`, SHA-256 verification, `open_file_x` installation, and ABI split build number normalization (`2102 -> 102`).
+- [x] Settings Screen Version Card: Shows installed version & clean build code, "YÜKLÜ" badge, and manual "🔄 Güncellemeleri Denetle" button.
+- [x] Flutter Realtime Push Notifications: `NotificationService` with high-priority Android channel `kap_app_admin_channel_v2`, real-time Supabase listener, heads-up system banner, sound, vibration, and in-app snackbars.
+- [x] Commit: `feat(admin): complete system admin dashboard, OTA in-app auto-updater and push notification broadcast system`
+
+---
+
+### [2026-08-06]
+- Completed: W4-1 (System Admins, OTA In-App Auto-Updater & Push Notifications)
+- Notes: Implemented and verified end-to-end OTA in-app update engine, Gradle ABI split build number normalization, admin dashboard, RLS policies, and realtime push notifications. Built release APK 109 (`app-arm64-v8a-release.apk`). All checks passing 100%.
 
 
 
