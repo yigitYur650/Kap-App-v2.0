@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:open_file_plus/open_file_plus.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/app_version_model.dart';
@@ -73,7 +73,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
       }
 
       // Trigger native Package Installer
-      final result = await OpenFile.open(
+      final result = await OpenFilex.open(
         filePath,
         type: 'application/vnd.android.package-archive',
       );
