@@ -55,15 +55,18 @@ class NotificationService {
   void startListening(BuildContext context) {
     if (_adminNotifChannel != null) return;
 
+    debugPrint('[NotificationService] Starting Realtime subscription on public:push_notifications...');
+
     _adminNotifChannel = Supabase.instance.client
         .channel('public:push_notifications')
         .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
+          event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'push_notifications',
           callback: (payload) {
+            debugPrint('[NotificationService] Realtime payload received: ${payload.newRecord}');
             final record = payload.newRecord;
-            final title = record['title'] as String? ?? 'Yönelici Bildirimi';
+            final title = record['title'] as String? ?? 'Yönetici Bildirimi';
             final body = record['body'] as String? ?? '';
 
             if (body.isNotEmpty) {
@@ -72,37 +75,46 @@ class NotificationService {
             }
           },
         )
-        .subscribe();
+        .subscribe((status, [error]) {
+          debugPrint('[NotificationService] Subscription status: $status, error: $error');
+        });
   }
 
   /// Shows a native heads-up system notification bar.
   Future<void> _showSystemNotification(String title, String body) async {
-    const androidDetails = AndroidNotificationDetails(
-      'kap_app_admin_channel',
-      'Kap-App Duyuruları',
-      channelDescription: 'Yöneticiler tarafından gönderilen duyuru ve bildirimler',
-      importance: Importance.max,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-    );
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        'kap_app_admin_channel_v2',
+        'Kap-App Duyuruları',
+        channelDescription: 'Yöneticiler tarafından gönderilen duyuru ve bildirimler',
+        importance: Importance.max,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+        playSound: true,
+        enableVibration: true,
+      );
 
-    const darwinDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
+      const darwinDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
 
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: darwinDetails,
-    );
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: darwinDetails,
+      );
 
-    await _localNotifications.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      details,
-    );
+      await _localNotifications.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        body,
+        details,
+      );
+      debugPrint('[NotificationService] Native system notification displayed!');
+    } catch (e, st) {
+      debugPrint('[NotificationService] Error showing system notification: $e\n$st');
+    }
   }
 
   /// Shows an in-app banner for active app users.
