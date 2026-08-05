@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kap_app_front/features/auth/presentation/providers/auth_provider.dart';
 import 'package:kap_app_front/features/groups/data/group_repository_provider.dart';
 import 'package:kap_app_front/features/groups/presentation/providers/active_group_provider.dart';
