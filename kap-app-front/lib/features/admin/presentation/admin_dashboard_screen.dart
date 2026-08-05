@@ -158,6 +158,116 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     }
   }
 
+  Future<void> _deleteVersion(String id) async {
+    try {
+      await Supabase.instance.client.from('app_versions').delete().eq('id', id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🗑️ Sürüm yayından kaldırıldı ve silindi.'),
+          backgroundColor: Colors.teal,
+        ),
+      );
+      setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Hata: $e'), backgroundColor: AppColors.primary),
+      );
+    }
+  }
+
+  Widget _buildVersionsList() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: Supabase.instance.client
+          .from('app_versions')
+          .select('*')
+          .order('version_code', ascending: false),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+        }
+        final list = snapshot.data!;
+        if (list.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Text('Henüz yayınlanmış bir sürüm yok.', style: TextStyle(color: Colors.white54)),
+          );
+        }
+
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: list.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final item = list[index];
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF141414),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              item['version_name'] ?? 'v1.0.0',
+                              style: AppTypography.headlineMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF242424),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text('Code: ${item['version_code']}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                            ),
+                            if (item['is_mandatory'] == true) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text('Zorunlu', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (item['changelog'] != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              item['changelog'],
+                              style: AppTypography.bodyLg.copyWith(color: AppColors.secondary),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_forever_rounded, color: Colors.redAccent),
+                    tooltip: 'Yayından Kaldır / İptal Et',
+                    onPressed: () => _deleteVersion(item['id']),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _sendNotification() async {
     final title = _notifTitleController.text.trim();
     final body = _notifBodyController.text.trim();
@@ -363,6 +473,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                     label: const Text('Yeni Sürümü Canlıya Al', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ),
+                const SizedBox(height: 36),
+                const Divider(color: Color(0xFF242424)),
+                const SizedBox(height: 16),
+                Text(
+                  '📋 Canlıdaki / Geçmiş Sürümler',
+                  style: AppTypography.headlineLg.copyWith(color: AppColors.text, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'İptal etmek istediğiniz test sürümünün yanındaki çöp kutusu simgesine basarak yayından kaldırabilirsiniz.',
+                  style: AppTypography.bodyLg.copyWith(color: AppColors.secondary),
+                ),
+                const SizedBox(height: 16),
+                _buildVersionsList(),
               ],
             ),
           ),

@@ -258,3 +258,29 @@ func (c *Client) CreateAppVersion(version *AppVersion) error {
 	respBody, _ := io.ReadAll(resp.Body)
 	return fmt.Errorf("supabase API returned status %d: %s", resp.StatusCode, string(respBody))
 }
+
+// DeleteAppVersion deletes a version entry by ID from public.app_versions.
+func (c *Client) DeleteAppVersion(id string) error {
+	reqURL := fmt.Sprintf("%s/rest/v1/app_versions?id=eq.%s", c.URL, url.QueryEscape(id))
+
+	req, err := http.NewRequest(http.MethodDelete, reqURL, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create version delete request: %w", err)
+	}
+
+	req.Header.Set("apikey", c.ServiceRoleKey)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.ServiceRoleKey))
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute version delete request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
+		return nil
+	}
+
+	respBody, _ := io.ReadAll(resp.Body)
+	return fmt.Errorf("supabase API returned status %d: %s", resp.StatusCode, string(respBody))
+}

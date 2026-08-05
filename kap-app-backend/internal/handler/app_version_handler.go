@@ -70,3 +70,23 @@ func (h *AppVersionHandler) CreateVersionHandler(c *fiber.Ctx) error {
 		"version": req,
 	})
 }
+
+// DeleteVersionHandler (DELETE /api/v1/admin/app-version/:id) allows system admins to cancel/delete a released version.
+func (h *AppVersionHandler) DeleteVersionHandler(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "version_id_required",
+		})
+	}
+
+	if err := h.sbClient.DeleteAppVersion(id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "version_deleted_successfully",
+	})
+}
