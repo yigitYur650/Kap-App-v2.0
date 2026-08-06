@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -13,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"kap-app-backend/pkg/supabase"
@@ -196,7 +198,16 @@ func getFCMv1AccessToken(serviceAccountPath string) (string, string, error) {
 
 	envJSON := os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
 	if envJSON != "" {
-		data = []byte(envJSON)
+		trimmed := strings.TrimSpace(envJSON)
+		// 1. Try base64 decoding first
+		decoded, b64err := base64.StdEncoding.DecodeString(trimmed)
+		if b64err == nil && len(decoded) > 0 && json.Valid(decoded) {
+			data = decoded
+		} else {
+			// 2. Fallback to unescaping double backslashes
+			cleaned := strings.ReplaceAll(trimmed, "\\n", "\n")
+			data = []byte(cleaned)
+		}
 	} else {
 		data, err = os.ReadFile(serviceAccountPath)
 		if err != nil {
