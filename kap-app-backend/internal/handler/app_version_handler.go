@@ -224,7 +224,8 @@ func getFCMv1AccessToken(serviceAccountPath string) (string, string, error) {
 		return "", "", fmt.Errorf("failed to parse service account JSON: %w", err)
 	}
 
-	block, _ := pem.Decode([]byte(sa.PrivateKey))
+	pkPem := strings.ReplaceAll(sa.PrivateKey, "\\n", "\n")
+	block, _ := pem.Decode([]byte(pkPem))
 	if block == nil {
 		return "", "", errors.New("failed to decode private key PEM")
 	}
