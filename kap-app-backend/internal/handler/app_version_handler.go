@@ -191,9 +191,17 @@ func (h *AppVersionHandler) SendPushNotificationHandler(c *fiber.Ctx) error {
 }
 
 func getFCMv1AccessToken(serviceAccountPath string) (string, string, error) {
-	data, err := os.ReadFile(serviceAccountPath)
-	if err != nil {
-		return "", "", fmt.Errorf("failed to read service account file: %w", err)
+	var data []byte
+	var err error
+
+	envJSON := os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+	if envJSON != "" {
+		data = []byte(envJSON)
+	} else {
+		data, err = os.ReadFile(serviceAccountPath)
+		if err != nil {
+			return "", "", fmt.Errorf("failed to read service account file: %w", err)
+		}
 	}
 
 	var sa struct {
