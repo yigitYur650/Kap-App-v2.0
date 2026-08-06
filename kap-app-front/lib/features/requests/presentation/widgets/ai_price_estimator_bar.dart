@@ -35,73 +35,102 @@ class AIPriceEstimatorBar extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 360;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'AI Akıllı Asistan',
-                      style: AppTypography.labelLg.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
                     ),
-                    Text(
-                      estimatedTotal != null
-                          ? 'Tahmini Toplam: ~${estimatedTotal!.toStringAsFixed(2)} TL'
-                          : 'Listenin tahmini fiyatını çıkarın veya fiş taratın',
-                      style: AppTypography.bodyMd.copyWith(
-                        color: AppColors.textMuted,
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'AI Akıllı Asistan',
+                          style: AppTypography.labelLg.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          estimatedTotal != null
+                              ? 'Tahmini Toplam: ~${estimatedTotal!.toStringAsFixed(2)} TL'
+                              : 'Listenin tahmini fiyatını çıkarın veya fiş taratın',
+                          style: AppTypography.bodyMd.copyWith(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (isLoading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                    ),
+                  ),
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (onScanReceiptPressed != null)
+                      TextButton.icon(
+                        onPressed: onScanReceiptPressed,
+                        icon: const Icon(Icons.receipt_long, size: 18, color: AppColors.primary),
+                        label: Text(
+                          isNarrow ? 'Fiş' : 'Fiş Tara',
+                          style: AppTypography.labelSm.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    const SizedBox(width: 6),
+                    ElevatedButton.icon(
+                      onPressed: onEstimatePressed,
+                      icon: const Icon(Icons.calculate_outlined, size: 16),
+                      label: Text(
+                        isNarrow ? 'Hesapla' : 'Fiyat Hesapla',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isNarrow ? 10 : 14,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              if (isLoading)
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-                )
-              else ...[
-                IconButton(
-                  icon: const Icon(Icons.receipt_long, color: AppColors.primary),
-                  tooltip: 'Fiş Tara (AI)',
-                  onPressed: onScanReceiptPressed,
-                ),
-                ElevatedButton.icon(
-                  onPressed: onEstimatePressed,
-                  icon: const Icon(Icons.calculate_outlined, size: 16),
-                  label: const Text('Fiyat Hesapla'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }

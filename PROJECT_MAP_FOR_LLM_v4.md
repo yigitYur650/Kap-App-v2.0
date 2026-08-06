@@ -5,8 +5,8 @@
 > known technical debt, error handling patterns, and database schema — so the LLM can
 > operate without reading every single file first.
 >
-> **Last updated:** 2026-08-05 (v4)
-> **Status:** Sprint 1 & Flat Permission Model Architecture (Migration 15 & 16) complete. Go Backend E2E isolation tests 100% PASSING. Flutter analyze clean (0 errors/warnings).
+> **Last updated:** 2026-08-07 (v4 - Updated with AI Integration, Live Market Engine, Price Pool & Receipt OCR)
+> **Status:** Sprint 1, AI Integration, Live Turkish Market Engine & Flat Permission Architecture complete. Go Backend tests 100% PASSING. Flutter analyze clean.
 >
 > **⚠️ NOTE:** This is v4. `PROJECT_MAP_FOR_LLM.md` (v1), `PROJECT_MAP_FOR_LLM_v2.md` (v2), and `PROJECT_MAP_FOR_LLM_v3.md` (v3) 
 > exist alongside this file. This v4 file is the AUTHORITATIVE version.
@@ -262,13 +262,53 @@ In Kap-App v2.0, **all active group members have equal rights**:
 | created_at | timestamptz | DEFAULT now() |
 | deleted_at | timestamptz | nullable |
 
+#### `product_price_pool` (22_add_product_price_pool_and_request_history.sql)
+| Column | Type | Constraints |
+|---|---|---|
+| id | uuid | PK DEFAULT gen_random_uuid() |
+| product_name | text | NOT NULL UNIQUE |
+| category | text | NOT NULL DEFAULT 'Genel' |
+| estimated_price | numeric(10,2) | NOT NULL DEFAULT 0.00 |
+| min_price | numeric(10,2) | NOT NULL DEFAULT 0.00 |
+| max_price | numeric(10,2) | NOT NULL DEFAULT 0.00 |
+| sample_count | integer | NOT NULL DEFAULT 1 |
+| updated_at | timestamptz | DEFAULT now() |
+
+*(Note: `requests` table was also expanded in Migration 22 with `category`, `bought_by`, `bought_at`, `bought_price`).*
+
 ---
 
 ## 6. 🧪 TEST INVENTORY & VERIFICATION
 
-1. **Go Backend Tests:** `go test ./...` passes 100% cleanly.
+1. **Go Backend Tests:** `go test ./...` passes 100% cleanly (including AIService, MarketPriceService & FCM OAuth2 PEM tests).
 2. **Flutter Codebase:** `flutter analyze` reports 0 errors and 0 warnings.
 3. **Database Security:** Diagnostic script `supabase/checks/rls_snapshot.sql` available for verifying RLS policy health.
+
+---
+
+## 7. 🤖 AI INTEGRATION & SMART FEATURES (NEW IN BUILD 122-126)
+
+### 7.1 Architecture & Models (0 TL Cost Infrastructure)
+- **Groq API (`llama-3.3-70b-versatile`):** Ultra-fast text completion, categorization, and 2026 Turkish market price anchoring (Free Developer Tier).
+- **Google Gemini 2.0 Flash Vision:** Receipt scanning and OCR price extraction (Free 1,500 requests/day).
+
+### 7.2 Core Capabilities & Endpoints
+1. **Live Turkish Market Price Engine (`MarketPriceService`):**
+   - Queries live public market search APIs (Akakçe / Migros) using normalized queries (`sut fiyati`, `tavuk fiyati`).
+   - Caches prices in Supabase `product_price_pool` table for 24 hours.
+   - Falls back to 2026 inflation anchored AI prompts when live market scrapers are rate-limited.
+2. **Smart Quantity & Variant Sensitivity (`ItemSpecDTO`):**
+   - Sends product name + quantity + unit payload (`item_name: "üçgen peynir", quantity: "8'li"`).
+   - Generates exact package pricing, unit specifications (`unit_spec: "8'li Standart Kutu (100g)"`), and variant hints (`variant_note: "24'lü Aile Boyu ise ~95 TL"`).
+3. **RAM-Only Receipt Scanner (`ScanReceipt`):**
+   - Accepts base64 encoded receipt photos.
+   - Extracts store name, date, total, and line-item prices.
+   - **Zero Retention Privacy:** Images processed in-memory (RAM) and immediately discarded. Never written to disk or storage buckets.
+4. **Category Tabs Filtering (`CategoryTabsBar`):**
+   - Dynamic tabbed filtering (*Tümü, Süt & Kahvaltılık, Meyve & Sebze, Temel Gıda, Atıştırmalık, İçecek, Temizlik, Genel*).
+5. **Security & Rate Limiting (`AIRateLimiter`):**
+   - JWT-authenticated rate limiter middleware in Go backend (max 20 AI requests / hour per user).
+   - Sanitizes and truncates string inputs to max 30-100 characters.
 
 ---
 

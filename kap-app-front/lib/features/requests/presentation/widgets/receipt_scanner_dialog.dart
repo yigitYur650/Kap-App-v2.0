@@ -154,17 +154,19 @@ class _ReceiptScannerDialogState extends State<ReceiptScannerDialog> {
                 style: AppTypography.bodyMd.copyWith(color: AppColors.textMuted),
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   OutlinedButton.icon(
                     onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
+                    icon: const Icon(Icons.camera_alt, size: 18),
                     label: const Text('Kamera'),
                   ),
                   OutlinedButton.icon(
                     onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
+                    icon: const Icon(Icons.photo_library, size: 18),
                     label: const Text('Galeri'),
                   ),
                 ],
