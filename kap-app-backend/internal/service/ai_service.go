@@ -13,16 +13,18 @@ import (
 )
 
 type AIService struct {
-	groqKey   string
-	geminiKey string
-	client    *http.Client
+	groqKey        string
+	geminiKey      string
+	client         *http.Client
+	marketPriceSvc *MarketPriceService
 }
 
 func NewAIService(groqKey, geminiKey string) *AIService {
 	return &AIService{
-		groqKey:   groqKey,
-		geminiKey: geminiKey,
-		client:    &http.Client{Timeout: 20 * time.Second},
+		groqKey:        groqKey,
+		geminiKey:      geminiKey,
+		client:         &http.Client{Timeout: 20 * time.Second},
+		marketPriceSvc: NewMarketPriceService(),
 	}
 }
 
@@ -57,8 +59,40 @@ func (s *AIService) EstimatePrices(items []string) (*PriceEstimationResult, erro
 		return &PriceEstimationResult{Items: []ItemPriceEstimate{}, TotalPrice: 0}, nil
 	}
 
-	prompt := fmt.Sprintf(`Sen Türkiye market fiyatlarını bilen uzman bir asistansın. 
-Aşağıdaki alışveriş listesindeki ürünlerin güncel ortalama Türkiye market fiyatlarını (TL), tahmini min-max aralığını ve reyon kategorisini çıkar.
+	// 1. Try Live Market Fetching for items
+	var liveEstimates []ItemPriceEstimate
+	var unhandledItems []string
+
+	for _, item := range items {
+		if est, err := s.marketPriceSvc.FetchLiveMarketPrice(item); err == nil && est != nil && est.EstimatedPrice > 0 {
+			liveEstimates = append(liveEstimates, *est)
+		} else {
+			unhandledItems = append(unhandledItems, item)
+		}
+	}
+
+	// If all items were resolved via live market APIs
+	if len(unhandledItems) == 0 {
+		res := &PriceEstimationResult{Items: liveEstimates}
+		s.calculateTotal(res)
+		return res, nil
+	}
+
+	// 2. Fallback to 2026 Turkish Market Anchored AI for remaining items
+	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye zincir market (BİM, A101, Migros, Carrefour) fiyatlarını %%100 GERÇEKÇİ bilen uzman asistansın.
+2026 YILI GÜNCEL TÜRKİYE MARKET FİYAT BASAMAKLARI:
+- 1L Tam Yağlı Süt: 38 - 48 TL
+- Somun Ekmek: 10 - 15 TL
+- 15li Yumurta: 65 - 95 TL
+- 1 kg Domates: 35 - 55 TL
+- 1 kg Salatalık: 30 - 50 TL
+- 500g Makarna: 18 - 28 TL
+- 1L Ayçiçek Yağı: 60 - 80 TL
+- 1 kg Çay: 160 - 220 TL
+- Bulaşık Deterjanı: 45 - 75 TL
+- 12li Tuvalet Kağıdı: 110 - 160 TL
+
+Aşağıdaki alışveriş listesindeki ürünlerin 2026 yılı güncel gerçekçi Türkiye ortalama market fiyatlarını (TL), min-max aralığını ve reyon kategorisini çıkar.
 Kategoriler yalnızca şunlar olabilir: "Meyve & Sebze", "Süt & Kahvaltılık", "Temel Gıda", "Atıştırmalık", "İçecek", "Temizlik", "Genel".
 
 Ürünler: %s
@@ -68,35 +102,37 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
   "items": [
     {
       "item_name": "ürün adı",
-      "estimated_price": 35.0,
-      "min_price": 25.0,
+      "estimated_price": 38.0,
+      "min_price": 30.0,
       "max_price": 45.0,
-      "category": "Meyve & Sebze"
+      "category": "Süt & Kahvaltılık"
     }
   ]
-}`, strings.Join(items, ", "))
+}`, strings.Join(unhandledItems, ", "))
 
 	respJSON, err := s.queryGroqOrGeminiText(prompt)
 	if err != nil {
+		if len(liveEstimates) > 0 {
+			res := &PriceEstimationResult{Items: liveEstimates}
+			s.calculateTotal(res)
+			return res, nil
+		}
 		return nil, err
 	}
 
-	var res PriceEstimationResult
-	if err := json.Unmarshal([]byte(respJSON), &res); err != nil {
-		// Attempt to extract JSON substring if extra text returned
+	var aiRes PriceEstimationResult
+	if err := json.Unmarshal([]byte(respJSON), &aiRes); err != nil {
 		start := strings.Index(respJSON, "{")
 		end := strings.LastIndex(respJSON, "}")
 		if start >= 0 && end > start {
-			if errJson := json.Unmarshal([]byte(respJSON[start:end+1]), &res); errJson == nil {
-				s.calculateTotal(&res)
-				return &res, nil
-			}
+			_ = json.Unmarshal([]byte(respJSON[start:end+1]), &aiRes)
 		}
-		return nil, fmt.Errorf("AI response parse error: %w", err)
 	}
 
-	s.calculateTotal(&res)
-	return &res, nil
+	combinedItems := append(liveEstimates, aiRes.Items...)
+	res := &PriceEstimationResult{Items: combinedItems}
+	s.calculateTotal(res)
+	return res, nil
 }
 
 func (s *AIService) calculateTotal(res *PriceEstimationResult) {

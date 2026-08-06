@@ -79,7 +79,7 @@ class _ReceiptScannerDialogState extends State<ReceiptScannerDialog> {
         children: [
           const Icon(Icons.receipt_long, color: AppColors.primary),
           const SizedBox(width: 8),
-          Text('Fiş Tara (AI)', style: AppTypography.titleLarge),
+          Text('Fiş Tara (AI)', style: AppTypography.headlineLg),
         ],
       ),
       content: SingleChildScrollView(
@@ -92,12 +92,12 @@ class _ReceiptScannerDialogState extends State<ReceiptScannerDialog> {
               Text(
                 'Gemini AI fişinizi inceliyor...\nÜrünler ve fiyatlar ayıklanıyor.',
                 textAlign: TextAlign.center,
-                style: AppTypography.bodySmall,
+                style: AppTypography.bodyMd,
               ),
             ] else if (_errorMessage != null) ...[
               Text(
                 _errorMessage!,
-                style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                style: AppTypography.bodyMd.copyWith(color: AppColors.primary),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -107,28 +107,28 @@ class _ReceiptScannerDialogState extends State<ReceiptScannerDialog> {
             ] else if (_scanResult != null) ...[
               Text(
                 'Mağaza: ${_scanResult!['store_name'] ?? 'Bilinmeyen Market'}',
-                style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                style: AppTypography.labelLg.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
                 'Toplam Tutar: ${_scanResult!['total'] ?? 0} TL',
-                style: AppTypography.titleMedium.copyWith(color: Colors.teal),
+                style: AppTypography.headlineMd.copyWith(color: Colors.teal),
               ),
               const Divider(),
               const SizedBox(height: 8),
               ...?(_scanResult!['items'] as List<dynamic>?)?.map((item) {
                 return ListTile(
                   dense: true,
-                  title: Text(item['name'] ?? '', style: AppTypography.bodyMedium),
+                  title: Text(item['name'] ?? '', style: AppTypography.bodyMd),
                   trailing: Text(
                     '${item['price']} TL',
-                    style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
+                    style: AppTypography.labelLg.copyWith(fontWeight: FontWeight.bold),
                   ),
                 );
               }),
             ] else ...[
               Text(
                 'Fiş fotoğrafını yükleyin. AI ürünleri ve fiyatları tespit edip veri havuzuna işleyecektir.\n\n🔒 Fiş görselleri sunucuda saklanmaz (RAM-only).',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTypography.bodyMd.copyWith(color: AppColors.textMuted),
               ),
               const SizedBox(height: 20),
               Row(

@@ -58,7 +58,7 @@ class AIPriceEstimatorBar extends StatelessWidget {
                   children: [
                     Text(
                       'AI Akıllı Asistan',
-                      style: AppTypography.labelLarge.copyWith(
+                      style: AppTypography.labelLg.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -66,8 +66,8 @@ class AIPriceEstimatorBar extends StatelessWidget {
                       estimatedTotal != null
                           ? 'Tahmini Toplam: ~${estimatedTotal!.toStringAsFixed(2)} TL'
                           : 'Listenin tahmini fiyatını çıkarın veya fiş taratın',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AppTypography.bodyMd.copyWith(
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ],

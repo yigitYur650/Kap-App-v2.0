@@ -128,13 +128,13 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 children: [
                   const Icon(Icons.auto_awesome, color: AppColors.primary),
                   const SizedBox(width: 8),
-                  Text('AI Tahmini Fiyat Raporu', style: AppTypography.titleLarge),
+                  Text('AI Tahmini Fiyat Raporu', style: AppTypography.headlineLg),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
                 'Tahmini Toplam: ~${total.toStringAsFixed(2)} TL',
-                style: AppTypography.titleMedium.copyWith(color: Colors.teal, fontWeight: FontWeight.bold),
+                style: AppTypography.headlineMd.copyWith(color: Colors.teal, fontWeight: FontWeight.bold),
               ),
               const Divider(),
               Expanded(
@@ -148,7 +148,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       subtitle: Text('Kategori: ${item['category'] ?? 'Genel'}'),
                       trailing: Text(
                         '~${item['estimated_price']} TL',
-                        style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTypography.labelLg.copyWith(fontWeight: FontWeight.bold),
                       ),
                     );
                   },

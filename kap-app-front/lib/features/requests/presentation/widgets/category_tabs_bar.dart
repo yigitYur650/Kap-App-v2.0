@@ -46,8 +46,8 @@ class CategoryTabsBar extends StatelessWidget {
               children: [
                 Text(
                   category,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                  style: AppTypography.bodyMd.copyWith(
+                    color: isSelected ? Colors.white : AppColors.textMuted,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
@@ -80,7 +80,7 @@ class CategoryTabsBar extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(
-                color: isSelected ? AppColors.primary : AppColors.outline.withValues(alpha: 0.3),
+                color: isSelected ? AppColors.primary : AppColors.border.withValues(alpha: 0.3),
               ),
             ),
           );
