@@ -42,8 +42,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     );
   }
 
-  Future<void> _calculateAIEstimatedPrices(List<String> itemNames) async {
-    if (itemNames.isEmpty) return;
+  Future<void> _calculateAIEstimatedPrices(List<Map<String, String>> itemSpecs) async {
+    if (itemSpecs.isEmpty) return;
 
     setState(() {
       _isEstimatingPrices = true;
@@ -67,7 +67,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'items': itemNames,
+          'items': itemSpecs,
         }),
       );
 
@@ -143,12 +143,79 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   itemCount: items.length,
                   itemBuilder: (context, idx) {
                     final item = items[idx];
-                    return ListTile(
-                      title: Text(item['item_name'] ?? ''),
-                      subtitle: Text('Kategori: ${item['category'] ?? 'Genel'}'),
-                      trailing: Text(
-                        '~${item['estimated_price']} TL',
-                        style: AppTypography.labelLg.copyWith(fontWeight: FontWeight.bold),
+                    final unitSpec = item['unit_spec'] as String?;
+                    final variantNote = item['variant_note'] as String?;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                item['item_name'] ?? '',
+                                style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                '~${item['estimated_price']} TL',
+                                style: AppTypography.headlineMd.copyWith(
+                                  color: Colors.teal,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Kategori: ${item['category'] ?? 'Genel'}',
+                            style: AppTypography.labelSm.copyWith(color: AppColors.textMuted),
+                          ),
+                          if (unitSpec != null && unitSpec.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.inventory_2_outlined, size: 14, color: AppColors.primary),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    'Paket: $unitSpec',
+                                    style: AppTypography.labelSm.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (variantNote != null && variantNote.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                const Icon(Icons.lightbulb_outline, size: 14, color: Colors.amber),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    variantNote,
+                                    style: AppTypography.labelSm.copyWith(
+                                      color: Colors.amber,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       ),
                     );
                   },
@@ -233,8 +300,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       isLoading: _isEstimatingPrices,
                       estimatedTotal: _estimatedTotal,
                       onEstimatePressed: () {
-                        final pendingNames = pendingItems.map((e) => e.itemName).toList();
-                        _calculateAIEstimatedPrices(pendingNames);
+                        final itemSpecs = pendingItems.map((e) => {
+                          'item_name': e.itemName,
+                          'quantity': e.quantity ?? '',
+                          'unit': e.unit ?? '',
+                        }).toList();
+                        _calculateAIEstimatedPrices(itemSpecs);
                       },
                       onScanReceiptPressed: () {
                         final pendingNames = pendingItems.map((e) => e.itemName).toList();

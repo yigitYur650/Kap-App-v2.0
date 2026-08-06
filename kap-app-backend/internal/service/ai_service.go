@@ -28,12 +28,20 @@ func NewAIService(groqKey, geminiKey string) *AIService {
 	}
 }
 
+type ItemSpecDTO struct {
+	ItemName string `json:"item_name"`
+	Quantity string `json:"quantity,omitempty"`
+	Unit     string `json:"unit,omitempty"`
+}
+
 type ItemPriceEstimate struct {
 	ItemName       string  `json:"item_name"`
 	EstimatedPrice float64 `json:"estimated_price"`
 	MinPrice       float64 `json:"min_price"`
 	MaxPrice       float64 `json:"max_price"`
 	Category       string  `json:"category"`
+	UnitSpec       string  `json:"unit_spec,omitempty"`
+	VariantNote    string  `json:"variant_note,omitempty"`
 }
 
 type PriceEstimationResult struct {
@@ -53,37 +61,53 @@ type ReceiptScanResult struct {
 	Items     []ReceiptItem `json:"items"`
 }
 
-// EstimatePrices returns estimated Turkish Lira price ranges and categories for a list of items.
-func (s *AIService) EstimatePrices(items []string) (*PriceEstimationResult, error) {
+// EstimatePrices returns estimated Turkish Lira price ranges, unit specs, variant notes & categories.
+func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult, error) {
 	if len(items) == 0 {
 		return &PriceEstimationResult{Items: []ItemPriceEstimate{}, TotalPrice: 0}, nil
 	}
 
-	// 1. Try Live Market Fetching for items
 	var liveEstimates []ItemPriceEstimate
-	var unhandledItems []string
+	var unhandledSpecs []ItemSpecDTO
 
-	for _, item := range items {
-		if est, err := s.marketPriceSvc.FetchLiveMarketPrice(item); err == nil && est != nil && est.EstimatedPrice > 0 {
+	for _, itemSpec := range items {
+		query := itemSpec.ItemName
+		if itemSpec.Quantity != "" {
+			query += " " + itemSpec.Quantity
+		}
+		if itemSpec.Unit != "" {
+			query += " " + itemSpec.Unit
+		}
+
+		if est, err := s.marketPriceSvc.FetchLiveMarketPrice(query); err == nil && est != nil && est.EstimatedPrice > 0 {
+			est.ItemName = itemSpec.ItemName
 			liveEstimates = append(liveEstimates, *est)
 		} else {
-			unhandledItems = append(unhandledItems, item)
+			unhandledSpecs = append(unhandledSpecs, itemSpec)
 		}
 	}
 
-	// If all items were resolved via live market APIs
-	if len(unhandledItems) == 0 {
+	if len(unhandledSpecs) == 0 {
 		res := &PriceEstimationResult{Items: liveEstimates}
 		s.calculateTotal(res)
 		return res, nil
 	}
 
-	// 2. Fallback to 2026 Turkish Market Anchored AI for remaining items
+	var formattedItems []string
+	for _, spec := range unhandledSpecs {
+		str := spec.ItemName
+		if spec.Quantity != "" || spec.Unit != "" {
+			str += fmt.Sprintf(" (Miktar: %s %s)", spec.Quantity, spec.Unit)
+		}
+		formattedItems = append(formattedItems, str)
+	}
+
 	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye zincir market (BİM, A101, Migros, Carrefour) en son etiket fiyatlarını %%100 GERÇEKÇİ bilen uzman asistansın.
 
-2026 YILI GÜNCEL TÜRKİYE MARKET ETİKET FİYAT BASAMAKLARI (KESİNLİKLE BU GERÇEKÇİ SEVİYELERİ BAZ AL):
-- 1 kg Tavuk / Piliç Göğüs / Paket Tavuk: 140 - 220 TL
-- 1 Paket Cips (Büyük Boy Lay's/Ruffles/Doritos): 35 - 55 TL
+2026 YILI GÜNCEL TÜRKİYE MARKET ETİKET FİYAT BASAMAKLARI:
+- 1 kg Tavuk / Piliç Göğüs: 180 - 220 TL (Bütün Piliç 1 kg: 95 - 110 TL)
+- 1 Paket Cips (Büyük Boy Lay's/Ruffles/Doritos 130g): 35 - 55 TL
+- Üçgen Peynir (8'li Kutu 100g): 35 - 45 TL (24'lü Aile Boyu Kutu: 95 - 120 TL)
 - 1L Tam Yağlı Süt: 38 - 50 TL
 - 15li Yumurta (L Boy): 75 - 110 TL
 - Somun Ekmek (200g): 12 - 15 TL
@@ -97,23 +121,25 @@ func (s *AIService) EstimatePrices(items []string) (*PriceEstimationResult, erro
 - Bulaşık Deterjanı: 55 - 95 TL
 - 12li Tuvalet Kağıdı: 120 - 190 TL
 
-Aşağıdaki alışveriş listesindeki ürünlerin 2026 yılı güncel gerçekçi Türkiye ortalama market etiket fiyatlarını (TL), min-max aralığını ve reyon kategorisini çıkar.
-Fiyatları KESİNLİKLE yukarıdaki 2026 güncel basamak seviyelerine uygun gerçekçi tut.
+Aşağıdaki ürünlerin 2026 etiket fiyatını (TL), paket boyutu tanımını (unit_spec) ve farklı paket boyutu/varyant varsa ipucu notunu (variant_note) çıkar.
+Miktar girilmediyse standart tekli küçük paketi (Örn: 8'li / 1 kg) kabul et.
 
 Ürünler: %s
 
-Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama yazma:
+Yalnızca aşağıdaki JSON formatında yanıt ver:
 {
   "items": [
     {
       "item_name": "ürün adı",
-      "estimated_price": 180.0,
-      "min_price": 140.0,
-      "max_price": 220.0,
-      "category": "Temel Gıda"
+      "estimated_price": 35.0,
+      "min_price": 30.0,
+      "max_price": 45.0,
+      "category": "Süt & Kahvaltılık",
+      "unit_spec": "8'li Standart Kutu (100g)",
+      "variant_note": "24'lü Aile Boyu ise ~95 TL"
     }
   ]
-}`, strings.Join(unhandledItems, ", "))
+}`, strings.Join(formattedItems, ", "))
 
 	respJSON, err := s.queryGroqOrGeminiText(prompt)
 	if err != nil {
@@ -143,7 +169,6 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
 func (s *AIService) calculateTotal(res *PriceEstimationResult) {
 	var total float64
 	for i := range res.Items {
-		// Outlier check: Keep price bounds reasonable (max 10000 TL per single item)
 		if res.Items[i].EstimatedPrice > 10000 {
 			res.Items[i].EstimatedPrice = 100
 		}
@@ -154,7 +179,6 @@ func (s *AIService) calculateTotal(res *PriceEstimationResult) {
 
 // ScanReceipt processes an in-memory base64 image of a grocery receipt via Gemini Vision API.
 func (s *AIService) ScanReceipt(base64Image string) (*ReceiptScanResult, error) {
-	// Strip header if data URI scheme is present
 	if idx := strings.Index(base64Image, ","); idx != -1 {
 		base64Image = base64Image[idx+1:]
 	}
@@ -245,7 +269,6 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
 }
 
 func (s *AIService) queryGroqOrGeminiText(prompt string) (string, error) {
-	// Try Groq API first if key configured
 	if s.groqKey != "" {
 		res, err := s.queryGroq(prompt)
 		if err == nil && res != "" {
@@ -254,7 +277,6 @@ func (s *AIService) queryGroqOrGeminiText(prompt string) (string, error) {
 		log.Printf("[AI Service] Groq query warning: %v. Falling back to Gemini...", err)
 	}
 
-	// Fallback to Gemini 2.0 Flash text query if Groq unavailable or key missing
 	if s.geminiKey != "" {
 		return s.queryGeminiText(prompt)
 	}
@@ -353,5 +375,4 @@ func (s *AIService) queryGeminiText(prompt string) (string, error) {
 	return geminiResp.Candidates[0].Content.Parts[0].Text, nil
 }
 
-// Unused helper for unused warnings
 var _ = base64.StdEncoding

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strings"
+
 	"kap-app-backend/internal/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,10 +19,10 @@ func NewAIHandler(aiService *service.AIService) *AIHandler {
 }
 
 type EstimatePricesReq struct {
-	Items []string `json:"items"`
+	Items []service.ItemSpecDTO `json:"items"`
 }
 
-// EstimatePricesHandler (POST /api/v1/ai/estimate-prices) calculates estimated prices and categories.
+// EstimatePricesHandler (POST /api/v1/ai/estimate-prices) calculates estimated prices, categories, unit specs and variant notes.
 func (h *AIHandler) EstimatePricesHandler(c *fiber.Ctx) error {
 	var req EstimatePricesReq
 	if err := c.BodyParser(&req); err != nil {
@@ -35,9 +37,15 @@ func (h *AIHandler) EstimatePricesHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Limit list size to max 50 items per request
+	// Limit list size to max 50 items per request and sanitize inputs
 	if len(req.Items) > 50 {
 		req.Items = req.Items[:50]
+	}
+
+	for i := range req.Items {
+		req.Items[i].ItemName = sanitizeInput(req.Items[i].ItemName, 100)
+		req.Items[i].Quantity = sanitizeInput(req.Items[i].Quantity, 30)
+		req.Items[i].Unit = sanitizeInput(req.Items[i].Unit, 30)
 	}
 
 	res, err := h.aiService.EstimatePrices(req.Items)
@@ -84,4 +92,14 @@ func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(res)
+}
+
+func sanitizeInput(input string, maxLen int) string {
+	cleaned := strings.ReplaceAll(input, "\n", " ")
+	cleaned = strings.ReplaceAll(cleaned, "\r", "")
+	cleaned = strings.TrimSpace(cleaned)
+	if len(cleaned) > maxLen {
+		cleaned = cleaned[:maxLen]
+	}
+	return cleaned
 }
