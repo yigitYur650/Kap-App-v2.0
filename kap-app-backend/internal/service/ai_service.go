@@ -79,21 +79,26 @@ func (s *AIService) EstimatePrices(items []string) (*PriceEstimationResult, erro
 	}
 
 	// 2. Fallback to 2026 Turkish Market Anchored AI for remaining items
-	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye zincir market (BİM, A101, Migros, Carrefour) fiyatlarını %%100 GERÇEKÇİ bilen uzman asistansın.
-2026 YILI GÜNCEL TÜRKİYE MARKET FİYAT BASAMAKLARI:
-- 1L Tam Yağlı Süt: 38 - 48 TL
-- Somun Ekmek: 10 - 15 TL
-- 15li Yumurta: 65 - 95 TL
-- 1 kg Domates: 35 - 55 TL
-- 1 kg Salatalık: 30 - 50 TL
-- 500g Makarna: 18 - 28 TL
-- 1L Ayçiçek Yağı: 60 - 80 TL
-- 1 kg Çay: 160 - 220 TL
-- Bulaşık Deterjanı: 45 - 75 TL
-- 12li Tuvalet Kağıdı: 110 - 160 TL
+	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye zincir market (BİM, A101, Migros, Carrefour) en son etiket fiyatlarını %%100 GERÇEKÇİ bilen uzman asistansın.
 
-Aşağıdaki alışveriş listesindeki ürünlerin 2026 yılı güncel gerçekçi Türkiye ortalama market fiyatlarını (TL), min-max aralığını ve reyon kategorisini çıkar.
-Kategoriler yalnızca şunlar olabilir: "Meyve & Sebze", "Süt & Kahvaltılık", "Temel Gıda", "Atıştırmalık", "İçecek", "Temizlik", "Genel".
+2026 YILI GÜNCEL TÜRKİYE MARKET ETİKET FİYAT BASAMAKLARI (KESİNLİKLE BU GERÇEKÇİ SEVİYELERİ BAZ AL):
+- 1 kg Tavuk / Piliç Göğüs / Paket Tavuk: 140 - 220 TL
+- 1 Paket Cips (Büyük Boy Lay's/Ruffles/Doritos): 35 - 55 TL
+- 1L Tam Yağlı Süt: 38 - 50 TL
+- 15li Yumurta (L Boy): 75 - 110 TL
+- Somun Ekmek (200g): 12 - 15 TL
+- 500g Beyaz Peynir / Kaşar: 120 - 180 TL
+- 1 kg Kıyma / Dana Et: 450 - 650 TL
+- 1 kg Domates: 35 - 60 TL
+- 1 kg Salatalık: 30 - 55 TL
+- 500g Makarna: 18 - 30 TL
+- 1L Ayçiçek Yağı: 65 - 90 TL
+- 1 kg Çay: 160 - 240 TL
+- Bulaşık Deterjanı: 55 - 95 TL
+- 12li Tuvalet Kağıdı: 120 - 190 TL
+
+Aşağıdaki alışveriş listesindeki ürünlerin 2026 yılı güncel gerçekçi Türkiye ortalama market etiket fiyatlarını (TL), min-max aralığını ve reyon kategorisini çıkar.
+Fiyatları KESİNLİKLE yukarıdaki 2026 güncel basamak seviyelerine uygun gerçekçi tut.
 
 Ürünler: %s
 
@@ -102,10 +107,10 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
   "items": [
     {
       "item_name": "ürün adı",
-      "estimated_price": 38.0,
-      "min_price": 30.0,
-      "max_price": 45.0,
-      "category": "Süt & Kahvaltılık"
+      "estimated_price": 180.0,
+      "min_price": 140.0,
+      "max_price": 220.0,
+      "category": "Temel Gıda"
     }
   ]
 }`, strings.Join(unhandledItems, ", "))
