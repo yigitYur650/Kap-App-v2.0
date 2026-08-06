@@ -199,14 +199,19 @@ func getFCMv1AccessToken(serviceAccountPath string) (string, string, error) {
 	envJSON := os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
 	if envJSON != "" {
 		trimmed := strings.TrimSpace(envJSON)
-		// 1. Try base64 decoding first
-		decoded, b64err := base64.StdEncoding.DecodeString(trimmed)
-		if b64err == nil && len(decoded) > 0 && json.Valid(decoded) {
-			data = decoded
-		} else {
-			// 2. Fallback to unescaping double backslashes
+		if strings.HasPrefix(trimmed, "{") {
+			// Raw JSON string
 			cleaned := strings.ReplaceAll(trimmed, "\\n", "\n")
 			data = []byte(cleaned)
+		} else {
+			// Base64 encoded string
+			decoded, b64err := base64.StdEncoding.DecodeString(trimmed)
+			if b64err == nil && len(decoded) > 0 {
+				data = decoded
+			} else {
+				cleaned := strings.ReplaceAll(trimmed, "\\n", "\n")
+				data = []byte(cleaned)
+			}
 		}
 	} else {
 		data, err = os.ReadFile(serviceAccountPath)
@@ -225,9 +230,18 @@ func getFCMv1AccessToken(serviceAccountPath string) (string, string, error) {
 	}
 
 	pkPem := strings.ReplaceAll(sa.PrivateKey, "\\n", "\n")
+	pkPem = strings.ReplaceAll(pkPem, "\r\n", "\n")
+	pkPem = strings.TrimSpace(pkPem)
+
 	block, _ := pem.Decode([]byte(pkPem))
 	if block == nil {
-		return "", "", errors.New("failed to decode private key PEM")
+		if !strings.HasSuffix(pkPem, "\n") {
+			pkPem += "\n"
+		}
+		block, _ = pem.Decode([]byte(pkPem))
+		if block == nil {
+			return "", "", errors.New("failed to decode private key PEM")
+		}
 	}
 
 	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
