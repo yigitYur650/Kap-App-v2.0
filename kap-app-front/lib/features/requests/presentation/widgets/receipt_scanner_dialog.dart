@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_typography.dart';
@@ -21,6 +22,28 @@ class _ReceiptScannerDialogState extends State<ReceiptScannerDialog> {
   bool _isScanning = false;
   Map<String, dynamic>? _scanResult;
   String? _errorMessage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 80,
+      );
+
+      if (image == null) return;
+
+      final bytes = await image.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      await _processReceiptImage(base64Image);
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Görsel seçme hatası: $e';
+      });
+    }
+  }
 
   Future<void> _processReceiptImage(String base64Image) async {
     setState(() {
@@ -135,12 +158,14 @@ class _ReceiptScannerDialogState extends State<ReceiptScannerDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   OutlinedButton.icon(
-                    onPressed: () {
-                      // Demo fallback image simulation or camera trigger
-                      _processReceiptImage('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
-                    },
+                    onPressed: () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt),
-                    label: const Text('Fotoğraf Çek'),
+                    label: const Text('Kamera'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => _pickImage(ImageSource.gallery),
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Galeri'),
                   ),
                 ],
               ),
