@@ -51,10 +51,12 @@ func main() {
 
 	// Services
 	authSvc := authService.NewAuthService(userRepo)
+	aiSvc := authService.NewAIService(cfg.GroqAPIKey, cfg.GeminiAPIKey)
 
 	// Handlers
 	authHandler := handler.NewAuthHandler(authSvc)
 	versionHandler := handler.NewAppVersionHandler(sbClient)
+	aiHandler := handler.NewAIHandler(aiSvc)
 
 	// API Routing Groups
 	api := app.Group("/api")
@@ -72,6 +74,11 @@ func main() {
 	adminGroup.Post("/app-version", versionHandler.CreateVersionHandler)
 	adminGroup.Delete("/app-version/:id", versionHandler.DeleteVersionHandler)
 	adminGroup.Post("/push-notification", versionHandler.SendPushNotificationHandler)
+
+	// Protected AI Routes (Rate Limited: Max 20 per hour)
+	aiGroup := v1.Group("/ai", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL), middleware.AIRateLimiter(20, 1*time.Hour))
+	aiGroup.Post("/estimate-prices", aiHandler.EstimatePricesHandler)
+	aiGroup.Post("/scan-receipt", aiHandler.ScanReceiptHandler)
 
 	// Protected Routes Group
 	protectedGroup := v1.Group("/protected", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))

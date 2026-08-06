@@ -14,6 +14,8 @@ type Config struct {
 	SupabaseServiceRoleKey string
 	SupabaseJWTSecret      string
 	CORSAllowedOrigins     string
+	GroqAPIKey             string
+	GeminiAPIKey           string
 }
 
 // LoadConfig loads application configuration from environment variables and optionally a .env file.
@@ -38,11 +40,16 @@ func LoadConfig() *Config {
 		corsAllowedOrigins = "http://localhost:3000,http://localhost:8080,http://localhost:9000"
 	}
 
+	groqAPIKey := os.Getenv("GROQ_API_KEY")
+	geminiAPIKey := os.Getenv("GEMINI_API_KEY")
+
 	return &Config{
 		Port:                   port,
 		SupabaseURL:            supabaseURL,
 		SupabaseServiceRoleKey: supabaseServiceRoleKey,
 		SupabaseJWTSecret:      supabaseJWTSecret,
 		CORSAllowedOrigins:     corsAllowedOrigins,
+		GroqAPIKey:             groqAPIKey,
+		GeminiAPIKey:           geminiAPIKey,
 	}
 }

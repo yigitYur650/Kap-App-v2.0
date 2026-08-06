@@ -12,6 +12,9 @@ class RequestModel {
   final String? quantity;
   final String? unit;
   final String? category;
+  final String? boughtBy;
+  final DateTime? boughtAt;
+  final double? boughtPrice;
 
   const RequestModel({
     required this.id,
@@ -26,6 +29,9 @@ class RequestModel {
     this.quantity,
     this.unit,
     this.category,
+    this.boughtBy,
+    this.boughtAt,
+    this.boughtPrice,
   });
 
   RequestModel copyWith({
@@ -41,6 +47,9 @@ class RequestModel {
     String? quantity,
     String? unit,
     String? category,
+    String? boughtBy,
+    DateTime? boughtAt,
+    double? boughtPrice,
   }) {
     return RequestModel(
       id: id ?? this.id,
@@ -55,6 +64,9 @@ class RequestModel {
       quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
       category: category ?? this.category,
+      boughtBy: boughtBy ?? this.boughtBy,
+      boughtAt: boughtAt ?? this.boughtAt,
+      boughtPrice: boughtPrice ?? this.boughtPrice,
     );
   }
 
@@ -75,6 +87,9 @@ class RequestModel {
       quantity: json['quantity'] as String?,
       unit: json['unit'] as String?,
       category: json['category'] as String?,
+      boughtBy: json['bought_by'] as String?,
+      boughtAt: json['bought_at'] != null ? DateTime.parse(json['bought_at'] as String) : null,
+      boughtPrice: json['bought_price'] != null ? (json['bought_price'] as num).toDouble() : null,
     );
   }
 
@@ -93,6 +108,9 @@ class RequestModel {
       'quantity': quantity,
       'unit': unit,
       'category': category,
+      'bought_by': boughtBy,
+      'bought_at': boughtAt?.toIso8601String(),
+      'bought_price': boughtPrice,
     };
   }
 }
