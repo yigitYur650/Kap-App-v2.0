@@ -70,6 +70,41 @@ type ReceiptScanResult struct {
 	Items     []ReceiptItem `json:"items"`
 }
 
+var turkishBaselinePrices = map[string]ItemPriceEstimate{
+	"ekmek":   {ItemName: "Ekmek", EstimatedPrice: 12.50, MinPrice: 10.0, MaxPrice: 15.0, Category: "Unlu Mamul", UnitSpec: "200g Somun", SourceMarket: "BİM / Fırın", Brand: "Halk Fırın"},
+	"süt":     {ItemName: "Süt", EstimatedPrice: 39.50, MinPrice: 35.0, MaxPrice: 48.0, Category: "Süt Ürünleri", UnitSpec: "1L Tam Yağlı Pet/Kutu", SourceMarket: "Migros", Brand: "Sütaş"},
+	"yumurta": {ItemName: "Yumurta", EstimatedPrice: 89.50, MinPrice: 75.0, MaxPrice: 110.0, Category: "Kahvaltılık", UnitSpec: "15'li L Boy Kutu", SourceMarket: "A101 / BİM", Brand: "Köyüm"},
+	"kola":    {ItemName: "Kola", EstimatedPrice: 55.00, MinPrice: 32.5, MaxPrice: 70.0, Category: "İçecek", UnitSpec: "1.5L Pet", SourceMarket: "Migros", Brand: "Coca-Cola"},
+	"tavuk":   {ItemName: "Tavuk Göğüs", EstimatedPrice: 195.00, MinPrice: 160.0, MaxPrice: 220.0, Category: "Et & Piliç", UnitSpec: "1 kg Paket", SourceMarket: "BİM", Brand: "Erpiliç"},
+	"kıyma":   {ItemName: "Dana Kıyma", EstimatedPrice: 520.00, MinPrice: 450.0, MaxPrice: 600.0, Category: "Et & Piliç", UnitSpec: "1 kg Taze Kıyma", SourceMarket: "Migros", Brand: "Uzman Kasap"},
+	"peynir":  {ItemName: "Beyaz Peynir", EstimatedPrice: 145.00, MinPrice: 120.0, MaxPrice: 180.0, Category: "Kahvaltılık", UnitSpec: "500g Tam Yağlı", SourceMarket: "Migros", Brand: "Sütaş"},
+	"cips":    {ItemName: "Cips", EstimatedPrice: 45.00, MinPrice: 35.0, MaxPrice: 55.0, Category: "Atıştırmalık", UnitSpec: "130g Parti Boy", SourceMarket: "Migros", Brand: "Lay's"},
+	"yağ":     {ItemName: "Ayçiçek Yağı", EstimatedPrice: 75.00, MinPrice: 65.0, MaxPrice: 90.0, Category: "Temel Gıda", UnitSpec: "1L Pet", SourceMarket: "BİM", Brand: "Sole"},
+	"makarna": {ItemName: "Makarna", EstimatedPrice: 22.50, MinPrice: 18.0, MaxPrice: 30.0, Category: "Temel Gıda", UnitSpec: "500g Paket", SourceMarket: "Migros", Brand: "Filiz"},
+	"çay":     {ItemName: "Çay", EstimatedPrice: 195.00, MinPrice: 160.0, MaxPrice: 240.0, Category: "İçecek", UnitSpec: "1 kg Rize Çayı", SourceMarket: "Migros", Brand: "Çaykur"},
+	"su":      {ItemName: "Su 5L", EstimatedPrice: 28.50, MinPrice: 20.0, MaxPrice: 35.0, Category: "İçecek", UnitSpec: "5L Pet", SourceMarket: "BİM", Brand: "Erikli"},
+}
+
+func getBaselinePrice(itemName string) ItemPriceEstimate {
+	lower := strings.ToLower(itemName)
+	for key, val := range turkishBaselinePrices {
+		if strings.Contains(lower, key) {
+			val.ItemName = itemName
+			return val
+		}
+	}
+	return ItemPriceEstimate{
+		ItemName:       itemName,
+		EstimatedPrice: 45.0,
+		MinPrice:       35.0,
+		MaxPrice:       60.0,
+		Category:       "Genel",
+		UnitSpec:       "1 Adet Standard",
+		SourceMarket:   "Migros / BİM",
+		Brand:          "Standart",
+	}
+}
+
 // EstimatePrices returns estimated Turkish Lira price ranges, unit specs, variant notes & categories.
 func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult, error) {
 	if len(items) == 0 {
@@ -100,7 +135,7 @@ GÜNCEL TEK REFERANS MARKET (MİGROS & BİM/A101) RAF FİYATI STANDARTLARI (2026
 - 1L Ayçiçek Yağı (Yudum/Sole/Orkide): 75.00 TL (BİM / A101)
 - 1 kg Rize Çay (Çaykur): 195.00 TL (Migros)
 
-Aşağıdaki ürünlerin tekil referans market (Migros / BİM) raf etiket fiyatını (estimated_price), marka adını (brand), referans marketini (source_market: Migros veya BİM) ve varsa boyut varyantlarını çıkar.
+ÇOK ÖNEMLİ KURAL: İstenen HER ürün için YALNIZCA 1 ADET nesne oluştur. Aynı ürün için birden fazla market seçeneği ekleme.
 
 Ürünler: %s
 
@@ -127,35 +162,43 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
   ]
 }`, strings.Join(formattedItems, ", "))
 
+	var finalItems []ItemPriceEstimate
 	respJSON, err := s.queryGroqOrGeminiText(prompt)
-	if err != nil {
-		// Fallback to live market scraper if Groq is offline
-		var liveEstimates []ItemPriceEstimate
-		for _, itemSpec := range items {
-			query := itemSpec.ItemName
-			if est, err := s.marketPriceSvc.FetchLiveMarketPrice(query); err == nil && est != nil && est.EstimatedPrice > 0 {
-				est.ItemName = itemSpec.ItemName
-				liveEstimates = append(liveEstimates, *est)
+	if err == nil && respJSON != "" {
+		var aiRes PriceEstimationResult
+		if unerr := json.Unmarshal([]byte(respJSON), &aiRes); unerr != nil {
+			start := strings.Index(respJSON, "{")
+			end := strings.LastIndex(respJSON, "}")
+			if start >= 0 && end > start {
+				_ = json.Unmarshal([]byte(respJSON[start:end+1]), &aiRes)
 			}
 		}
-		if len(liveEstimates) > 0 {
-			res := &PriceEstimationResult{Items: liveEstimates}
-			s.calculateTotal(res)
-			return res, nil
-		}
-		return nil, err
-	}
 
-	var aiRes PriceEstimationResult
-	if err := json.Unmarshal([]byte(respJSON), &aiRes); err != nil {
-		start := strings.Index(respJSON, "{")
-		end := strings.LastIndex(respJSON, "}")
-		if start >= 0 && end > start {
-			_ = json.Unmarshal([]byte(respJSON[start:end+1]), &aiRes)
+		// Deduplicate and validate items from AI
+		seen := make(map[string]bool)
+		for _, item := range aiRes.Items {
+			if item.ItemName != "" && !seen[item.ItemName] && item.EstimatedPrice > 0 {
+				seen[item.ItemName] = true
+				finalItems = append(finalItems, item)
+			}
 		}
 	}
 
-	res := &PriceEstimationResult{Items: aiRes.Items}
+	// Ensure EVERY requested item has a price (fill missing items with baseline)
+	for _, spec := range items {
+		found := false
+		for _, fi := range finalItems {
+			if strings.EqualFold(fi.ItemName, spec.ItemName) || strings.Contains(strings.ToLower(fi.ItemName), strings.ToLower(spec.ItemName)) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			finalItems = append(finalItems, getBaselinePrice(spec.ItemName))
+		}
+	}
+
+	res := &PriceEstimationResult{Items: finalItems}
 	s.calculateTotal(res)
 	return res, nil
 }
