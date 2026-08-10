@@ -111,7 +111,7 @@ class AIPriceEstimatorBar extends StatelessWidget {
                       onPressed: onEstimatePressed,
                       icon: const Icon(Icons.calculate_outlined, size: 16),
                       label: Text(
-                        isNarrow ? 'Hesapla' : 'Fiyat Hesapla',
+                        estimatedTotal != null ? (isNarrow ? 'Yenile' : 'Yeniden Hesapla') : (isNarrow ? 'Hesapla' : 'Fiyat Hesapla'),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(

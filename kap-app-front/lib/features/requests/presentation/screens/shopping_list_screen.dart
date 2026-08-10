@@ -148,8 +148,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   itemCount: items.length,
                   itemBuilder: (context, idx) {
                     final item = items[idx];
+                    final brand = item['brand'] as String?;
+                    final sourceMarket = item['source_market'] as String?;
                     final unitSpec = item['unit_spec'] as String?;
                     final variantNote = item['variant_note'] as String?;
+                    final variants = item['variants'] as List<dynamic>? ?? [];
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
@@ -165,9 +168,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                item['item_name'] ?? '',
-                                style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
+                              Expanded(
+                                child: Text(
+                                  item['item_name'] ?? '',
+                                  style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
+                                ),
                               ),
                               Text(
                                 '~${item['estimated_price']} TL',
@@ -179,6 +184,39 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                               ),
                             ],
                           ),
+                          if ((brand != null && brand.isNotEmpty) || (sourceMarket != null && sourceMarket.isNotEmpty)) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                if (brand != null && brand.isNotEmpty) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '🏷️ $brand',
+                                      style: AppTypography.labelSm.copyWith(color: Colors.blue, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                ],
+                                if (sourceMarket != null && sourceMarket.isNotEmpty)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '🛒 $sourceMarket',
+                                      style: AppTypography.labelSm.copyWith(color: Colors.orange, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: 4),
                           Text(
                             'Kategori: ${item['category'] ?? 'Genel'}',
@@ -219,6 +257,33 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                 ),
                               ],
                             ),
+                          ],
+                          if (variants.isNotEmpty) ...[
+                            const Divider(height: 14),
+                            Text(
+                              'Popüler Miktar & Fiyat Seçenekleri:',
+                              style: AppTypography.labelSm.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
+                            ...variants.map((v) {
+                              final size = v['size'] ?? '';
+                              final vPrice = v['price'] ?? 0;
+                              final store = v['store'] ?? '';
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 2),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('• $size', style: AppTypography.bodyMd.copyWith(fontSize: 12)),
+                                    Text(
+                                      '$vPrice TL ${store.toString().isNotEmpty ? "($store)" : ""}',
+                                      style: AppTypography.labelSm.copyWith(fontWeight: FontWeight.bold, color: Colors.tealAccent),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
                           ],
                         ],
                       ),

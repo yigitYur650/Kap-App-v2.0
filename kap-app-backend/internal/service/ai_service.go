@@ -34,14 +34,23 @@ type ItemSpecDTO struct {
 	Unit     string `json:"unit,omitempty"`
 }
 
+type ProductVariant struct {
+	Size  string  `json:"size"`
+	Price float64 `json:"price"`
+	Store string  `json:"store,omitempty"`
+}
+
 type ItemPriceEstimate struct {
-	ItemName       string  `json:"item_name"`
-	EstimatedPrice float64 `json:"estimated_price"`
-	MinPrice       float64 `json:"min_price"`
-	MaxPrice       float64 `json:"max_price"`
-	Category       string  `json:"category"`
-	UnitSpec       string  `json:"unit_spec,omitempty"`
-	VariantNote    string  `json:"variant_note,omitempty"`
+	ItemName       string           `json:"item_name"`
+	Brand          string           `json:"brand,omitempty"`
+	EstimatedPrice float64          `json:"estimated_price"`
+	MinPrice       float64          `json:"min_price"`
+	MaxPrice       float64          `json:"max_price"`
+	Category       string           `json:"category"`
+	UnitSpec       string           `json:"unit_spec,omitempty"`
+	VariantNote    string           `json:"variant_note,omitempty"`
+	SourceMarket   string           `json:"source_market,omitempty"`
+	Variants       []ProductVariant `json:"variants,omitempty"`
 }
 
 type PriceEstimationResult struct {
@@ -102,27 +111,19 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 		formattedItems = append(formattedItems, str)
 	}
 
-	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye zincir market (BİM, A101, Migros, Carrefour) en son etiket fiyatlarını %%100 GERÇEKÇİ bilen uzman asistansın.
+	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye zincir market (BİM, A101, Migros, CarrefourSA) en son etiket fiyatlarını %%100 GERÇEKÇİ bilen uzman asistansın.
 
-2026 YILI GÜNCEL TÜRKİYE MARKET ETİKET FİYAT BASAMAKLARI:
+2026 YILI GÜNCEL TÜRKİYE MARKET ETİKET FİYAT BASAMAKLARI VE BOYUT SEÇENEKLERİ:
+- Kola (Coca-Cola/Pepsi): 330ml Kutu (32.50 TL A101), 1L Pet (45 TL BİM), 1.5L Pet (55 TL Migros), 2.5L Pet (70 TL CarrefourSA)
 - 1 kg Tavuk / Piliç Göğüs: 180 - 220 TL (Bütün Piliç 1 kg: 95 - 110 TL)
 - 1 Paket Cips (Büyük Boy Lay's/Ruffles/Doritos 130g): 35 - 55 TL
-- Üçgen Peynir (8'li Kutu 100g): 35 - 45 TL (24'lü Aile Boyu Kutu: 95 - 120 TL)
-- 1L Tam Yağlı Süt: 38 - 50 TL
+- 1L Tam Yağlı Süt (Sütaş/Pınar/Torku): 38 - 50 TL
 - 15li Yumurta (L Boy): 75 - 110 TL
 - Somun Ekmek (200g): 12 - 15 TL
 - 500g Beyaz Peynir / Kaşar: 120 - 180 TL
 - 1 kg Kıyma / Dana Et: 450 - 650 TL
-- 1 kg Domates: 35 - 60 TL
-- 1 kg Salatalık: 30 - 55 TL
-- 500g Makarna: 18 - 30 TL
-- 1L Ayçiçek Yağı: 65 - 90 TL
-- 1 kg Çay: 160 - 240 TL
-- Bulaşık Deterjanı: 55 - 95 TL
-- 12li Tuvalet Kağıdı: 120 - 190 TL
 
-Aşağıdaki ürünlerin 2026 etiket fiyatını (TL), paket boyutu tanımını (unit_spec) ve farklı paket boyutu/varyant varsa ipucu notunu (variant_note) çıkar.
-Miktar girilmediyse standart tekli küçük paketi (Örn: 8'li / 1 kg) kabul et.
+Aşağıdaki ürünlerin 2026 etiket fiyatını (TL), marka adını (brand), kaynak marketini (source_market: BİM/A101/Migros) ve varsa en popüler miktar/boyut varyant dökümlerini (variants: size, price, store) çıkar.
 
 Ürünler: %s
 
@@ -131,12 +132,20 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
   "items": [
     {
       "item_name": "ürün adı",
-      "estimated_price": 35.0,
-      "min_price": 30.0,
-      "max_price": 45.0,
-      "category": "Süt & Kahvaltılık",
-      "unit_spec": "8'li Standart Kutu (100g)",
-      "variant_note": "24'lü Aile Boyu ise ~95 TL"
+      "brand": "Coca-Cola",
+      "estimated_price": 55.0,
+      "min_price": 32.5,
+      "max_price": 70.0,
+      "category": "İçecek",
+      "unit_spec": "1.5L Standart Pet",
+      "variant_note": "330ml Kutu ~32.50 TL, 2.5L ~70 TL",
+      "source_market": "Migros / A101 / BİM",
+      "variants": [
+        { "size": "330 ml Kutu", "price": 32.5, "store": "A101" },
+        { "size": "1 L Pet", "price": 45.0, "store": "BİM" },
+        { "size": "1.5 L Pet", "price": 55.0, "store": "Migros" },
+        { "size": "2.5 L Pet", "price": 70.0, "store": "CarrefourSA" }
+      ]
     }
   ]
 }`, strings.Join(formattedItems, ", "))
