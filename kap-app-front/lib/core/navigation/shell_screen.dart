@@ -35,7 +35,7 @@ class _ShellScreenState extends State<ShellScreen> {
   void _handleSwipe(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
     final current = widget.navigationShell.currentIndex;
-    if (velocity < -250 && current < 2) {
+    if (velocity < -250 && current < 3) {
       // Swiped Left -> Go to next tab
       _onTabSelect(current + 1);
     } else if (velocity > 250 && current > 0) {
@@ -106,6 +106,13 @@ class _ShellScreenState extends State<ShellScreen> {
                       Expanded(
                         child: _buildNavItem(
                           index: 2,
+                          icon: Icons.fitness_center,
+                          label: 'Kişisel',
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildNavItem(
+                          index: 3,
                           icon: Icons.settings,
                           label: localizations.nav_tab_settings,
                         ),

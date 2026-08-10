@@ -8,6 +8,7 @@ import 'package:kap_app_front/features/groups/presentation/screens/hub_screen.da
 import 'package:kap_app_front/features/groups/presentation/screens/settings_screen.dart';
 import 'package:kap_app_front/features/requests/presentation/screens/shopping_list_screen.dart';
 import 'package:kap_app_front/features/admin/presentation/admin_dashboard_screen.dart';
+import 'package:kap_app_front/features/health/presentation/screens/health_profile_screen.dart';
 import 'package:kap_app_front/core/navigation/shell_screen.dart';
 
 /// Provider that exposes the GoRouter configuration and rebuilds on auth state changes.
@@ -77,8 +78,18 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+
+          // Tab 2: Health / Kişisel Profile
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/health',
+                builder: (context, state) => const HealthProfileScreen(),
+              ),
+            ],
+          ),
           
-          // Tab 2: Settings
+          // Tab 3: Settings
           StatefulShellBranch(
             routes: [
               GoRoute(
