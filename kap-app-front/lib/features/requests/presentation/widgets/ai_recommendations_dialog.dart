@@ -15,7 +15,7 @@ class AIRecommendationsDialog extends StatelessWidget {
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'health':
-        return Colors.emerald;
+        return Colors.green;
       case 'savings':
         return Colors.orange;
       case 'recipe':
