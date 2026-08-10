@@ -5,8 +5,8 @@
 > known technical debt, error handling patterns, and database schema — so the LLM can
 > operate without reading every single file first.
 >
-> **Last updated:** 2026-08-07 (v4 - Updated with AI Integration, Live Market Engine, Price Pool & Receipt OCR)
-> **Status:** Sprint 1, AI Integration, Live Turkish Market Engine & Flat Permission Architecture complete. Go Backend tests 100% PASSING. Flutter analyze clean.
+> **Last updated:** 2026-08-11 (v4 - Version 2.4.1+128: Playwright Live Scraper, 24h In-Memory Price Cache & Gemini 3.6 Vision)
+> **Status:** Sprint 1-4, AI Receipt OCR, Playwright Scraper, 24h In-Memory Cache & Version 2.4.1+128 complete. Go Backend tests 100% PASSING. Flutter analyze clean.
 >
 > **⚠️ NOTE:** This is v4. `PROJECT_MAP_FOR_LLM.md` (v1), `PROJECT_MAP_FOR_LLM_v2.md` (v2), and `PROJECT_MAP_FOR_LLM_v3.md` (v3) 
 > exist alongside this file. This v4 file is the AUTHORITATIVE version.

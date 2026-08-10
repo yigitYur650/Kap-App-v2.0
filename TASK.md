@@ -313,5 +313,21 @@ These are out of scope for Sprint 1. Do not implement.
 - Completed: W4-1 (System Admins, OTA In-App Auto-Updater & Push Notifications)
 - Notes: Implemented and verified end-to-end OTA in-app update engine, Gradle ABI split build number normalization, admin dashboard, RLS policies, and realtime push notifications. Built release APK 109 (`app-arm64-v8a-release.apk`). All checks passing 100%.
 
+---
+
+### W4-2: AI Receipt Scanner, Groq AI & Playwright Price Estimation Engine
+- [x] **AI Receipt Scanner & OCR (`receipt_scanner_dialog.dart`, `ai_service.go`):** RAM-only base64 receipt scanning with `gemini-3.6-flash` & `gemini-flash-latest` model fallbacks. User-friendly Turkish error handling for HTTP 429 rate/quota limits.
+- [x] **Groq AI Price Estimator (`ai_service.go`):** Instant 2026 Turkish market price range (Min, Max, Avg) using `llama-3.3-70b-versatile`, with unit specs and variant notes.
+- [x] **Playwright Live Web Scraper (`price_scraper.js`, `playwright_price_service.go`):** Headless Chromium scraper extracting live Turkish grocery prices from Akakçe/e-commerce.
+- [x] **24-Hour In-Memory Price Cache (`price_cache_service.go`):** Thread-safe sub-10ms cached price lookup for frequent items.
+- [x] **Version & Release Bump:** `pubspec.yaml` version bumped to `2.4.1+128` and pushed to GitHub.
+
+---
+
+### [2026-08-11]
+- Completed: W4-2 (AI Receipt Scanner, Groq AI & Playwright Price Estimation Engine)
+- Notes: Integrated Gemini Vision OCR (`gemini-3.6-flash`), Groq price estimator, Playwright live web scraper, 24h in-memory price cache, and bumped version to `2.4.1+128`. All Go backend tests pass 100%.
+
+
 
 
