@@ -79,6 +79,7 @@ func main() {
 	aiGroup := v1.Group("/ai", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL), middleware.AIRateLimiter(20, 1*time.Hour))
 	aiGroup.Post("/estimate-prices", aiHandler.EstimatePricesHandler)
 	aiGroup.Post("/scan-receipt", aiHandler.ScanReceiptHandler)
+	aiGroup.Post("/recommendations", aiHandler.GetShoppingRecommendationsHandler)
 
 	// Protected Routes Group
 	protectedGroup := v1.Group("/protected", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))

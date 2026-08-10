@@ -10,6 +10,7 @@ import 'package:kap_app_front/features/requests/presentation/widgets/ai_price_es
 import 'package:kap_app_front/features/requests/presentation/widgets/category_tabs_bar.dart';
 import 'package:kap_app_front/features/requests/presentation/widgets/receipt_scanner_dialog.dart';
 import 'package:kap_app_front/features/requests/presentation/widgets/request_card.dart';
+import 'package:kap_app_front/features/requests/presentation/widgets/ai_recommendations_dialog.dart';
 import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:kap_app_front/shared/theme/app_colors.dart';
 import 'package:kap_app_front/shared/theme/app_typography.dart';
@@ -98,6 +99,64 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             content: Text('Hata: $e'),
             backgroundColor: AppColors.primary,
           ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isEstimatingPrices = false);
+      }
+    }
+  }
+
+  Future<void> _fetchAIRecommendations(List<Map<String, String>> pendingItems) async {
+    setState(() => _isEstimatingPrices = true);
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      final jwtToken = session?.accessToken ?? '';
+      const backendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: 'https://kap-app-backend.onrender.com');
+
+      final resp = await http.post(
+        Uri.parse('$backendUrl/api/v1/ai/recommendations'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (jwtToken.isNotEmpty) 'Authorization': 'Bearer $jwtToken',
+        },
+        body: jsonEncode({'items': pendingItems}),
+      );
+
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        final recs = (data['recommendations'] as List<dynamic>?) ?? [];
+        if (mounted) {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => AIRecommendationsDialog(
+              recommendations: recs,
+              onAddSuggestedItem: (suggestedName) {
+                final activeGroup = ref.read(activeGroupProvider);
+                if (activeGroup != null) {
+                  ref.read(requestControllerProvider.notifier).createRequest(
+                        groupId: activeGroup.id,
+                        itemName: suggestedName,
+                      );
+                }
+              },
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('AI tavsiyeleri şu an alınamadı, lütfen tekrar deneyin.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
         );
       }
     } finally {
@@ -413,6 +472,14 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           'unit': e.unit ?? '',
                         }).toList();
                         _calculateAIEstimatedPrices(itemSpecs);
+                      },
+                      onRecommendationsPressed: () {
+                        final itemSpecs = pendingItems.map((e) => {
+                          'item_name': e.itemName,
+                          'quantity': e.quantity ?? '',
+                          'unit': e.unit ?? '',
+                        }).toList();
+                        _fetchAIRecommendations(itemSpecs);
                       },
                       onScanReceiptPressed: () {
                         final pendingNames = pendingItems.map((e) => e.itemName).toList();

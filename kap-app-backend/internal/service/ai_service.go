@@ -58,6 +58,18 @@ type PriceEstimationResult struct {
 	TotalPrice float64             `json:"total_price"`
 }
 
+type ShoppingRecommendation struct {
+	Category      string `json:"category"`                 // health, savings, recipe, missing, storage
+	Title         string `json:"title"`                    // Başlık
+	Description   string `json:"description"`              // Detay
+	Icon          string `json:"icon"`                     // Emoji (🥗, 💰, 🍳, ⚠️, 🌱)
+	SuggestedItem string `json:"suggested_item,omitempty"` // Öneri ürünü (Örn: Ispanak)
+}
+
+type ShoppingRecommendationsResult struct {
+	Recommendations []ShoppingRecommendation `json:"recommendations"`
+}
+
 type ReceiptItem struct {
 	Name  string  `json:"name"`
 	Price float64 `json:"price"`
@@ -451,6 +463,113 @@ func (s *AIService) queryGeminiText(prompt string) (string, error) {
 	}
 
 	return "", fmt.Errorf("gemini text query failed: %v", lastErr)
+}
+
+func (s *AIService) GetShoppingRecommendations(items []ItemSpecDTO) (*ShoppingRecommendationsResult, error) {
+	if len(items) == 0 {
+		return &ShoppingRecommendationsResult{
+			Recommendations: []ShoppingRecommendation{
+				{
+					Category:      "health",
+					Title:         "Alışveriş Listeniz Boş",
+					Description:   "Alışveriş listenize ürün eklediğinizde dengeli beslenme, bütçe tasarrufu ve tarif tüyoları burada görünecektir.",
+					Icon:          "💡",
+					SuggestedItem: "Taze Meyve",
+				},
+			},
+		}, nil
+	}
+
+	var names []string
+	for _, item := range items {
+		names = append(names, item.ItemName)
+	}
+
+	prompt := fmt.Sprintf(`Sen uzman diyetisyen, tasarruf koçu ve profesyonel şef asistansın.
+Kullanıcının aşağıdaki alışveriş listesindeki ürünleri incele:
+Alışveriş Listesi: %s
+
+Lütfen aşağıdaki 5 kategoriden en az 3-4 tanesinde GERÇEKÇİ, PRATİK VE FAYDALI Türkçe tavsiyeler üret:
+1. "health": Dengeli Beslenme & Sağlık İpucu (Örn: Besin dengesi, eksik lif/protein/meyve tamamlayıcısı)
+2. "savings": Bütçe & Tasarruf İpucu (Örn: Gramaj avantajı, muadil ürün veya toplu paket tüyosu)
+3. "recipe": Sepetteki Malzemelerden Pratik Yemek Tarifi (Örn: Bu ürünlerle pişirilebilecek nefis yemek fikri)
+4. "missing": Unutulmuş Olabilir Uyarısı (Örn: Birbiriyle ilişkili ürünlerin tamamlayıcısı - salça var yağ yok vb.)
+5. "storage": Tazelik & İsraf Önleme İpucu (Örn: Saklama tüyoları)
+
+Tüm tavsiyeler net, Türkçe ve motivasyon edici olsun. Varsa suggested_item alanına doğrudan alışveriş listesine eklenebilecek 1-2 kelimelik net ürün adı yaz (Örn: "Ispanak", "Sıvı Yağ", "Salatalık").
+
+Yalnızca aşağıdaki JSON formatında yanıt ver:
+{
+  "recommendations": [
+    {
+      "category": "health",
+      "title": "Dengeli Beslenme İpucu",
+      "description": "Listenize lif oranı yüksek taze sebze (Ispanak/Brokoli) ekleyerek öğünlerinizi zenginleştirebilirsiniz.",
+      "icon": "🥗",
+      "suggested_item": "Ispanak"
+    },
+    {
+      "category": "savings",
+      "title": "Bütçe Tasarruf Fırsatı",
+      "description": "Peynir ve süt ürünlerini büyük paket almak kg başına %%15-20 tasarruf sağlar.",
+      "icon": "💰",
+      "suggested_item": "1kg Peynir"
+    },
+    {
+      "category": "recipe",
+      "title": "Pratik Yemek Fikri",
+      "description": "Sepetteki kıyma ve makarna ile harika bir Fırın Kıymalı Makarna pişirebilirsiniz!",
+      "icon": "🍳",
+      "suggested_item": ""
+    }
+  ]
+}`, strings.Join(names, ", "))
+
+	respJSON, err := s.queryGroqOrGeminiText(prompt)
+	if err != nil || respJSON == "" {
+		// Fail-safe default recommendations
+		return &ShoppingRecommendationsResult{
+			Recommendations: []ShoppingRecommendation{
+				{
+					Category:      "health",
+					Title:         "Taze Yeşillik Ekleme İpucu",
+					Description:   "Haftalık alışveriş listenize taze yeşillik ve meyve ekleyerek dengeli beslenmeyi destekleyebilirsiniz.",
+					Icon:          "🥗",
+					SuggestedItem: "Yeşillik Paket",
+				},
+				{
+					Category:      "savings",
+					Title:         "Bütçe İpucu",
+					Description:   "Sık tüketilen temel gıdaları (Un, Şeker, Bakliyat) koli veya büyük boy paketlerde tercih edebilirsiniz.",
+					Icon:          "💰",
+					SuggestedItem: "5kg Un",
+				},
+			},
+		}, nil
+	}
+
+	var result ShoppingRecommendationsResult
+	if err := json.Unmarshal([]byte(respJSON), &result); err != nil {
+		start := strings.Index(respJSON, "{")
+		end := strings.LastIndex(respJSON, "}")
+		if start >= 0 && end > start {
+			_ = json.Unmarshal([]byte(respJSON[start:end+1]), &result)
+		}
+	}
+
+	if len(result.Recommendations) == 0 {
+		result.Recommendations = []ShoppingRecommendation{
+			{
+				Category:      "health",
+				Title:         "Dengeli Sepet Önerisi",
+				Description:   "Sepetinizdeki ürünlerin yanına taze meyve ve sebze ekleyerek vitamin dengesini artırabilirsiniz.",
+				Icon:          "🥗",
+				SuggestedItem: "Meyve Tabağı",
+			},
+		}
+	}
+
+	return &result, nil
 }
 
 var _ = base64.StdEncoding

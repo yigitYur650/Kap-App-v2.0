@@ -7,6 +7,7 @@ class AIPriceEstimatorBar extends StatelessWidget {
   final double? estimatedTotal;
   final VoidCallback onEstimatePressed;
   final VoidCallback? onScanReceiptPressed;
+  final VoidCallback? onRecommendationsPressed;
 
   const AIPriceEstimatorBar({
     super.key,
@@ -14,6 +15,7 @@ class AIPriceEstimatorBar extends StatelessWidget {
     this.estimatedTotal,
     required this.onEstimatePressed,
     this.onScanReceiptPressed,
+    this.onRecommendationsPressed,
   });
 
   @override
@@ -97,7 +99,18 @@ class AIPriceEstimatorBar extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    if (onScanReceiptPressed != null)
+                    if (onRecommendationsPressed != null) ...[
+                      TextButton.icon(
+                        onPressed: onRecommendationsPressed,
+                        icon: const Icon(Icons.psychology_outlined, size: 18, color: Colors.purple),
+                        label: Text(
+                          isNarrow ? 'İpuçları' : 'AI Tavsiyeler',
+                          style: AppTypography.labelSm.copyWith(color: Colors.purple, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    if (onScanReceiptPressed != null) ...[
                       TextButton.icon(
                         onPressed: onScanReceiptPressed,
                         icon: const Icon(Icons.receipt_long, size: 18, color: AppColors.primary),
@@ -106,19 +119,20 @@ class AIPriceEstimatorBar extends StatelessWidget {
                           style: AppTypography.labelSm.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
                         ),
                       ),
-                    const SizedBox(width: 6),
+                      const SizedBox(width: 4),
+                    ],
                     ElevatedButton.icon(
                       onPressed: onEstimatePressed,
                       icon: const Icon(Icons.calculate_outlined, size: 16),
                       label: Text(
-                        estimatedTotal != null ? (isNarrow ? 'Yenile' : 'Yeniden Hesapla') : (isNarrow ? 'Hesapla' : 'Fiyat Hesapla'),
+                        estimatedTotal != null ? (isNarrow ? 'Yenile' : 'Hesapla') : (isNarrow ? 'Hesapla' : 'Fiyat Hesapla'),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(
-                          horizontal: isNarrow ? 10 : 14,
+                          horizontal: isNarrow ? 8 : 12,
                           vertical: 8,
                         ),
                         shape: RoundedRectangleBorder(

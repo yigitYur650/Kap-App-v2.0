@@ -99,6 +99,31 @@ func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
+// GetShoppingRecommendationsHandler (POST /api/v1/ai/recommendations) provides AI shopping insights (health, savings, recipes, storage).
+func (h *AIHandler) GetShoppingRecommendationsHandler(c *fiber.Ctx) error {
+	var req EstimatePricesReq
+	if err := c.BodyParser(&req); err != nil {
+		req.Items = []service.ItemSpecDTO{}
+	}
+
+	if len(req.Items) > 50 {
+		req.Items = req.Items[:50]
+	}
+
+	for i := range req.Items {
+		req.Items[i].ItemName = sanitizeInput(req.Items[i].ItemName, 100)
+	}
+
+	res, err := h.aiService.GetShoppingRecommendations(req.Items)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(res)
+}
+
 func sanitizeInput(input string, maxLen int) string {
 	cleaned := strings.ReplaceAll(input, "\n", " ")
 	cleaned = strings.ReplaceAll(cleaned, "\r", "")
