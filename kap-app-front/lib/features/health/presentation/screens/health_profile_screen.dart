@@ -42,9 +42,9 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
 
   void _populateData(HealthProfileData profile) {
     if (_isInitialized) return;
-    _weightController.text = profile.weight.toStringAsFixed(1);
-    _heightController.text = profile.height.toStringAsFixed(0);
-    _ageController.text = profile.age.toString();
+    _weightController.text = profile.weight > 0 ? profile.weight.toStringAsFixed(1) : '70.0';
+    _heightController.text = profile.height > 0 ? profile.height.toStringAsFixed(0) : '170';
+    _ageController.text = profile.age > 0 ? profile.age.toString() : '25';
     _gender = profile.gender;
     _activityLevel = profile.activityLevel;
     _goal = profile.goal;
@@ -78,6 +78,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
           const SnackBar(
             content: Text('Kişisel sağlık profiliniz başarıyla güncellendi!'),
             backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -87,6 +88,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
           SnackBar(
             content: Text('Hata oluştu: $e'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -111,7 +113,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
       ),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (err, stack) => Center(child: Text('Hata: $err', style: const TextStyle(color: Colors.white))),
+        error: (err, stack) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         data: (profile) {
           _populateData(profile);
 
@@ -136,9 +138,9 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Macro Summary Card
+                // Macro Summary Card (Responsive Grid Layout)
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFF2C2C2E), Color(0xFF1C1C1E)],
@@ -150,6 +152,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                   ),
                   child: Column(
                     children: [
+                      // Target Calories Header
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -157,8 +160,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Günlük Kalori Hedefi',
-                                style: AppTypography.labelSm.copyWith(color: AppColors.textMuted),
+                                'Günlük Hedef Kalori',
+                                style: AppTypography.labelLg.copyWith(color: AppColors.textMuted),
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -182,7 +185,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                                   : _goal == 'gain'
                                       ? '🏋️‍♂️ Kilo Alma'
                                       : '🧘‍♀️ Form Koruma',
-                              style: AppTypography.labelSm.copyWith(
+                              style: AppTypography.labelLg.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -193,14 +196,35 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                       const SizedBox(height: 16),
                       const Divider(color: Colors.white12),
                       const SizedBox(height: 12),
+
+                      // Energy Row: BMR & TDEE
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildMacroItem('BMR (Metabolizma)', '${macros.bmr}', 'kcal', Colors.orange),
-                          _buildMacroItem('TDEE (Harcanan)', '${macros.tdee}', 'kcal', Colors.blue),
-                          _buildMacroItem('Protein', '${macros.proteinGrams}', 'g', Colors.redAccent),
-                          _buildMacroItem('Karbonhidrat', '${macros.carbGrams}', 'g', Colors.green),
-                          _buildMacroItem('Yağ', '${macros.fatGrams}', 'g', Colors.amber),
+                          Expanded(
+                            child: _buildEnergyCard('BMR (Metabolizma)', '${macros.bmr} kcal', Icons.local_fire_department, Colors.orange),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildEnergyCard('TDEE (Harcanan)', '${macros.tdee} kcal', Icons.bolt, Colors.blue),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Nutrients Row: Protein, Carbs, Fat
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildNutrientCard('Protein', '${macros.proteinGrams}g', Colors.redAccent),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildNutrientCard('Karbonhidrat', '${macros.carbGrams}g', Colors.green),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildNutrientCard('Yağ', '${macros.fatGrams}g', Colors.amber),
+                          ),
                         ],
                       ),
                     ],
@@ -214,17 +238,17 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Form Fields
+                // Form Fields (Kilo, Boy, Yaş)
                 Row(
                   children: [
                     Expanded(
                       child: _buildTextField(_weightController, 'Kilo (kg)', TextInputType.number),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: _buildTextField(_heightController, 'Boy (cm)', TextInputType.number),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: _buildTextField(_ageController, 'Yaş', TextInputType.number),
                     ),
@@ -241,6 +265,12 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                       child: ChoiceChip(
                         label: const Center(child: Text('Erkek 👨')),
                         selected: _gender == 'male',
+                        selectedColor: AppColors.primary.withValues(alpha: 0.25),
+                        backgroundColor: const Color(0xFF1E1E1E),
+                        labelStyle: TextStyle(
+                          color: _gender == 'male' ? AppColors.primary : Colors.white70,
+                          fontWeight: _gender == 'male' ? FontWeight.bold : FontWeight.normal,
+                        ),
                         onSelected: (_) => setState(() => _gender = 'male'),
                       ),
                     ),
@@ -249,6 +279,12 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                       child: ChoiceChip(
                         label: const Center(child: Text('Kadın 👩')),
                         selected: _gender == 'female',
+                        selectedColor: AppColors.primary.withValues(alpha: 0.25),
+                        backgroundColor: const Color(0xFF1E1E1E),
+                        labelStyle: TextStyle(
+                          color: _gender == 'female' ? AppColors.primary : Colors.white70,
+                          fontWeight: _gender == 'female' ? FontWeight.bold : FontWeight.normal,
+                        ),
                         onSelected: (_) => setState(() => _gender = 'female'),
                       ),
                     ),
@@ -260,20 +296,22 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                 Text('Günlük Hareket Seviyesi', style: AppTypography.labelLg.copyWith(color: AppColors.textMuted)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _activityLevel,
+                  initialValue: _activityLevel,
                   dropdownColor: const Color(0xFF2C2C2E),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     filled: true,
                     fillColor: Color(0xFF1E1E1E),
                     border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'sedentary', child: Text('Hareketsiz (Masa başı iş)')),
-                    DropdownMenuItem(value: 'light', child: Text('Hafif Aktif (Haftada 1-3 gün egzersiz)')),
-                    DropdownMenuItem(value: 'moderate', child: Text('Orta Aktif (Haftada 3-5 gün egzersiz)')),
-                    DropdownMenuItem(value: 'active', child: Text('Çok Aktif (Haftada 6-7 gün egzersiz)')),
-                    DropdownMenuItem(value: 'very-active', child: Text('Fiziksel İş / Ağır Antrenman')),
+                    DropdownMenuItem(value: 'sedentary', child: Text('Hareketsiz (Masa başı iş)', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: 'light', child: Text('Hafif Aktif (Haftada 1-3 gün egzersiz)', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: 'moderate', child: Text('Orta Aktif (Haftada 3-5 gün egzersiz)', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: 'active', child: Text('Çok Aktif (Haftada 6-7 gün egzersiz)', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: 'very-active', child: Text('Fiziksel İş / Ağır Antrenman', overflow: TextOverflow.ellipsis)),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _activityLevel = val);
@@ -281,34 +319,16 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Goal Selection
+                // Goal Selection (Responsive Wrap)
                 Text('Ana Hedef', style: AppTypography.labelLg.copyWith(color: AppColors.textMuted)),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
                   children: [
-                    Expanded(
-                      child: ChoiceChip(
-                        label: const Text('Kilo Verme'),
-                        selected: _goal == 'lose',
-                        onSelected: (_) => setState(() => _goal = 'lose'),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: const Text('Form Koruma'),
-                        selected: _goal == 'maintain',
-                        onSelected: (_) => setState(() => _goal = 'maintain'),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: const Text('Kilo Alma'),
-                        selected: _goal == 'gain',
-                        onSelected: (_) => setState(() => _goal = 'gain'),
-                      ),
-                    ),
+                    _buildGoalChip('lose', '🏃‍♂️ Kilo Verme'),
+                    _buildGoalChip('maintain', '🧘‍♀️ Form Koruma'),
+                    _buildGoalChip('gain', '🏋️‍♂️ Kilo Alma'),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -321,7 +341,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                     border: Border.all(color: Colors.white12),
                   ),
                   child: SwitchListTile(
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     title: Text(
                       'Grup Arkadaşlarıyla Paylaş',
                       style: AppTypography.bodyLg.copyWith(color: Colors.white),
@@ -339,7 +359,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                 // Save Button
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 52,
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : _saveProfile,
                     style: ElevatedButton.styleFrom(
@@ -354,7 +374,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                           ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
               ],
             ),
           );
@@ -363,23 +383,77 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
     );
   }
 
-  Widget _buildMacroItem(String label, String val, String unit, Color color) {
-    return Column(
-      children: [
-        Text(
-          val,
-          style: AppTypography.headlineMd.copyWith(color: color, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          unit,
-          style: AppTypography.labelSm.copyWith(color: AppColors.textMuted),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(color: Colors.white70, fontSize: 10),
-        ),
-      ],
+  Widget _buildGoalChip(String goalKey, String label) {
+    final isSelected = _goal == goalKey;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      selectedColor: AppColors.primary.withValues(alpha: 0.25),
+      backgroundColor: const Color(0xFF1E1E1E),
+      labelStyle: TextStyle(
+        color: isSelected ? AppColors.primary : Colors.white70,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      onSelected: (_) => setState(() => _goal = goalKey),
+    );
+  }
+
+  Widget _buildEnergyCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNutrientCard(String title, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: const TextStyle(color: Colors.white60, fontSize: 10),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -391,9 +465,10 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: AppColors.textMuted),
+        labelStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
         filled: true,
         fillColor: const Color(0xFF1E1E1E),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         border: const OutlineInputBorder(),
       ),
     );
