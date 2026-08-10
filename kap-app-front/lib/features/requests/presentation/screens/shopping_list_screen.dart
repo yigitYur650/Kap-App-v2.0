@@ -118,184 +118,222 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.75,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.auto_awesome, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text('AI Tahmini Fiyat Raporu', style: AppTypography.headlineLg),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Tahmini Toplam: ~${total.toStringAsFixed(2)} TL',
-                style: AppTypography.headlineMd.copyWith(color: Colors.teal, fontWeight: FontWeight.bold),
-              ),
-              const Divider(),
-              Expanded(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: items.length,
-                  itemBuilder: (context, idx) {
-                    final item = items[idx];
-                    final brand = item['brand'] as String?;
-                    final sourceMarket = item['source_market'] as String?;
-                    final unitSpec = item['unit_spec'] as String?;
-                    final variantNote = item['variant_note'] as String?;
-                    final variants = item['variants'] as List<dynamic>? ?? [];
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isWeb = screenWidth > 600;
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        return Center(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: isWeb ? 560 : screenWidth,
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            margin: EdgeInsets.all(isWeb ? 16 : 0),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.vertical(
+                top: const Radius.circular(24),
+                bottom: Radius.circular(isWeb ? 24 : 0),
+              ),
+            ),
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.auto_awesome, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Text('AI Tahmini Fiyat Raporu', style: AppTypography.headlineLg),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: AppColors.textMuted),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Tahmini Toplam:', style: AppTypography.labelLg),
+                      Text(
+                        '~${total.toStringAsFixed(2)} TL',
+                        style: AppTypography.headlineMd.copyWith(color: Colors.teal, fontWeight: FontWeight.bold),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  item['item_name'] ?? '',
-                                  style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: items.length,
+                    itemBuilder: (context, idx) {
+                      final item = items[idx];
+                      final brand = item['brand'] as String?;
+                      final sourceMarket = item['source_market'] as String?;
+                      final unitSpec = item['unit_spec'] as String?;
+                      final variantNote = item['variant_note'] as String?;
+                      final variants = item['variants'] as List<dynamic>? ?? [];
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item['item_name'] ?? '',
+                                    style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '~${item['estimated_price']} TL',
-                                style: AppTypography.headlineMd.copyWith(
-                                  color: Colors.teal,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                Text(
+                                  '~${item['estimated_price']} TL',
+                                  style: AppTypography.headlineMd.copyWith(
+                                    color: Colors.teal,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
+                              ],
+                            ),
+                            if ((brand != null && brand.isNotEmpty) || (sourceMarket != null && sourceMarket.isNotEmpty)) ...[
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: [
+                                  if (brand != null && brand.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '🏷️ $brand',
+                                        style: AppTypography.labelSm.copyWith(color: Colors.blue, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  if (sourceMarket != null && sourceMarket.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '🛒 $sourceMarket',
+                                        style: AppTypography.labelSm.copyWith(color: Colors.orange, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ],
-                          ),
-                          if ((brand != null && brand.isNotEmpty) || (sourceMarket != null && sourceMarket.isNotEmpty)) ...[
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                if (brand != null && brand.isNotEmpty) ...[
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      '🏷️ $brand',
-                                      style: AppTypography.labelSm.copyWith(color: Colors.blue, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                ],
-                                if (sourceMarket != null && sourceMarket.isNotEmpty)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      '🛒 $sourceMarket',
-                                      style: AppTypography.labelSm.copyWith(color: Colors.orange, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                          const SizedBox(height: 4),
-                          Text(
-                            'Kategori: ${item['category'] ?? 'Genel'}',
-                            style: AppTypography.labelSm.copyWith(color: AppColors.textMuted),
-                          ),
-                          if (unitSpec != null && unitSpec.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(Icons.inventory_2_outlined, size: 14, color: AppColors.primary),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    'Paket: $unitSpec',
-                                    style: AppTypography.labelSm.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                          if (variantNote != null && variantNote.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                const Icon(Icons.lightbulb_outline, size: 14, color: Colors.amber),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    variantNote,
-                                    style: AppTypography.labelSm.copyWith(
-                                      color: Colors.amber,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                          if (variants.isNotEmpty) ...[
-                            const Divider(height: 14),
+                            const SizedBox(height: 6),
                             Text(
-                              'Popüler Miktar & Fiyat Seçenekleri:',
-                              style: AppTypography.labelSm.copyWith(fontWeight: FontWeight.bold),
+                              'Kategori: ${item['category'] ?? 'Genel'}',
+                              style: AppTypography.labelSm.copyWith(color: AppColors.textMuted),
                             ),
-                            const SizedBox(height: 4),
-                            ...variants.map((v) {
-                              final size = v['size'] ?? '';
-                              final vPrice = v['price'] ?? 0;
-                              final store = v['store'] ?? '';
-
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('• $size', style: AppTypography.bodyMd.copyWith(fontSize: 12)),
-                                    Text(
-                                      '$vPrice TL ${store.toString().isNotEmpty ? "($store)" : ""}',
-                                      style: AppTypography.labelSm.copyWith(fontWeight: FontWeight.bold, color: Colors.tealAccent),
+                            if (unitSpec != null && unitSpec.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.inventory_2_outlined, size: 14, color: AppColors.primary),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      'Paket: $unitSpec',
+                                      style: AppTypography.labelSm.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ],
-                                ),
-                              );
-                            }),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (variantNote != null && variantNote.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  const Icon(Icons.lightbulb_outline, size: 14, color: Colors.amber),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      variantNote,
+                                      style: AppTypography.labelSm.copyWith(
+                                        color: Colors.amber,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (variants.isNotEmpty) ...[
+                              const Divider(height: 14),
+                              Text(
+                                'Popüler Miktar & Fiyat Seçenekleri:',
+                                style: AppTypography.labelSm.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              ...variants.map((v) {
+                                final size = v['size'] ?? '';
+                                final vPrice = v['price'] ?? 0;
+                                final store = v['store'] ?? '';
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 2),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text('• $size', style: AppTypography.bodyMd.copyWith(fontSize: 12), overflow: TextOverflow.ellipsis),
+                                      ),
+                                      Text(
+                                        '$vPrice TL ${store.toString().isNotEmpty ? "($store)" : ""}',
+                                        style: AppTypography.labelSm.copyWith(fontWeight: FontWeight.bold, color: Colors.tealAccent),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
                           ],
-                        ],
-                      ),
-                    );
-                  },
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      );
-    },
+        );
+      },
   );
 }
 
