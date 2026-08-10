@@ -11,6 +11,7 @@ import 'package:kap_app_front/features/requests/presentation/widgets/category_ta
 import 'package:kap_app_front/features/requests/presentation/widgets/receipt_scanner_dialog.dart';
 import 'package:kap_app_front/features/requests/presentation/widgets/request_card.dart';
 import 'package:kap_app_front/features/requests/presentation/widgets/ai_recommendations_dialog.dart';
+import 'package:kap_app_front/shared/utils/category_helper.dart';
 import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:kap_app_front/shared/theme/app_colors.dart';
 import 'package:kap_app_front/shared/theme/app_typography.dart';
@@ -437,13 +438,20 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
               data: (items) {
                 final categoryCounts = <String, int>{};
                 for (var i in items) {
-                  final cat = i.category ?? 'Genel';
+                  final cat = (i.category != null && i.category!.isNotEmpty && i.category != 'Genel')
+                      ? i.category!
+                      : CategoryHelper.detectCategory(i.itemName);
                   categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1;
                 }
 
                 final filteredItems = _selectedCategory == 'Tümü'
                     ? items
-                    : items.where((i) => (i.category ?? 'Genel') == _selectedCategory).toList();
+                    : items.where((i) {
+                        final cat = (i.category != null && i.category!.isNotEmpty && i.category != 'Genel')
+                            ? i.category!
+                            : CategoryHelper.detectCategory(i.itemName);
+                        return cat == _selectedCategory;
+                      }).toList();
 
                 final pendingItems = filteredItems.where((i) => i.status == 'pending').toList();
                 final completedItems = filteredItems.where((i) => i.status == 'done').toList();

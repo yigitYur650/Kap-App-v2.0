@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kap_app_front/features/groups/presentation/providers/active_group_provider.dart';
 import 'package:kap_app_front/features/groups/presentation/providers/group_members_provider.dart';
 import 'package:kap_app_front/features/requests/presentation/providers/request_controller.dart';
+import 'package:kap_app_front/shared/utils/category_helper.dart';
 import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:kap_app_front/shared/theme/app_colors.dart';
 import 'package:kap_app_front/shared/theme/app_typography.dart';
@@ -25,6 +26,14 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
   static const List<String> _unitOptions = [
     'pcs', 'kg', 'g', 'L', 'mL', 'tsp', 'tbsp', 'cup',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -156,6 +165,27 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
               ),
             ),
           ),
+          if (_nameController.text.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.label_outlined, size: 14, color: AppColors.primary),
+                const SizedBox(width: 4),
+                Text('Otomatik Kategori: ', style: AppTypography.labelSm.copyWith(color: AppColors.textMuted)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    CategoryHelper.detectCategory(_nameController.text),
+                    style: AppTypography.labelSm.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
 
           // Quantity & Unit Row

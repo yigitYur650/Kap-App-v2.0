@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/models/request_model.dart';
 import '../../../core/repositories/request_repository.dart';
+import '../../../shared/utils/category_helper.dart';
 
 /// Implementation of [RequestRepository] using Supabase client.
 ///
@@ -104,6 +105,7 @@ class SupabaseRequestRepository implements RequestRepository {
             'is_private': isPrivate,
             'private_to': isPrivate ? privateTo : null,
             'status': 'pending',
+            'category': CategoryHelper.detectCategory(normalizedItemName),
             if (quantity != null && quantity.trim().isNotEmpty) 'quantity': quantity.trim(),
             if (unit != null && unit.trim().isNotEmpty) 'unit': unit.trim(),
           })

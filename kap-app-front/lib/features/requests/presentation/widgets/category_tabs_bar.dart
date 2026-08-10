@@ -2,21 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_typography.dart';
 
+import '../../../../shared/utils/category_helper.dart';
+
 class CategoryTabsBar extends StatelessWidget {
   final String selectedCategory;
   final ValueChanged<String> onCategorySelected;
   final Map<String, int> categoryCounts;
 
-  static const List<String> categories = [
-    'Tümü',
-    'Süt & Kahvaltılık',
-    'Meyve & Sebze',
-    'Temel Gıda',
-    'Atıştırmalık',
-    'İçecek',
-    'Temizlik',
-    'Genel',
-  ];
+  List<String> get categories => CategoryHelper.categories;
 
   const CategoryTabsBar({
     super.key,
