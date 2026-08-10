@@ -13,12 +13,16 @@ import (
 )
 
 type MarketPriceService struct {
-	client *http.Client
+	client        *http.Client
+	playwrightSvc *PlaywrightPriceService
+	cacheSvc      *PriceCacheService
 }
 
 func NewMarketPriceService() *MarketPriceService {
 	return &MarketPriceService{
-		client: &http.Client{Timeout: 8 * time.Second},
+		client:        &http.Client{Timeout: 8 * time.Second},
+		playwrightSvc: NewPlaywrightPriceService(),
+		cacheSvc:      NewPriceCacheService(24 * time.Hour),
 	}
 }
 
@@ -28,16 +32,31 @@ var userAgents = []string{
 	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
 }
 
-// FetchLiveMarketPrice queries live Turkish grocery prices from Akakçe & public price search engines.
+// FetchLiveMarketPrice queries live Turkish grocery prices with sub-10ms cache lookup and Playwright fallback.
 func (s *MarketPriceService) FetchLiveMarketPrice(productName string) (*ItemPriceEstimate, error) {
 	cleanName := strings.TrimSpace(productName)
 	if cleanName == "" {
 		return nil, fmt.Errorf("empty product name")
 	}
 
+	// 1. Fast path: Check 24-hour in-memory cache
+	if cached, hit := s.cacheSvc.Get(cleanName); hit && cached != nil {
+		return cached, nil
+	}
+
+	// 2. HTTP scraper path
 	est, err := s.fetchFromAkakce(cleanName)
 	if err == nil && est != nil && est.EstimatedPrice > 0 {
+		s.cacheSvc.Set(cleanName, *est)
 		return est, nil
+	}
+
+	// 3. Fallback to Playwright Headless Web Scraper
+	if s.playwrightSvc != nil {
+		if pwEst, pwErr := s.playwrightSvc.FetchLivePrice(cleanName); pwErr == nil && pwEst != nil && pwEst.EstimatedPrice > 0 {
+			s.cacheSvc.Set(cleanName, *pwEst)
+			return pwEst, nil
+		}
 	}
 
 	return nil, fmt.Errorf("could not fetch live price for %s: %v", cleanName, err)
