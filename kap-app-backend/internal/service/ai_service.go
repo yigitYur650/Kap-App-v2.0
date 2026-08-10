@@ -76,34 +76,8 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 		return &PriceEstimationResult{Items: []ItemPriceEstimate{}, TotalPrice: 0}, nil
 	}
 
-	var liveEstimates []ItemPriceEstimate
-	var unhandledSpecs []ItemSpecDTO
-
-	for _, itemSpec := range items {
-		query := itemSpec.ItemName
-		if itemSpec.Quantity != "" {
-			query += " " + itemSpec.Quantity
-		}
-		if itemSpec.Unit != "" {
-			query += " " + itemSpec.Unit
-		}
-
-		if est, err := s.marketPriceSvc.FetchLiveMarketPrice(query); err == nil && est != nil && est.EstimatedPrice > 0 {
-			est.ItemName = itemSpec.ItemName
-			liveEstimates = append(liveEstimates, *est)
-		} else {
-			unhandledSpecs = append(unhandledSpecs, itemSpec)
-		}
-	}
-
-	if len(unhandledSpecs) == 0 {
-		res := &PriceEstimationResult{Items: liveEstimates}
-		s.calculateTotal(res)
-		return res, nil
-	}
-
 	var formattedItems []string
-	for _, spec := range unhandledSpecs {
+	for _, spec := range items {
 		str := spec.ItemName
 		if spec.Quantity != "" || spec.Unit != "" {
 			str += fmt.Sprintf(" (Miktar: %s %s)", spec.Quantity, spec.Unit)
@@ -111,19 +85,22 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 		formattedItems = append(formattedItems, str)
 	}
 
-	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye zincir market (BİM, A101, Migros, CarrefourSA) en son etiket fiyatlarını %%100 GERÇEKÇİ bilen uzman asistansın.
+	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye'nin en yaygın zincir marketi MİGROS ve BİM/A101 tekil raf etiket fiyatlarını %%100 TUTARLI VE KESİN bilen uzman asistansın.
 
-2026 YILI GÜNCEL TÜRKİYE MARKET ETİKET FİYAT BASAMAKLARI VE BOYUT SEÇENEKLERİ:
-- Kola (Coca-Cola/Pepsi): 330ml Kutu (32.50 TL A101), 1L Pet (45 TL BİM), 1.5L Pet (55 TL Migros), 2.5L Pet (70 TL CarrefourSA)
-- 1 kg Tavuk / Piliç Göğüs: 180 - 220 TL (Bütün Piliç 1 kg: 95 - 110 TL)
-- 1 Paket Cips (Büyük Boy Lay's/Ruffles/Doritos 130g): 35 - 55 TL
-- 1L Tam Yağlı Süt (Sütaş/Pınar/Torku): 38 - 50 TL
-- 15li Yumurta (L Boy): 75 - 110 TL
-- Somun Ekmek (200g): 12 - 15 TL
-- 500g Beyaz Peynir / Kaşar: 120 - 180 TL
-- 1 kg Kıyma / Dana Et: 450 - 650 TL
+GÜNCEL TEK REFERANS MARKET (MİGROS & BİM/A101) RAF FİYATI STANDARTLARI (2026):
+- 1L Tam Yağlı Süt (Sütaş/Pınar/İçim/Dost): 39.50 TL (Migros / BİM Raf Fiyatı)
+- Somun Taze Ekmek (200g): 12.50 TL (Fırın / BİM)
+- Coca-Cola / Pepsi 1.5L Pet: 55.00 TL (Migros / A101) [330ml Kutu: 32.50 TL, 2.5L: 70.00 TL]
+- 1 Paket Cips (Lay's/Ruffles/Doritos 130g): 45.00 TL (Migros)
+- 15'li L Boy Yumurta: 89.50 TL (A101 / BİM)
+- 1 kg Piliç / Tavuk Göğüs: 195.00 TL (BİM / Migros)
+- 500g Tam Yağlı Beyaz Peynir: 145.00 TL (Migros / BİM)
+- 1 kg Dana Kıyma: 520.00 TL (Migros)
+- 500g Makarna (Filiz/Nuh’un Ankara/Barilla): 22.50 TL (Migros)
+- 1L Ayçiçek Yağı (Yudum/Sole/Orkide): 75.00 TL (BİM / A101)
+- 1 kg Rize Çay (Çaykur): 195.00 TL (Migros)
 
-Aşağıdaki ürünlerin 2026 etiket fiyatını (TL), marka adını (brand), kaynak marketini (source_market: BİM/A101/Migros) ve varsa en popüler miktar/boyut varyant dökümlerini (variants: size, price, store) çıkar.
+Aşağıdaki ürünlerin tekil referans market (Migros / BİM) raf etiket fiyatını (estimated_price), marka adını (brand), referans marketini (source_market: Migros veya BİM) ve varsa boyut varyantlarını çıkar.
 
 Ürünler: %s
 
@@ -137,9 +114,9 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
       "min_price": 32.5,
       "max_price": 70.0,
       "category": "İçecek",
-      "unit_spec": "1.5L Standart Pet",
-      "variant_note": "330ml Kutu ~32.50 TL, 2.5L ~70 TL",
-      "source_market": "Migros / A101 / BİM",
+      "unit_spec": "1.5L Pet (Migros)",
+      "variant_note": "330ml Kutu: 32.50 TL, 2.5L: 70.00 TL",
+      "source_market": "Migros",
       "variants": [
         { "size": "330 ml Kutu", "price": 32.5, "store": "A101" },
         { "size": "1 L Pet", "price": 45.0, "store": "BİM" },
@@ -152,6 +129,15 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
 
 	respJSON, err := s.queryGroqOrGeminiText(prompt)
 	if err != nil {
+		// Fallback to live market scraper if Groq is offline
+		var liveEstimates []ItemPriceEstimate
+		for _, itemSpec := range items {
+			query := itemSpec.ItemName
+			if est, err := s.marketPriceSvc.FetchLiveMarketPrice(query); err == nil && est != nil && est.EstimatedPrice > 0 {
+				est.ItemName = itemSpec.ItemName
+				liveEstimates = append(liveEstimates, *est)
+			}
+		}
 		if len(liveEstimates) > 0 {
 			res := &PriceEstimationResult{Items: liveEstimates}
 			s.calculateTotal(res)
@@ -169,8 +155,7 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
 		}
 	}
 
-	combinedItems := append(liveEstimates, aiRes.Items...)
-	res := &PriceEstimationResult{Items: combinedItems}
+	res := &PriceEstimationResult{Items: aiRes.Items}
 	s.calculateTotal(res)
 	return res, nil
 }
