@@ -135,13 +135,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             builder: (context) => AIRecommendationsDialog(
               recommendations: recs,
               onAddSuggestedItem: (suggestedName) {
-                final activeGroup = ref.read(activeGroupProvider);
-                if (activeGroup != null) {
-                  ref.read(requestControllerProvider.notifier).createRequest(
-                        groupId: activeGroup.id,
-                        itemName: suggestedName,
-                      );
-                }
+                ref.read(requestControllerProvider.notifier).createRequest(
+                      itemName: suggestedName,
+                    );
               },
             ),
           );
