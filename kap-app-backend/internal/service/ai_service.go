@@ -465,14 +465,29 @@ func (s *AIService) queryGeminiText(prompt string) (string, error) {
 	return "", fmt.Errorf("gemini text query failed: %v", lastErr)
 }
 
-func (s *AIService) GetShoppingRecommendations(items []ItemSpecDTO) (*ShoppingRecommendationsResult, error) {
+type UserHealthProfileDTO struct {
+	Weight         float64 `json:"weight,omitempty"`
+	Height         float64 `json:"height,omitempty"`
+	Age            int     `json:"age,omitempty"`
+	Gender         string  `json:"gender,omitempty"`
+	ActivityLevel  string  `json:"activity_level,omitempty"`
+	Goal           string  `json:"goal,omitempty"`
+	BMR            int     `json:"bmr,omitempty"`
+	TDEE           int     `json:"tdee,omitempty"`
+	TargetCalories int     `json:"target_calories,omitempty"`
+	ProteinGrams   int     `json:"protein_grams,omitempty"`
+	CarbGrams      int     `json:"carb_grams,omitempty"`
+	FatGrams       int     `json:"fat_grams,omitempty"`
+}
+
+func (s *AIService) GetShoppingRecommendations(items []ItemSpecDTO, profile *UserHealthProfileDTO) (*ShoppingRecommendationsResult, error) {
 	if len(items) == 0 {
 		return &ShoppingRecommendationsResult{
 			Recommendations: []ShoppingRecommendation{
 				{
 					Category:      "health",
 					Title:         "Alışveriş Listeniz Boş",
-					Description:   "Alışveriş listenize ürün eklediğinizde dengeli beslenme, bütçe tasarrufu ve tarif tüyoları burada görünecektir.",
+					Description:   "Alışveriş listenize ürün eklediğinizde kişiselleştirilmiş beslenme, bütçe tasarrufu ve tarif tüyoları burada görünecektir.",
 					Icon:          "💡",
 					SuggestedItem: "Taze Meyve",
 				},
@@ -485,14 +500,39 @@ func (s *AIService) GetShoppingRecommendations(items []ItemSpecDTO) (*ShoppingRe
 		names = append(names, item.ItemName)
 	}
 
-	prompt := fmt.Sprintf(`Sen uzman diyetisyen, tasarruf koçu ve profesyonel şef asistansın.
+	profileContext := ""
+	if profile != nil && profile.Weight > 0 {
+		goalText := "Form Koruma"
+		if profile.Goal == "lose" {
+			goalText = "Kilo Verme (Kalori Açığı)"
+		} else if profile.Goal == "gain" {
+			goalText = "Kilo Alma / Hacim (Kalori Fazlası)"
+		}
+
+		profileContext = fmt.Sprintf(`
+
+KULLANICININ KİŞİSEL FITNESS & BESLENME PROFİLİ:
+- Kilo: %.1f kg, Boy: %.0f cm, Yaş: %d, Cinsiyet: %s
+- Beslenme Hedefi: %s
+- Günlük Hedef Kalori Limiti: %d kcal (Bazal Metabolizma: %d, Harcanan TDEE: %d)
+- Günlük Hedef Makrolar: Protein: %dg, Karbonhidrat: %dg, Yağ: %dg
+
+LÜTFEN KULLANICININ SEPETİNDEKİ ÜRÜNLERİ BU KİŞİSEL SAĞLIK BİLGİLERİ VE HEDEFLERİYLE BİREBİR EŞLEŞTİREREK ÖZEL İPUÇLARI ÜRET! (Örneğin kilo verme hedefindeyse yüksek kalorili gıdalar yerine hafif alternatifler veya protein ihtiyacına göre tamamlama önerileri sun).`,
+			profile.Weight, profile.Height, profile.Age, profile.Gender,
+			goalText, profile.TargetCalories, profile.BMR, profile.TDEE,
+			profile.ProteinGrams, profile.CarbGrams, profile.FatGrams,
+		)
+	}
+
+	prompt := fmt.Sprintf(`Sen uzman diyetisyen, kişisel fitness antrenörü, tasarruf koçu ve profesyonel şef asistansın.
 Kullanıcının aşağıdaki alışveriş listesindeki ürünleri incele:
 Alışveriş Listesi: %s
+%s
 
-Lütfen aşağıdaki 5 kategoriden en az 3-4 tanesinde GERÇEKÇİ, PRATİK VE FAYDALI Türkçe tavsiyeler üret:
-1. "health": Dengeli Beslenme & Sağlık İpucu (Örn: Besin dengesi, eksik lif/protein/meyve tamamlayıcısı)
+Lütfen aşağıdaki 5 kategoriden en az 3-4 tanesinde GERÇEKÇİ, PRATİK VE KULLANICININ KİŞİSEL SAĞLIK PROFİLİNE ÖZEL Türkçe tavsiyeler üret:
+1. "health": Dengeli Beslenme & Sağlık/Fitness İpucu (Örn: Kişinin günlük protein/kalori hedefine göre sepet analizi, lif/meyve tamamlayıcısı)
 2. "savings": Bütçe & Tasarruf İpucu (Örn: Gramaj avantajı, muadil ürün veya toplu paket tüyosu)
-3. "recipe": Sepetteki Malzemelerden Pratik Yemek Tarifi (Örn: Bu ürünlerle pişirilebilecek nefis yemek fikri)
+3. "recipe": Sepetteki Malzemelerden Pratik Yemek Tarifi (Örn: Bu ürünlerle pişirilebilecek nefis ve sağlıklı yemek fikri)
 4. "missing": Unutulmuş Olabilir Uyarısı (Örn: Birbiriyle ilişkili ürünlerin tamamlayıcısı - salça var yağ yok vb.)
 5. "storage": Tazelik & İsraf Önleme İpucu (Örn: Saklama tüyoları)
 
@@ -503,8 +543,8 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
   "recommendations": [
     {
       "category": "health",
-      "title": "Dengeli Beslenme İpucu",
-      "description": "Listenize lif oranı yüksek taze sebze (Ispanak/Brokoli) ekleyerek öğünlerinizi zenginleştirebilirsiniz.",
+      "title": "Kişisel Beslenme & Fitness İpucu",
+      "description": "Listenize lif ve protein oranı yüksek taze sebze (Ispanak/Brokoli) ekleyerek günlük hedeflerinize daha hızlı ulaşabilirsiniz.",
       "icon": "🥗",
       "suggested_item": "Ispanak"
     },
@@ -523,7 +563,7 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
       "suggested_item": ""
     }
   ]
-}`, strings.Join(names, ", "))
+}`, strings.Join(names, ", "), profileContext)
 
 	respJSON, err := s.queryGroqOrGeminiText(prompt)
 	if err != nil || respJSON == "" {

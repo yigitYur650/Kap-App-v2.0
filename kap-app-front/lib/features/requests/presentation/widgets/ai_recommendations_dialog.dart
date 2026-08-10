@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_typography.dart';
 
-class AIRecommendationsDialog extends StatelessWidget {
+class AIRecommendationsDialog extends StatefulWidget {
   final List<dynamic> recommendations;
   final Function(String itemName)? onAddSuggestedItem;
 
@@ -11,6 +11,22 @@ class AIRecommendationsDialog extends StatelessWidget {
     required this.recommendations,
     this.onAddSuggestedItem,
   });
+
+  @override
+  State<AIRecommendationsDialog> createState() => _AIRecommendationsDialogState();
+}
+
+class _AIRecommendationsDialogState extends State<AIRecommendationsDialog> {
+  String _selectedFilter = 'Tümü';
+
+  static const List<Map<String, String>> _categories = [
+    {'key': 'Tümü', 'label': 'Tümü', 'icon': '✨'},
+    {'key': 'health', 'label': 'Sağlık', 'icon': '🥗'},
+    {'key': 'savings', 'label': 'Tasarruf', 'icon': '💰'},
+    {'key': 'recipe', 'label': 'Tarifler', 'icon': '🍳'},
+    {'key': 'missing', 'label': 'Unutulanlar', 'icon': '⚠️'},
+    {'key': 'storage', 'label': 'Tazelik', 'icon': '📦'},
+  ];
 
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
@@ -46,16 +62,40 @@ class AIRecommendationsDialog extends StatelessWidget {
     }
   }
 
+  void _addAllSuggestedItems() {
+    int count = 0;
+    for (var rec in widget.recommendations) {
+      final item = rec['suggested_item']?.toString().trim() ?? '';
+      if (item.isNotEmpty && widget.onAddSuggestedItem != null) {
+        widget.onAddSuggestedItem!(item);
+        count++;
+      }
+    }
+    if (count > 0 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$count adet önerilen ürün alışveriş listenize eklendi!'),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWeb = screenWidth > 600;
 
+    final filteredRecs = _selectedFilter == 'Tümü'
+        ? widget.recommendations
+        : widget.recommendations.where((r) => (r['category']?.toString().toLowerCase()) == _selectedFilter.toLowerCase()).toList();
+
     return Center(
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: isWeb ? 560 : screenWidth,
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxWidth: isWeb ? 580 : screenWidth,
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
         ),
         margin: EdgeInsets.all(isWeb ? 16 : 0),
         decoration: BoxDecoration(
@@ -70,6 +110,7 @@ class AIRecommendationsDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header Bar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -86,97 +127,162 @@ class AIRecommendationsDialog extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
-              'Alışveriş listenize göre kişiselleştirilmiş beslenme, bütçe ve tarif ipuçları:',
+              'Kişisel beslenme profilinize ve sepetinize özel üretilen ipuçları:',
               style: AppTypography.bodyMd.copyWith(color: AppColors.textMuted, fontSize: 12),
             ),
-            const SizedBox(height: 14),
-            Expanded(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: recommendations.length,
-                itemBuilder: (context, idx) {
-                  final rec = recommendations[idx];
-                  final category = rec['category'] ?? 'health';
-                  final title = rec['title'] ?? 'Tavsiye';
-                  final desc = rec['description'] ?? '';
-                  final icon = rec['icon'] ?? '💡';
-                  final suggestedItem = rec['suggested_item'] ?? '';
-                  final catColor = _getCategoryColor(category);
+            const SizedBox(height: 12),
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: catColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: catColor.withValues(alpha: 0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            // Category Filter Chips Row
+            SizedBox(
+              height: 38,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                itemBuilder: (context, idx) {
+                  final cat = _categories[idx];
+                  final isSelected = cat['key'] == _selectedFilter;
+                  final catColor = _getCategoryColor(cat['key']!);
+
+                  return ChoiceChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
-                          children: [
-                            Text(icon, style: const TextStyle(fontSize: 22)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                title,
-                                style: AppTypography.labelLg.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: catColor.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                _getCategoryLabel(category),
-                                style: AppTypography.labelSm.copyWith(color: catColor, fontWeight: FontWeight.bold, fontSize: 10),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
+                        Text(cat['icon']!),
+                        const SizedBox(width: 4),
                         Text(
-                          desc,
-                          style: AppTypography.bodyMd.copyWith(fontSize: 13, height: 1.4),
-                        ),
-                        if (suggestedItem.toString().isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                if (onAddSuggestedItem != null) {
-                                  onAddSuggestedItem!(suggestedItem);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('"$suggestedItem" alışveriş listesine eklendi!'),
-                                      duration: const Duration(seconds: 2),
-                                      backgroundColor: AppColors.primary,
-                                    ),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.add_shopping_cart, size: 16),
-                              label: Text('"$suggestedItem" Listeye Ekle'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: catColor,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                textStyle: AppTypography.labelSm.copyWith(fontWeight: FontWeight.bold),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                            ),
+                          cat['label']!,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : AppColors.textMuted,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12,
                           ),
-                        ],
+                        ),
                       ],
                     ),
+                    selected: isSelected,
+                    selectedColor: catColor.withValues(alpha: 0.3),
+                    backgroundColor: const Color(0xFF1E1E1E),
+                    onSelected: (_) => setState(() => _selectedFilter = cat['key']!),
                   );
                 },
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Recommendations List
+            Expanded(
+              child: filteredRecs.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Bu kategoride henüz ipucu bulunmuyor.',
+                        style: AppTypography.bodyMd.copyWith(color: AppColors.textMuted),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: filteredRecs.length,
+                      itemBuilder: (context, idx) {
+                        final rec = filteredRecs[idx];
+                        final category = rec['category'] ?? 'health';
+                        final title = rec['title'] ?? 'Tavsiye';
+                        final desc = rec['description'] ?? '';
+                        final icon = rec['icon'] ?? '💡';
+                        final suggestedItem = rec['suggested_item'] ?? '';
+                        final catColor = _getCategoryColor(category);
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: catColor.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: catColor.withValues(alpha: 0.3)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(icon, style: const TextStyle(fontSize: 22)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      title,
+                                      style: AppTypography.labelLg.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: catColor.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _getCategoryLabel(category),
+                                      style: AppTypography.labelSm.copyWith(color: catColor, fontWeight: FontWeight.bold, fontSize: 10),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                desc,
+                                style: AppTypography.bodyMd.copyWith(fontSize: 13, height: 1.4),
+                              ),
+                              if (suggestedItem.toString().isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      if (widget.onAddSuggestedItem != null) {
+                                        widget.onAddSuggestedItem!(suggestedItem);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('"$suggestedItem" alışveriş listenize eklendi!'),
+                                            duration: const Duration(seconds: 2),
+                                            backgroundColor: AppColors.primary,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    icon: const Icon(Icons.add_shopping_cart, size: 16),
+                                    label: Text('$suggestedItem Ekle'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: catColor,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 12),
+
+            // Bottom Add All Button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: _addAllSuggestedItems,
+                icon: const Icon(Icons.flash_on, color: Colors.white),
+                label: const Text(
+                  '⚡ Tüm Önerilen Ürünleri Sepete Ekle',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ),
           ],

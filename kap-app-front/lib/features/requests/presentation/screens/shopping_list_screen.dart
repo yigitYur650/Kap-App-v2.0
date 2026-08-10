@@ -11,6 +11,8 @@ import 'package:kap_app_front/features/requests/presentation/widgets/category_ta
 import 'package:kap_app_front/features/requests/presentation/widgets/receipt_scanner_dialog.dart';
 import 'package:kap_app_front/features/requests/presentation/widgets/request_card.dart';
 import 'package:kap_app_front/features/requests/presentation/widgets/ai_recommendations_dialog.dart';
+import 'package:kap_app_front/features/health/data/health_profile_repository.dart';
+import 'package:kap_app_front/shared/utils/fitness_calculator.dart';
 import 'package:kap_app_front/shared/utils/category_helper.dart';
 import 'package:kap_app_front/l10n/app_localizations.dart';
 import 'package:kap_app_front/shared/theme/app_colors.dart';
@@ -116,13 +118,34 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       final jwtToken = session?.accessToken ?? '';
       const backendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: 'https://kap-app-backend.onrender.com');
 
+      final healthProfile = await ref.read(healthProfileRepositoryProvider).getHealthProfile();
+      final macros = FitnessCalculator.calculateAll(healthProfile);
+
+      final payload = {
+        'items': pendingItems,
+        'user_profile': {
+          'weight': healthProfile.weight,
+          'height': healthProfile.height,
+          'age': healthProfile.age,
+          'gender': healthProfile.gender,
+          'activity_level': healthProfile.activityLevel,
+          'goal': healthProfile.goal,
+          'bmr': macros.bmr,
+          'tdee': macros.tdee,
+          'target_calories': macros.targetCalories,
+          'protein_grams': macros.proteinGrams,
+          'carb_grams': macros.carbGrams,
+          'fat_grams': macros.fatGrams,
+        },
+      };
+
       final resp = await http.post(
         Uri.parse('$backendUrl/api/v1/ai/recommendations'),
         headers: {
           'Content-Type': 'application/json',
           if (jwtToken.isNotEmpty) 'Authorization': 'Bearer $jwtToken',
         },
-        body: jsonEncode({'items': pendingItems}),
+        body: jsonEncode(payload),
       );
 
       if (resp.statusCode == 200) {
