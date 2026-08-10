@@ -86,8 +86,13 @@ func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
 
 	res, err := h.aiService.ScanReceipt(req.Base64Image)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+		status := fiber.StatusInternalServerError
+		errStr := err.Error()
+		if strings.Contains(errStr, "429") || strings.Contains(strings.ToLower(errStr), "kotasına ulaşıldı") {
+			status = fiber.StatusTooManyRequests
+		}
+		return c.Status(status).JSON(fiber.Map{
+			"error": errStr,
 		})
 	}
 

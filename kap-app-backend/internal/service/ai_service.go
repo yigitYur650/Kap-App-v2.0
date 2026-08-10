@@ -187,8 +187,6 @@ func (s *AIService) ScanReceipt(base64Image string) (*ReceiptScanResult, error) 
 		return nil, fmt.Errorf("GEMINI_API_KEY is not configured")
 	}
 
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=%s", s.geminiKey)
-
 	prompt := `Bu bir market fişi görselidir. Fiş üzerindeki mağaza adını, tarihini, toplam tutarı ve ürün kalemleri ile fiyatlarını çıkar.
 Kişisel verileri (Kredi kartı no, isim vb.) KESİNLİKLE DİKKATE ALMA.
 
@@ -222,50 +220,81 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
 	}
 
 	jsonBytes, _ := json.Marshal(reqBody)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	// Try vision-capable Gemini models in sequence (prioritizing current 2026 model aliases)
+	candidateModels := []string{"gemini-flash-latest", "gemini-3.6-flash", "gemini-flash-lite-latest", "gemini-2.0-flash"}
+	var lastErr error
+	var isQuotaError bool
 
-	bodyBytes, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("gemini vision error status=%d body=%s", resp.StatusCode, string(bodyBytes))
+	for _, model := range candidateModels {
+		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, s.geminiKey)
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := s.client.Do(req)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			bodyStr := string(bodyBytes)
+			log.Printf("[AI Service] Gemini model %s failed (status=%d): %s", model, resp.StatusCode, bodyStr)
+			if resp.StatusCode == http.StatusTooManyRequests || strings.Contains(bodyStr, "Quota exceeded") || strings.Contains(bodyStr, "429") {
+				isQuotaError = true
+			}
+			lastErr = fmt.Errorf("gemini vision error status=%d", resp.StatusCode)
+			continue
+		}
+
+		var geminiResp struct {
+			Candidates []struct {
+				Content struct {
+					Parts []struct {
+						Text string `json:"text"`
+					} `json:"parts"`
+				} `json:"content"`
+			} `json:"candidates"`
+		}
+
+		if err := json.Unmarshal(bodyBytes, &geminiResp); err != nil || len(geminiResp.Candidates) == 0 {
+			lastErr = fmt.Errorf("invalid gemini response format")
+			continue
+		}
+
+		rawText := geminiResp.Candidates[0].Content.Parts[0].Text
+		start := strings.Index(rawText, "{")
+		end := strings.LastIndex(rawText, "}")
+		if start < 0 || end <= start {
+			lastErr = fmt.Errorf("no json structure found in receipt scan response")
+			continue
+		}
+
+		var scanRes ReceiptScanResult
+		if err := json.Unmarshal([]byte(rawText[start:end+1]), &scanRes); err != nil {
+			lastErr = fmt.Errorf("failed to parse receipt json: %w", err)
+			continue
+		}
+
+		return &scanRes, nil
 	}
 
-	var geminiResp struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
+	if isQuotaError {
+		return nil, fmt.Errorf("Gemini AI ücretsiz kullanım kotasına ulaşıldı (HTTP 429). Lütfen 1 dakika bekleyip tekrar deneyin veya yeni bir API anahtarı ekleyin.")
 	}
 
-	if err := json.Unmarshal(bodyBytes, &geminiResp); err != nil || len(geminiResp.Candidates) == 0 {
-		return nil, fmt.Errorf("invalid gemini response: %w", err)
+	if lastErr != nil {
+		return nil, fmt.Errorf("Fiş okunamadı: %v", lastErr)
 	}
 
-	rawText := geminiResp.Candidates[0].Content.Parts[0].Text
-	start := strings.Index(rawText, "{")
-	end := strings.LastIndex(rawText, "}")
-	if start < 0 || end <= start {
-		return nil, fmt.Errorf("no json structure found in receipt scan response")
-	}
-
-	var scanRes ReceiptScanResult
-	if err := json.Unmarshal([]byte(rawText[start:end+1]), &scanRes); err != nil {
-		return nil, fmt.Errorf("failed to parse receipt json: %w", err)
-	}
-
-	return &scanRes, nil
+	return nil, fmt.Errorf("Fiş okuma servisi şu anda yanıt vermiyor. Lütfen tekrar deneyin.")
 }
 
 func (s *AIService) queryGroqOrGeminiText(prompt string) (string, error) {
@@ -329,7 +358,6 @@ func (s *AIService) queryGroq(prompt string) (string, error) {
 }
 
 func (s *AIService) queryGeminiText(prompt string) (string, error) {
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=%s", s.geminiKey)
 	reqBody := map[string]interface{}{
 		"contents": []map[string]interface{}{
 			{
@@ -341,38 +369,51 @@ func (s *AIService) queryGeminiText(prompt string) (string, error) {
 	}
 
 	jsonBytes, _ := json.Marshal(reqBody)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/json")
+	candidateModels := []string{"gemini-flash-latest", "gemini-3.6-flash", "gemini-flash-lite-latest", "gemini-2.0-flash"}
+	var lastErr error
 
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
+	for _, model := range candidateModels {
+		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, s.geminiKey)
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
 
-	bodyBytes, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("gemini api status=%d body=%s", resp.StatusCode, string(bodyBytes))
+		resp, err := s.client.Do(req)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			lastErr = fmt.Errorf("gemini api model %s status=%d", model, resp.StatusCode)
+			continue
+		}
+
+		var geminiResp struct {
+			Candidates []struct {
+				Content struct {
+					Parts []struct {
+						Text string `json:"text"`
+					} `json:"parts"`
+				} `json:"content"`
+			} `json:"candidates"`
+		}
+
+		if err := json.Unmarshal(bodyBytes, &geminiResp); err != nil || len(geminiResp.Candidates) == 0 {
+			lastErr = fmt.Errorf("invalid gemini response from model %s", model)
+			continue
+		}
+
+		return geminiResp.Candidates[0].Content.Parts[0].Text, nil
 	}
 
-	var geminiResp struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-
-	if err := json.Unmarshal(bodyBytes, &geminiResp); err != nil || len(geminiResp.Candidates) == 0 {
-		return "", fmt.Errorf("invalid gemini response")
-	}
-
-	return geminiResp.Candidates[0].Content.Parts[0].Text, nil
+	return "", fmt.Errorf("gemini text query failed: %v", lastErr)
 }
 
 var _ = base64.StdEncoding

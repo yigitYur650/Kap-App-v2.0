@@ -80,8 +80,17 @@ class _ReceiptScannerDialogState extends State<ReceiptScannerDialog> {
         });
       } else {
         final errData = jsonDecode(response.body);
+        final rawErr = errData['error']?.toString() ?? 'Fiş okunamadı';
+        
+        String cleanErr;
+        if (response.statusCode == 429 || rawErr.contains('429') || rawErr.toLowerCase().contains('quota') || rawErr.toLowerCase().contains('kotasına ulaşıldı')) {
+          cleanErr = '⚠️ AI Servisi Yoğun (HTTP 429)\n\nGoogle Gemini AI günlük ücretsiz kullanım kotasına ulaşıldı.\nLütfen 1 dakika sonra tekrar deneyin veya fiş bilgilerinizi elle ekleyin.';
+        } else {
+          cleanErr = 'Fiş taranırken bir hata oluştu.\n$rawErr';
+        }
+
         setState(() {
-          _errorMessage = errData['error'] ?? 'Fiş okunamadı';
+          _errorMessage = cleanErr;
         });
       }
     } catch (e) {
@@ -118,14 +127,36 @@ class _ReceiptScannerDialogState extends State<ReceiptScannerDialog> {
                 style: AppTypography.bodyMd,
               ),
             ] else if (_errorMessage != null) ...[
-              Text(
-                _errorMessage!,
-                style: AppTypography.bodyMd.copyWith(color: AppColors.primary),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: AppColors.primary, size: 24),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: AppTypography.bodyMd.copyWith(height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              ElevatedButton(
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
                 onPressed: () => setState(() => _errorMessage = null),
-                child: const Text('Tekrar Dene'),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Tekrar Dene'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
               ),
             ] else if (_scanResult != null) ...[
               Text(
