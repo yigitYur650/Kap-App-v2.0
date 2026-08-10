@@ -210,7 +210,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
 
                 Text(
                   'Vücut Ölçülerim & Hedeflerim',
-                  style: AppTypography.titleLg.copyWith(color: Colors.white),
+                  style: AppTypography.headlineMd.copyWith(color: Colors.white),
                 ),
                 const SizedBox(height: 16),
 
