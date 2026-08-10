@@ -114,12 +114,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) {
         final screenWidth = MediaQuery.of(context).size.width;
         final isWeb = screenWidth > 600;
