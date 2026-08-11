@@ -171,30 +171,28 @@ class _ShellScreenState extends State<ShellScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-                // Glowing active dot indicator
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: isActive ? 4 : 0,
-                  height: isActive ? 4 : 0,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary,
-                    boxShadow: isActive
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.8),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            )
-                          ]
-                        : null,
-                  ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: isActive ? 4 : 0,
+                height: isActive ? 4 : 0,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary,
+                  boxShadow: isActive
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.8),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          )
+                        ]
+                      : null,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
-      }
+      },
     );
   }
 }
