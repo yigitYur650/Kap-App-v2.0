@@ -99,6 +99,27 @@ class CategoryHelper {
     return genel;
   }
 
+  static String getCategoryIcon(String category) {
+    switch (category) {
+      case sutKahvaltilik:
+        return '🧀';
+      case meyveSebze:
+        return '🥦';
+      case etPilic:
+        return '🍗';
+      case temelGida:
+        return '🌾';
+      case atistirmalik:
+        return '🍿';
+      case icecek:
+        return '🥤';
+      case temizlik:
+        return '🧹';
+      default:
+        return '📦';
+    }
+  }
+
   static bool _containsAny(String text, List<String> keywords) {
     for (final kw in keywords) {
       if (text.contains(kw)) return true;

@@ -9,6 +9,7 @@ import 'package:kap_app_front/features/groups/presentation/screens/settings_scre
 import 'package:kap_app_front/features/requests/presentation/screens/shopping_list_screen.dart';
 import 'package:kap_app_front/features/admin/presentation/admin_dashboard_screen.dart';
 import 'package:kap_app_front/features/health/presentation/screens/health_profile_screen.dart';
+import 'package:kap_app_front/features/inventory/presentation/screens/inventory_screen.dart';
 import 'package:kap_app_front/core/navigation/shell_screen.dart';
 
 /// Provider that exposes the GoRouter configuration and rebuilds on auth state changes.
@@ -79,7 +80,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Tab 2: Health / Kişisel Profile
+          // Tab 2: Home Inventory ("Evde Ne Var?")
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/inventory',
+                builder: (context, state) => const InventoryScreen(),
+              ),
+            ],
+          ),
+
+          // Tab 3: Health / Kişisel Profile
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -89,7 +100,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           
-          // Tab 3: Settings
+          // Tab 4: Settings
           StatefulShellBranch(
             routes: [
               GoRoute(
