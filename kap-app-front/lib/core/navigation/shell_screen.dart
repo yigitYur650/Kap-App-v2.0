@@ -148,25 +148,29 @@ class _ShellScreenState extends State<ShellScreen> {
         return GestureDetector(
           onTap: () => _onTabSelect(index),
           behavior: HitTestBehavior.opaque,
-          child: SizedBox(
-            width: 80,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  color: color,
-                  size: 24,
-                ),
-                const SizedBox(height: 4),
-                Text(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: 22,
+              ),
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.labelSm.copyWith(
                     color: color,
+                    fontSize: 10,
                     fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
-                const SizedBox(height: 4),
+              ),
+              const SizedBox(height: 2),
                 // Glowing active dot indicator
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),

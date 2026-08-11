@@ -142,17 +142,21 @@ class InventoryCard extends StatelessWidget {
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
-              height: 36,
+              height: 38,
               child: ElevatedButton.icon(
                 onPressed: onAddToList,
                 icon: const Icon(Icons.add_shopping_cart, size: 16),
-                label: Text(
-                  '🛒 "${item.itemName}" Listeye Ekle',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '🛒 "${item.itemName}" Listeye Ekle',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: statusColor,
                   foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -176,7 +180,7 @@ class InventoryCard extends StatelessWidget {
       onTap: () => onStatusChanged(statusKey),
       borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.25) : Colors.transparent,
@@ -186,12 +190,15 @@ class InventoryCard extends StatelessWidget {
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? color : AppColors.textMuted,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 12,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? color : AppColors.textMuted,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 12,
+            ),
           ),
         ),
       ),

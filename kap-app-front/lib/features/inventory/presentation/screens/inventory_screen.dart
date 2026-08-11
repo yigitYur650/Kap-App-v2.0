@@ -75,40 +75,49 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.inventory_2,
-                              color: AppColors.primary,
-                              size: 26,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Evde Ne Var?',
-                                style: AppTypography.headlineLg.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              Text(
-                                'Evdeki stokları ve malzeme durumunu takip edin',
-                                style: AppTypography.bodyMd.copyWith(
-                                  color: AppColors.textMuted,
-                                  fontSize: 12,
-                                ),
+                              child: const Icon(
+                                Icons.inventory_2,
+                                color: AppColors.primary,
+                                size: 26,
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Evde Ne Var?',
+                                      style: AppTypography.headlineLg.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Evdeki stok durumunu takip edin',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.bodyMd.copyWith(
+                                      color: AppColors.textMuted,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.refresh, color: AppColors.primary),
@@ -325,28 +334,33 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             count.toString(),
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: AppTypography.labelSm.copyWith(
-              color: AppColors.textMuted,
-              fontSize: 10,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: AppTypography.labelSm.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 10,
+              ),
             ),
           ),
         ],
