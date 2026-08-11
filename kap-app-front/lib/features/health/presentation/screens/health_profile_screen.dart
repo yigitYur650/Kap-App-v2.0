@@ -16,6 +16,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
   late TextEditingController _weightController;
   late TextEditingController _heightController;
   late TextEditingController _ageController;
+  late TextEditingController _waterIntakeController;
+  late TextEditingController _bodyFatController;
 
   String _gender = 'male';
   String _activityLevel = 'moderate';
@@ -30,6 +32,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
     _weightController = TextEditingController();
     _heightController = TextEditingController();
     _ageController = TextEditingController();
+    _waterIntakeController = TextEditingController();
+    _bodyFatController = TextEditingController();
   }
 
   @override
@@ -37,6 +41,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
     _weightController.dispose();
     _heightController.dispose();
     _ageController.dispose();
+    _waterIntakeController.dispose();
+    _bodyFatController.dispose();
     super.dispose();
   }
 
@@ -45,6 +51,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
     _weightController.text = profile.weight > 0 ? profile.weight.toStringAsFixed(1) : '70.0';
     _heightController.text = profile.height > 0 ? profile.height.toStringAsFixed(0) : '170';
     _ageController.text = profile.age > 0 ? profile.age.toString() : '25';
+    _waterIntakeController.text = profile.dailyWaterIntakeLiters > 0 ? profile.dailyWaterIntakeLiters.toStringAsFixed(1) : '2.5';
+    _bodyFatController.text = profile.bodyFatPercentage > 0 ? profile.bodyFatPercentage.toStringAsFixed(1) : '20.0';
     _gender = profile.gender;
     _activityLevel = profile.activityLevel;
     _goal = profile.goal;
@@ -56,6 +64,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
     final weight = double.tryParse(_weightController.text.trim()) ?? 70.0;
     final height = double.tryParse(_heightController.text.trim()) ?? 170.0;
     final age = int.tryParse(_ageController.text.trim()) ?? 25;
+    final waterIntake = double.tryParse(_waterIntakeController.text.trim()) ?? 2.5;
+    final bodyFat = double.tryParse(_bodyFatController.text.trim()) ?? 20.0;
 
     setState(() => _isSaving = true);
 
@@ -67,6 +77,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
       activityLevel: _activityLevel,
       goal: _goal,
       isPublic: _isPublic,
+      dailyWaterIntakeLiters: waterIntake,
+      bodyFatPercentage: bodyFat,
     );
 
     try {
@@ -120,6 +132,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
           final currentWeight = double.tryParse(_weightController.text.trim()) ?? profile.weight;
           final currentHeight = double.tryParse(_heightController.text.trim()) ?? profile.height;
           final currentAge = int.tryParse(_ageController.text.trim()) ?? profile.age;
+          final currentWater = double.tryParse(_waterIntakeController.text.trim()) ?? profile.dailyWaterIntakeLiters;
+          final currentFat = double.tryParse(_bodyFatController.text.trim()) ?? profile.bodyFatPercentage;
 
           final calculatedProfile = HealthProfileData(
             weight: currentWeight,
@@ -129,6 +143,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
             activityLevel: _activityLevel,
             goal: _goal,
             isPublic: _isPublic,
+            dailyWaterIntakeLiters: currentWater,
+            bodyFatPercentage: currentFat,
           );
 
           final macros = FitnessCalculator.calculateAll(calculatedProfile);
@@ -227,6 +243,30 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+
+                      // Hydration & Body Fat Analysis Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildEnergyCard(
+                              'Su Tüketimi (Hedef)',
+                              '${calculatedProfile.dailyWaterIntakeLiters}L / ${macros.recommendedWaterLiters}L',
+                              Icons.water_drop_rounded,
+                              Colors.cyanAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildEnergyCard(
+                              'Vücut Yağ Durumu',
+                              '%${calculatedProfile.bodyFatPercentage} (${macros.bodyFatCategory})',
+                              Icons.pie_chart_rounded,
+                              Colors.amberAccent,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -251,6 +291,32 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _buildTextField(_ageController, 'Yaş', TextInputType.number),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // New Form Fields: Ort. Su Tüketimi (Litre) & Yağ Oranı (%)
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        _waterIntakeController,
+                        'Günlük Su (Litre)',
+                        const TextInputType.numberWithOptions(decimal: true),
+                        prefixIcon: Icons.water_drop_rounded,
+                        prefixColor: Colors.cyanAccent,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildTextField(
+                        _bodyFatController,
+                        'Yağ Oranı (%)',
+                        const TextInputType.numberWithOptions(decimal: true),
+                        prefixIcon: Icons.pie_chart_rounded,
+                        prefixColor: Colors.amberAccent,
+                      ),
                     ),
                   ],
                 ),
@@ -457,13 +523,20 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, TextInputType keyboard) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    TextInputType keyboard, {
+    IconData? prefixIcon,
+    Color? prefixColor,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: keyboard,
       style: const TextStyle(color: Colors.white),
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: prefixColor ?? AppColors.primary, size: 18) : null,
         labelText: label,
         labelStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
         filled: true,

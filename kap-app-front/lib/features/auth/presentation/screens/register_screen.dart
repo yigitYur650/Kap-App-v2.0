@@ -27,6 +27,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final localizations = AppLocalizations.of(context)!;
     final size = MediaQuery.of(context).size;
 
+    ref.listen(registerControllerProvider, (previous, next) {
+      if (next.status == FormzSubmissionStatus.failure && next.errorMessage != null) {
+        if (next.errorMessage!.startsWith('2FA_REQUIRED:')) {
+          final email = next.errorMessage!.replaceFirst('2FA_REQUIRED:', '');
+          context.go('/verify-otp', extra: email);
+        }
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(

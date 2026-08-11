@@ -12,6 +12,8 @@ import 'package:kap_app_front/features/health/presentation/screens/health_profil
 import 'package:kap_app_front/features/inventory/presentation/screens/inventory_screen.dart';
 import 'package:kap_app_front/core/navigation/shell_screen.dart';
 
+import 'package:kap_app_front/features/auth/presentation/screens/otp_verification_screen.dart';
+
 /// Provider that exposes the GoRouter configuration and rebuilds on auth state changes.
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -26,13 +28,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authState.value != null;
       final isLoggingIn = state.matchedLocation == '/login';
       final isRegistering = state.matchedLocation == '/register';
+      final isVerifyingOTP = state.matchedLocation == '/verify-otp';
 
       if (!isLoggedIn) {
-        if (!isLoggingIn && !isRegistering) {
+        if (!isLoggingIn && !isRegistering && !isVerifyingOTP) {
           return '/login';
         }
       } else {
-        if (isLoggingIn || isRegistering) {
+        if (isLoggingIn || isRegistering || isVerifyingOTP) {
           return '/';
         }
       }
@@ -48,6 +51,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/verify-otp',
+        builder: (context, state) {
+          final email = (state.extra as String?) ?? (state.uri.queryParameters['email'] ?? '');
+          return OTPVerificationScreen(email: email);
+        },
       ),
       GoRoute(
         path: '/admin',

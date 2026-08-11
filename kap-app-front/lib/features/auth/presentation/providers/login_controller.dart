@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
+import '../../../../core/errors/failure.dart';
 import '../../providers/auth_repository_provider.dart';
 import '../models/email_input.dart';
 import '../models/password_input.dart';
@@ -58,10 +59,17 @@ class LoginController extends Notifier<LoginState> {
 
     result.fold(
       (failure) {
-        state = state.copyWith(
-          status: FormzSubmissionStatus.failure,
-          errorMessage: failure.message,
-        );
+        if (failure is TwoFactorRequiredFailure) {
+          state = state.copyWith(
+            status: FormzSubmissionStatus.failure,
+            errorMessage: '2FA_REQUIRED:${failure.email}',
+          );
+        } else {
+          state = state.copyWith(
+            status: FormzSubmissionStatus.failure,
+            errorMessage: failure.message,
+          );
+        }
       },
       (user) {
         state = state.copyWith(status: FormzSubmissionStatus.success);

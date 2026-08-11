@@ -10,7 +10,6 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'core/navigation/router.dart';
 import 'core/providers/shared_preferences_provider.dart';
 import 'core/localization/custom_shadcn_localizations.dart';
-import 'core/services/notification_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -50,8 +49,6 @@ void main() async {
     url: supabaseUrl,
     publishableKey: supabaseAnonKey,
   );
-
-  await NotificationService().initialize();
 
   final sharedPreferences = await SharedPreferences.getInstance();
 

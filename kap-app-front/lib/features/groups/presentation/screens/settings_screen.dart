@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:kap_app_front/features/admin/presentation/providers/admin_provider.dart';
 import 'package:kap_app_front/features/auth/presentation/providers/auth_provider.dart';
 import 'package:kap_app_front/features/groups/data/group_repository_provider.dart';
 import 'package:kap_app_front/features/groups/presentation/providers/active_group_provider.dart';
@@ -80,6 +82,7 @@ class SettingsScreen extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final activeGroup = ref.watch(activeGroupProvider);
     final groupsAsync = ref.watch(userGroupsProvider);
+    final isSystemAdmin = ref.watch(isSystemAdminProvider).value ?? false;
     final user = authState.value;
     final localizations = AppLocalizations.of(context)!;
 
@@ -378,35 +381,118 @@ class SettingsScreen extends ConsumerWidget {
                 );
               },
             ),
-            const SizedBox(height: 16),
+            // 2FA Security Preference Tile
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF141414),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  final is2FAEnabled = user?.is2FAEnabled ?? false;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.security, color: AppColors.primary, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'E-posta ile 2FA Doğrulama',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Girişte e-postanıza 6 haneli güvenlik kodu gönderilir.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.secondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: is2FAEnabled,
+                        activeThumbColor: AppColors.primary,
+                        onChanged: (val) async {
+                          if (user == null) return;
+                          try {
+                            await Supabase.instance.client
+                                .from('users')
+                                .update({'is_2fa_enabled': val})
+                                .eq('id', user.id);
 
-            // Admin Dashboard Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  context.push('/admin');
+                            ref.read(authProvider.notifier).updateState(user.copyWith(is2FAEnabled: val));
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(val ? '2-Adımlı E-posta Doğrulama Aktifleştirildi.' : '2-Adımlı Doğrulama Kapatıldı.'),
+                                  backgroundColor: val ? Colors.teal : Colors.grey[700],
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Ayar güncellenemedi: $e'),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1F2022),
-                  side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                icon: const Icon(Icons.admin_panel_settings_rounded, color: AppColors.primary),
-                label: const Text(
-                  '🛡️ Admin Paneline Git',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
               ),
             ),
             const SizedBox(height: 16),
+
+            // Admin Dashboard Button (Only for verified system admins)
+            if (isSystemAdmin) ...[
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    context.push('/admin');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1F2022),
+                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  icon: const Icon(Icons.admin_panel_settings_rounded, color: AppColors.primary),
+                  label: const Text(
+                    '🛡️ Admin Paneline Git',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Sign Out Button
             SizedBox(

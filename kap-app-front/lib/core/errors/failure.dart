@@ -33,3 +33,8 @@ class CollisionFailure extends Failure {
 class DuplicateItemFailure extends Failure {
   const DuplicateItemFailure([super.message = 'This item is already in your shopping list.']);
 }
+
+class TwoFactorRequiredFailure extends Failure {
+  final String email;
+  const TwoFactorRequiredFailure(this.email, [super.message = '2-Step Verification Required']);
+}

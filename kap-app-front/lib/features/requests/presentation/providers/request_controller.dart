@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/models/request_model.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../groups/presentation/providers/active_group_provider.dart';
 import '../../providers/request_repository_provider.dart';
 
@@ -71,6 +72,13 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
       (newRequest) {
         final currentList = state.value ?? [];
         state = AsyncData([newRequest, ...currentList.where((r) => r.id != newRequest.id)]);
+
+        try {
+          ref.read(notificationServiceProvider).showInstantNotification(
+            title: '🛒 Yeni İhtiyaç Ekledi!',
+            body: 'Gruba yeni \'$itemName\' isteği eklendi.',
+          );
+        } catch (_) {}
       },
     );
 

@@ -6,6 +6,8 @@ class HealthProfileData {
   final String activityLevel; // 'sedentary', 'light', 'moderate', 'active', 'very-active'
   final String goal; // 'lose', 'maintain', 'gain'
   final bool isPublic;
+  final double dailyWaterIntakeLiters; // Liters per day
+  final double bodyFatPercentage; // % body fat
 
   const HealthProfileData({
     this.weight = 70.0,
@@ -15,6 +17,8 @@ class HealthProfileData {
     this.activityLevel = 'moderate',
     this.goal = 'maintain',
     this.isPublic = true,
+    this.dailyWaterIntakeLiters = 2.5,
+    this.bodyFatPercentage = 20.0,
   });
 
   Map<String, dynamic> toJson() {
@@ -26,6 +30,8 @@ class HealthProfileData {
       'activity_level': activityLevel,
       'goal': goal,
       'is_public': isPublic,
+      'daily_water_intake_liters': dailyWaterIntakeLiters,
+      'body_fat_percentage': bodyFatPercentage,
     };
   }
 
@@ -38,6 +44,8 @@ class HealthProfileData {
       activityLevel: (json['activity_level'] as String?) ?? 'moderate',
       goal: (json['goal'] as String?) ?? 'maintain',
       isPublic: (json['is_public'] as bool?) ?? true,
+      dailyWaterIntakeLiters: (json['daily_water_intake_liters'] as num?)?.toDouble() ?? 2.5,
+      bodyFatPercentage: (json['body_fat_percentage'] as num?)?.toDouble() ?? 20.0,
     );
   }
 }
@@ -49,6 +57,8 @@ class CalculatedMacros {
   final int proteinGrams;
   final int fatGrams;
   final int carbGrams;
+  final double recommendedWaterLiters;
+  final String bodyFatCategory;
 
   const CalculatedMacros({
     required this.bmr,
@@ -57,6 +67,8 @@ class CalculatedMacros {
     required this.proteinGrams,
     required this.fatGrams,
     required this.carbGrams,
+    required this.recommendedWaterLiters,
+    required this.bodyFatCategory,
   });
 }
 
@@ -93,7 +105,39 @@ class FitnessCalculator {
     return res < 1000 ? 1000 : res;
   }
 
-  /// Calculate Macro distribution (Protein: 2g/kg, Fat: 0.8g/kg, Carbs: remaining / 4)
+  /// Calculate recommended daily water intake based on weight & activity
+  static double calculateRecommendedWater(HealthProfileData profile) {
+    final activityBonuses = {
+      'sedentary': 0.0,
+      'light': 0.3,
+      'moderate': 0.5,
+      'active': 0.8,
+      'very-active': 1.0,
+    };
+    final bonus = activityBonuses[profile.activityLevel] ?? 0.5;
+    final recommended = (profile.weight * 0.035) + bonus;
+    return double.parse(recommended.toStringAsFixed(1));
+  }
+
+  /// Categorize body fat percentage based on gender standards
+  static String categorizeBodyFat(double bodyFat, String gender) {
+    if (bodyFat <= 0) return 'Belirtilmedi';
+    if (gender == 'male') {
+      if (bodyFat < 6) return 'Temel Yağ';
+      if (bodyFat <= 13) return 'Sporcu';
+      if (bodyFat <= 17) return 'Fit / İdeal';
+      if (bodyFat <= 24) return 'Ortalama';
+      return 'Yüksek';
+    } else {
+      if (bodyFat < 14) return 'Temel Yağ';
+      if (bodyFat <= 20) return 'Sporcu';
+      if (bodyFat <= 24) return 'Fit / İdeal';
+      if (bodyFat <= 31) return 'Ortalama';
+      return 'Yüksek';
+    }
+  }
+
+  /// Calculate Macro & Hydration distribution
   static CalculatedMacros calculateAll(HealthProfileData profile) {
     final bmr = calculateBMR(profile);
     final tdee = calculateTDEE(bmr, profile.activityLevel);
@@ -107,6 +151,9 @@ class FitnessCalculator {
     final remainingCal = targetCal - proteinCal - fatCal;
     final carbGrams = remainingCal > 0 ? (remainingCal / 4).round() : 0;
 
+    final recommendedWater = calculateRecommendedWater(profile);
+    final bfCategory = categorizeBodyFat(profile.bodyFatPercentage, profile.gender);
+
     return CalculatedMacros(
       bmr: bmr,
       tdee: tdee,
@@ -114,6 +161,8 @@ class FitnessCalculator {
       proteinGrams: proteinGrams,
       fatGrams: fatGrams,
       carbGrams: carbGrams,
+      recommendedWaterLiters: recommendedWater,
+      bodyFatCategory: bfCategory,
     );
   }
 }

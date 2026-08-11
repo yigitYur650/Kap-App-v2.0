@@ -77,8 +77,10 @@ class InventoryCard extends StatelessWidget {
                   children: [
                     Text(
                       item.itemName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.headlineMd.copyWith(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

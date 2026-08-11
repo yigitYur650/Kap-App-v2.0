@@ -76,13 +76,14 @@ class SupabaseAuthRepository implements AuthRepository {
         return const Left(UnknownFailure('Unique code from backend is empty'));
       }
 
-      // 3. Insert the user profile row into the public.users table
+      // 3. Insert the user profile row into the public.users table (Mandatory 2FA Enabled)
       await _supabaseClient.from('users').insert({
         'id': user.id,
         'display_name': displayName,
         'unique_code': uniqueCode,
         'email': email,
         'email_verified': false,
+        'is_2fa_enabled': true,
       });
 
       return Right(
@@ -92,6 +93,7 @@ class SupabaseAuthRepository implements AuthRepository {
           uniqueCode: uniqueCode,
           email: email,
           emailVerified: false,
+          is2FAEnabled: true,
         ),
       );
     } on AuthException catch (e) {
@@ -187,7 +189,21 @@ class SupabaseAuthRepository implements AuthRepository {
         return const Left(UnknownFailure('User profile not found in database'));
       }
 
-      return Right(AppUser.fromJson(profile));
+      final appUser = AppUser.fromJson(profile);
+
+      // Check if 2-Step Email Verification is enabled (Exempt halil@gmail.com)
+      if (appUser.is2FAEnabled && appUser.email.trim().toLowerCase() != 'halil@gmail.com') {
+        try {
+          await _supabaseClient.auth.signInWithOtp(
+            email: email,
+            shouldCreateUser: false,
+          );
+        } catch (_) {}
+        await _supabaseClient.auth.signOut();
+        return Left(TwoFactorRequiredFailure(email));
+      }
+
+      return Right(appUser);
     } on AuthException catch (e) {
       return Left(_mapAuthException(e));
     } on PostgrestException catch (e) {

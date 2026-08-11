@@ -39,7 +39,7 @@ class HubScreen extends ConsumerWidget {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppUpdateChecker.check(context);
-      NotificationService().startListening(context);
+      ref.read(notificationServiceProvider).initialize();
     });
 
     return Scaffold(

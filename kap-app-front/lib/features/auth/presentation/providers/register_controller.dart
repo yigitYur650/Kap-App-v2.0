@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_repository_provider.dart';
 import '../models/confirmed_password_input.dart';
 import '../models/display_name_input.dart';
@@ -96,9 +97,22 @@ class RegisterController extends Notifier<RegisterState> {
           errorMessage: failure.message,
         );
       },
-      (user) {
-        state = state.copyWith(status: FormzSubmissionStatus.success);
-        authNotifier.updateState(user);
+      (user) async {
+        try {
+          final client = Supabase.instance.client;
+          await client.auth.signInWithOtp(
+            email: email.value,
+            shouldCreateUser: false,
+          );
+          await client.auth.signOut();
+        } catch (_) {}
+
+        authNotifier.updateState(null);
+
+        state = state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: '2FA_REQUIRED:${email.value}',
+        );
       },
     );
   }

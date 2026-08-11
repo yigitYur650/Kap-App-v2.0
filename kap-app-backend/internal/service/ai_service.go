@@ -524,43 +524,37 @@ LÜTFEN KULLANICININ SEPETİNDEKİ ÜRÜNLERİ BU KİŞİSEL SAĞLIK BİLGİLER�
 		)
 	}
 
-	prompt := fmt.Sprintf(`Sen uzman diyetisyen, kişisel fitness antrenörü, tasarruf koçu ve profesyonel şef asistansın.
-Kullanıcının aşağıdaki alışveriş listesindeki ürünleri incele:
-Alışveriş Listesi: %s
+	prompt := fmt.Sprintf(`Sen uzman bir diyetisyen, kişisel fitness antrenörü ve yaratıcı bir şefsin.
+Kullanıcının evindeki/sepetindeki aşağıdaki mevcut malzemeleri incele:
+Malzeme Listesi: %s
 %s
 
-Lütfen aşağıdaki 5 kategoriden en az 3-4 tanesinde GERÇEKÇİ, PRATİK VE KULLANICININ KİŞİSEL SAĞLIK PROFİLİNE ÖZEL Türkçe tavsiyeler üret:
-1. "health": Dengeli Beslenme & Sağlık/Fitness İpucu (Örn: Kişinin günlük protein/kalori hedefine göre sepet analizi, lif/meyve tamamlayıcısı)
-2. "savings": Bütçe & Tasarruf İpucu (Örn: Gramaj avantajı, muadil ürün veya toplu paket tüyosu)
-3. "recipe": Sepetteki Malzemelerden Pratik Yemek Tarifi (Örn: Bu ürünlerle pişirilebilecek nefis ve sağlıklı yemek fikri)
-4. "missing": Unutulmuş Olabilir Uyarısı (Örn: Birbiriyle ilişkili ürünlerin tamamlayıcısı - salça var yağ yok vb.)
-5. "storage": Tazelik & İsraf Önleme İpucu (Örn: Saklama tüyoları)
+Lütfen bu malzemeleri kullanarak pişirilebilecek GERÇEKÇİ, PRATİK VE LEZZETLİ Türkçe yemek tarifleri ve beslenme tüyoları üret. Özellikle "recipe" kategorisinde bu malzemeleri harmanlayan nefis yemek fikirleri ver.
+Lütfen aşağıdaki kategorilerden en az 3-4 tavsiye üret:
+1. "recipe": Evdeki Malzemelerle Nefis Yemek Tarifi (Örn: Bu ürünlerle pişirilebilecek adım adım lezzetli ve sağlıklı yemek fikri)
+2. "health": Dengeli Beslenme & Fitness İpucu (Kullanıcının makro ve kalori hedeflerine uygun sepet/malzeme tavsiyesi)
+3. "savings": Bütçe & İsraf Önleme Tüyosu (Gramaj avantajı veya evdeki malzemeleri değerlendirme fikri)
+4. "missing": Eksik Tamamlayıcı Malzeme Uyarısı (Tarifi mükemmelleştirecek ama listede eksik olan malzeme)
+5. "storage": Tazelik Saklama Tüyosu
 
-Tüm tavsiyeler net, Türkçe ve motivasyon edici olsun. Varsa suggested_item alanına doğrudan alışveriş listesine eklenebilecek 1-2 kelimelik net ürün adı yaz (Örn: "Ispanak", "Sıvı Yağ", "Salatalık").
+ÖNEMLİ: Tarif veya öneride eksik olan 1 tamamlayıcı malzeme varsa, suggested_item alanına doğrudan alışveriş listesine eklenebilecek net 1-2 kelimelik ürün adı yaz (Örn: "Yoğurt", "Sıvı Yağ", "Domates Salçası").
 
 Yalnızca aşağıdaki JSON formatında yanıt ver:
 {
   "recommendations": [
     {
-      "category": "health",
-      "title": "Kişisel Beslenme & Fitness İpucu",
-      "description": "Listenize lif ve protein oranı yüksek taze sebze (Ispanak/Brokoli) ekleyerek günlük hedeflerinize daha hızlı ulaşabilirsiniz.",
-      "icon": "🥗",
-      "suggested_item": "Ispanak"
-    },
-    {
-      "category": "savings",
-      "title": "Bütçe Tasarruf Fırsatı",
-      "description": "Peynir ve süt ürünlerini büyük paket almak kg başına %%15-20 tasarruf sağlar.",
-      "icon": "💰",
-      "suggested_item": "1kg Peynir"
-    },
-    {
       "category": "recipe",
-      "title": "Pratik Yemek Fikri",
-      "description": "Sepetteki kıyma ve makarna ile harika bir Fırın Kıymalı Makarna pişirebilirsiniz!",
+      "title": "🍳 Evdeki Malzemelerle: Fırın Tavuklu Sebze",
+      "description": "Evdeki patates, domates ve tavuk göğsü ile harika bir fırın yemeği hazırlayabilirsiniz. Sosu için biraz zeytinyağı ve kekik ekleyin.",
       "icon": "🍳",
-      "suggested_item": ""
+      "suggested_item": "Zeytinyağı"
+    },
+    {
+      "category": "health",
+      "title": "🥗 Yüksek Proteinli Öğün Fikri",
+      "description": "Evdeki yumurta ve peynir ile yüksek proteinli nefis bir omlet pişirerek günlük protein ihtiyacınızı destekleyin.",
+      "icon": "🥗",
+      "suggested_item": "Maydanoz"
     }
   ]
 }`, strings.Join(names, ", "), profileContext)

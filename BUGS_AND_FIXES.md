@@ -80,3 +80,29 @@
 - **Semptom:** AI önerileri kullanıcının kişisel kilosunu, yaşını, hedefini ve makrolarını dikkate almayıp genel veriler üretiyordu. Tavsiye penceresinde süzme sekmeleri yoktu.
 - **Kök Neden:** Backend API isteğine kullanıcı profil verileri gönderilmiyordu ve UI diyaloğunda filtre sekmeleri tanımlanmamıştı.
 - **Düzeltme:** `UserHealthProfileDTO` backend promptuna entegre edildi. `AIRecommendationsDialog` sekmeli (Tümü, Sağlık, Tasarruf, Tarifler, Unutulanlar, Tazelik) ve "⚡ Tüm Önerilenleri Sepete Ekle" butonlu hale getirildi.
+
+### HATA-16: Yeni Hesap Kaydında 2FA Doğrulamasının Atlanması
+- **Semptom:** Yeni kullanıcı kayıt olduğu an 2FA OTP kod ekranına yönlendirilmeden doğrudan ana sayfaya giriş yapabiliyordu.
+- **Kök Neden:** `register_controller.dart` içerisinde kayıt başarılı olduğunda `authNotifier.updateState(user)` çağrılarak 2FA adımı tetiklenmiyordu.
+- **Düzeltme:** `register_controller.dart` güncellenerek kayıt sonrası `signInWithOtp` tetiklendi ve kullanıcı 6-8 haneli `/verify-otp` doğrulama ekranına yönlendirildi.
+
+### HATA-17: Admin Olmayan Hesaplarda Admin Paneli Butonunun Görünmesi
+- **Semptom:** Sistem admini olmayan kullanıcıların Ayarlar sayfasında "Admin Paneline Git" butonu görünüyordu.
+- **Kök Neden:** `isSystemAdminProvider` Riverpod sağlayıcısı `authProvider` kullanıcısını anlık izlemediği için önceki admin oturumunun durumunu hafızada tutuyordu.
+- **Düzeltme:** `isSystemAdminProvider` içerisine `ref.watch(authProvider)` eklendi, aktif kullanıcının `system_admins` tablosunda olup olmadığı dinamik kontrol edildi.
+
+### HATA-18: Çıkış Yapıldığında Önbellekteki Kişisel Verilerin Yeni Hesaba Sızması
+- **Semptom:** Bir hesaptan çıkıp farklı bir hesap açıldığında önceki kullanıcının sağlık profili ve aktif grup bilgileri yeni hesapta görünüyordu.
+- **Kök Neden:** `AuthNotifier.signOut()` ve `updateState()` metotlarında `healthProfileProvider` ve `isSystemAdminProvider` sıfırlanmıyordu.
+- **Düzeltme:** `_invalidateAllUserProviders()` metodu yazılarak çıkış ve oturum değişim anında tüm kişisel sağlık, grup ve admin önbellekleri tamamen temizlendi.
+
+### HATA-19: 8 Haneli Supabase OTP Kodlarının 6 Hanede Kesilmesi
+- **Semptom:** Supabase 8 haneli OTP kodu gönderdiğinde giriş ekranı 6 hane ile sınırlandığı için doğrulama başarısız oluyordu.
+- **Kök Neden:** `OTPVerificationScreen` içerisindeki `maxLength` değeri 6 olarak sabitlenmişti.
+- **Düzeltme:** `maxLength: 8` ve `letterSpacing: 6` olarak güncellendi. Arayüz hem 6 hem de 8 haneli kodları destekler hale getirildi.
+
+### HATA-20: Admin Sağlayıcılarında Göreceli Import (`../../`) Yolu Hatası
+- **Semptom:** `flutter build apk` release derlemesinde `Error when reading lib/features/admin/presentation/data/...` derleme hatası veriyordu.
+- **Kök Neden:** `admin_dashboard_screen.dart` ve `admin_provider.dart` dosyalarında göreceli yollar (`../../`) yanlış dizini hedefliyordu.
+- **Düzeltme:** Tüm importlar `package:kap_app_front/features/admin/...` paket standartına çevrildi.
+

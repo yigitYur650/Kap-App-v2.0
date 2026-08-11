@@ -6,6 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/theme/app_typography.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
+import 'package:kap_app_front/features/admin/data/notification_admin_repository.dart';
+import 'package:kap_app_front/features/admin/domain/models/scheduled_notification.dart';
+import 'package:kap_app_front/core/services/notification_service.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -36,7 +39,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _verifyAdminAccess();
   }
 
@@ -381,6 +384,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       );
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 480;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -390,17 +396,25 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           children: [
             const Icon(Icons.admin_panel_settings, color: AppColors.primary),
             const SizedBox(width: 8),
-            Text('Kap-App Web Admin Dashboard v2.0', style: AppTypography.headlineMd),
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text('Kap-App Admin Dashboard v2.0', style: AppTypography.headlineMd),
+              ),
+            ),
           ],
         ),
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: isCompact,
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.secondary,
           tabs: const [
             Tab(icon: Icon(Icons.system_update), text: 'Sürüm Yayınla (OTA)'),
-            Tab(icon: Icon(Icons.notifications_active), text: 'Bildirim Gönder'),
+            Tab(icon: Icon(Icons.notifications_active), text: 'Anlık Bildirim'),
+            Tab(icon: Icon(Icons.alarm_on_rounded), text: 'Otomatik Hatırlatıcılar'),
           ],
         ),
       ),
@@ -409,52 +423,78 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         children: [
           // Tab 1: Version Release
           SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(isCompact ? 16 : 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '🚀 Yeni APK Sürümü Yayınlama',
-                  style: AppTypography.headlineLg.copyWith(color: AppColors.text, fontWeight: FontWeight.bold),
+                  style: AppTypography.headlineLg.copyWith(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: isCompact ? 18 : 22),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Yüklediğiniz yeni APK sürümü tüm mobil kullanıcılarda uygulama içi diyalog olarak açılacaktır.',
-                  style: AppTypography.bodyLg.copyWith(color: AppColors.secondary),
+                  style: AppTypography.bodyLg.copyWith(color: AppColors.secondary, fontSize: isCompact ? 12 : 14),
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _versionCodeController,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          labelText: 'Sürüm Kodu (Örn: 102)',
-                          labelStyle: TextStyle(color: Colors.white70),
-                          filled: true,
-                          fillColor: Color(0xFF1F2022),
-                          border: OutlineInputBorder(),
+                if (isCompact) ...[
+                  TextField(
+                    controller: _versionCodeController,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Sürüm Kodu (Örn: 102)',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Color(0xFF1F2022),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _versionNameController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Sürüm Adı (Örn: v2.1.0)',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Color(0xFF1F2022),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ] else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _versionCodeController,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: 'Sürüm Kodu (Örn: 102)',
+                            labelStyle: TextStyle(color: Colors.white70),
+                            filled: true,
+                            fillColor: Color(0xFF1F2022),
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: _versionNameController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          labelText: 'Sürüm Adı (Örn: v2.1.0)',
-                          labelStyle: TextStyle(color: Colors.white70),
-                          filled: true,
-                          fillColor: Color(0xFF1F2022),
-                          border: OutlineInputBorder(),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: _versionNameController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: 'Sürüm Adı (Örn: v2.1.0)',
+                            labelStyle: TextStyle(color: Colors.white70),
+                            filled: true,
+                            fillColor: Color(0xFF1F2022),
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _apkUrlController,
@@ -574,8 +614,287 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               ],
             ),
           ),
+
+          // Tab 3: Scheduled Automated Notifications
+          _buildScheduledNotificationsTab(),
         ],
       ),
+    );
+  }
+
+  Widget _buildScheduledNotificationsTab() {
+    final scheduledAsync = ref.watch(scheduledNotificationsProvider);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '⏰ Günlük Otomatik Hatırlatıcılar',
+                    style: AppTypography.headlineLg.copyWith(color: AppColors.text, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Her gün belirli saatlerde kullanıcılara otomatik gönderilecek bildirimler.',
+                    style: AppTypography.bodyLg.copyWith(color: AppColors.secondary),
+                  ),
+                ],
+              ),
+              ElevatedButton.icon(
+                onPressed: _showAddScheduledNotificationDialog,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                icon: const Icon(Icons.add_alarm_rounded, color: Colors.white),
+                label: const Text('Yeni Ekle', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          scheduledAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            error: (err, _) => Center(child: Text('Hata: $err', style: const TextStyle(color: Colors.red))),
+            data: (list) {
+              if (list.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(
+                    child: Text(
+                      'Henüz tanımlanmış otomatik hatırlatıcı yok.',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: list.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final item = list[index];
+                  final icon = item.notificationType == 'water'
+                      ? Icons.water_drop_rounded
+                      : item.notificationType == 'market'
+                          ? Icons.shopping_cart_rounded
+                          : item.notificationType == 'nutrition'
+                              ? Icons.restaurant_rounded
+                              : Icons.notifications_active_rounded;
+
+                  final color = item.notificationType == 'water'
+                      ? Colors.cyanAccent
+                      : item.notificationType == 'market'
+                          ? Colors.orangeAccent
+                          : item.notificationType == 'nutrition'
+                              ? Colors.lightGreenAccent
+                              : AppColors.primary;
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1F2022),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: item.isActive ? color.withValues(alpha: 0.4) : Colors.white12),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      leading: CircleAvatar(
+                        backgroundColor: color.withValues(alpha: 0.15),
+                        child: Icon(icon, color: color),
+                      ),
+                      title: Row(
+                        children: [
+                          Text(
+                            item.title,
+                            style: AppTypography.bodyLg.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white12,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '🕒 ${item.scheduledTime.substring(0, 5)}',
+                              style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          item.body,
+                          style: AppTypography.bodyMd.copyWith(color: AppColors.secondary),
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Switch(
+                            value: item.isActive,
+                            activeThumbColor: color,
+                            onChanged: (val) async {
+                              await ref
+                                  .read(notificationAdminRepositoryProvider)
+                                  .toggleNotificationStatus(item.id, val);
+                              ref.invalidate(scheduledNotificationsProvider);
+                              ref.read(notificationServiceProvider).syncScheduledNotifications();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                            onPressed: () async {
+                              await ref
+                                  .read(notificationAdminRepositoryProvider)
+                                  .deleteScheduledNotification(item.id);
+                              ref.invalidate(scheduledNotificationsProvider);
+                              ref.read(notificationServiceProvider).syncScheduledNotifications();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddScheduledNotificationDialog() {
+    final titleController = TextEditingController();
+    final bodyController = TextEditingController();
+    final timeController = TextEditingController(text: '12:00');
+    String selectedType = 'water';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E1E1E),
+              title: const Text('⏰ Yeni Otomatik Hatırlatıcı Ekle', style: TextStyle(color: Colors.white)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Bildirim Başlığı (Örn: 💧 Su İçme Zamanı!)',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Color(0xFF2C2C2E),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: bodyController,
+                      maxLines: 2,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Mesaj İçeriği',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Color(0xFF2C2C2E),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: timeController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Her Gün Çalma Saati (HH:mm formatı)',
+                        hintText: '12:00 veya 17:30',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Color(0xFF2C2C2E),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedType,
+                      dropdownColor: const Color(0xFF2C2C2E),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Kategori / Tür',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Color(0xFF2C2C2E),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'water', child: Text('💧 Su Hatırlatıcısı')),
+                        DropdownMenuItem(value: 'market', child: Text('🛒 Market Hatırlatıcısı')),
+                        DropdownMenuItem(value: 'nutrition', child: Text('🥗 Beslenme Hatırlatıcısı')),
+                        DropdownMenuItem(value: 'custom', child: Text('🔔 Genel Duyuru / Özel')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setModalState(() => selectedType = val);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('İptal', style: TextStyle(color: Colors.white60)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                  onPressed: () async {
+                    final title = titleController.text.trim();
+                    final body = bodyController.text.trim();
+                    var timeStr = timeController.text.trim();
+                    if (title.isEmpty || body.isEmpty || timeStr.isEmpty) return;
+
+                    if (!timeStr.contains(':')) timeStr = '12:00';
+                    if (timeStr.split(':').length == 2) timeStr = '$timeStr:00';
+
+                    final notification = ScheduledNotification(
+                      id: '',
+                      title: title,
+                      body: body,
+                      scheduledTime: timeStr,
+                      isActive: true,
+                      notificationType: selectedType,
+                    );
+
+                    await ref
+                        .read(notificationAdminRepositoryProvider)
+                        .saveScheduledNotification(notification);
+
+                    ref.invalidate(scheduledNotificationsProvider);
+                    ref.read(notificationServiceProvider).syncScheduledNotifications();
+
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: const Text('Kaydet ve Zamanla', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

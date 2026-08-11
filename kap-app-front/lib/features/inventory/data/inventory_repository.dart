@@ -88,21 +88,53 @@ class InventoryRepository {
 
       return createdItem;
     } catch (e) {
-      // Offline fallback item creation
-      final fallbackItem = InventoryItem(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        groupId: groupId,
-        itemName: itemName,
-        status: status,
-        category: category,
-        createdAt: DateTime.now(),
-      );
+      assert(() {
+        print('Supabase addInventoryItem error (trying fallback without category): $e');
+        return true;
+      }());
 
-      final currentList = await getFromLocalCache(groupId);
-      currentList.insert(0, fallbackItem);
-      await _saveToLocalCache(groupId, currentList);
+      // Fallback: If DB table schema does not have 'category' column yet
+      try {
+        final fallbackMap = {
+          'group_id': groupId,
+          'item_name': itemName,
+          'status': status,
+        };
+        final response = await _supabase
+            .from('inventory')
+            .insert(fallbackMap)
+            .select()
+            .single();
 
-      return fallbackItem;
+        final createdItem = InventoryItem.fromJson(response).copyWith(category: category);
+        
+        final currentList = await getFromLocalCache(groupId);
+        currentList.insert(0, createdItem);
+        await _saveToLocalCache(groupId, currentList);
+
+        return createdItem;
+      } catch (innerError) {
+        assert(() {
+          print('Supabase addInventoryItem fallback error: $innerError');
+          return true;
+        }());
+
+        // Offline fallback item creation
+        final fallbackItem = InventoryItem(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          groupId: groupId,
+          itemName: itemName,
+          status: status,
+          category: category,
+          createdAt: DateTime.now(),
+        );
+
+        final currentList = await getFromLocalCache(groupId);
+        currentList.insert(0, fallbackItem);
+        await _saveToLocalCache(groupId, currentList);
+
+        return fallbackItem;
+      }
     }
   }
 
@@ -113,7 +145,12 @@ class InventoryRepository {
         'status': newStatus,
         'last_updated_at': DateTime.now().toIso8601String(),
       }).eq('id', itemId);
-    } catch (_) {}
+    } catch (e) {
+      assert(() {
+        print('Supabase updateItemStatus error: $e');
+        return true;
+      }());
+    }
 
     // Update local cache
     final currentList = await getFromLocalCache(groupId);
@@ -133,7 +170,12 @@ class InventoryRepository {
       await _supabase.from('inventory').update({
         'deleted_at': DateTime.now().toIso8601String(),
       }).eq('id', itemId);
-    } catch (_) {}
+    } catch (e) {
+      assert(() {
+        print('Supabase deleteInventoryItem error: $e');
+        return true;
+      }());
+    }
 
     // Remove from local cache
     final currentList = await getFromLocalCache(groupId);

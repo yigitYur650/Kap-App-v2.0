@@ -1,8 +1,8 @@
-# TASK.md — Kap-App Sprint 1-5 Progress Log
+# TASK.md — Kap-App Progress Log
 
 > Sprint Status: **Active Development & Deployment**
-> Version: **2.4.1+141**
-> Core Goal: Shared Household Shopping, AI Receipt Scanner, Live Price Scraper, Personal Fitness & Nutrition Hub
+> Version: **2.4.1+151**
+> Core Goal: Shared Household Shopping, AI Receipt Scanner, Live Price Scraper, Personal Health & Fitness Hub, Mandatory 2FA & Automated Notification Engine
 
 ---
 
@@ -50,3 +50,16 @@
 - [x] Personal Profile-Aware AI Recommendation Engine (`UserHealthProfileDTO`)
 - [x] Category Filter Chips inside AI Recommendations Dialog
 - [x] "⚡ Tüm Önerilen Ürünleri Sepete Ekle" 1-click batch insertion
+
+### Week 6 — Security, 2FA, Water/Fat Analysis & Notification Engine
+- [x] Mandatory 2-Step Email Verification (2FA) via Supabase Auth + Resend SMTP
+- [x] 2FA exemption for `halil@gmail.com` as system admin
+- [x] Session cache invalidation on logout (`_invalidateAllUserProviders()`)
+- [x] Restricted Admin Panel button visibility in Settings Screen
+- [x] 6 to 8 digit OTP verification screen with rate-limit handling (`/verify-otp`)
+- [x] Daily Water Intake (Liters) & Body Fat Percentage (%) calculation engine
+- [x] Water & Body Fat analysis cards in Health Profile screen (`health_profile_screen.dart`)
+- [x] Admin Notification Management tab in Admin Dashboard (`scheduled_notifications`)
+- [x] Daily automated recurring notifications at 12:00 (Water), 17:00 (Market), 20:00 (Nutrition)
+- [x] Instant live group event push notifications on request creation
+- [x] 100% SUCCESS Release APK Build (`app-arm64-v8a-release.apk`, `app-armeabi-v7a-release.apk`)

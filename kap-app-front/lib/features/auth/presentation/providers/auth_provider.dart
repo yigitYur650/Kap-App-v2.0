@@ -4,8 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/models/app_user.dart';
 import '../../../../core/network/supabase_client.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
+import '../../../admin/presentation/providers/admin_provider.dart';
 import '../../../groups/presentation/providers/active_group_provider.dart';
 import '../../../groups/presentation/providers/user_groups_provider.dart';
+import '../../../health/data/health_profile_repository.dart';
 
 /// Notifier that manages and projects the current user authentication session state.
 class AuthNotifier extends AsyncNotifier<AppUser?> {
@@ -48,7 +50,20 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
 
   /// Updates the authentication state with the specified user profile.
   void updateState(AppUser? user) {
+    _invalidateAllUserProviders();
     state = AsyncValue.data(user);
+  }
+
+  void _invalidateAllUserProviders() {
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      prefs.remove(kActiveGroupIdKey);
+    } catch (_) {}
+
+    ref.invalidate(userGroupsProvider);
+    ref.invalidate(activeGroupProvider);
+    ref.invalidate(isSystemAdminProvider);
+    ref.invalidate(healthProfileProvider);
   }
 
   /// Sets the authentication state to an error.
@@ -66,14 +81,7 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
     final supabaseClient = ref.read(supabaseClientProvider);
     await supabaseClient.auth.signOut();
 
-    // Clear local storage active group cache on logout
-    final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.remove(kActiveGroupIdKey);
-
-    // Invalidate group providers so fresh user session doesn't inherit old group cache
-    ref.invalidate(userGroupsProvider);
-    ref.invalidate(activeGroupProvider);
-
+    _invalidateAllUserProviders();
     updateState(null);
   }
 }
