@@ -10,6 +10,14 @@
 .env
 .env.*
 !.env.example
+google-services.json
+GoogleService-Info.plist
+*firebase*.json
+*.pem
+*.key
+*.keystore
+*.jks
+
 
 # IDEs and Editors
 .idea/

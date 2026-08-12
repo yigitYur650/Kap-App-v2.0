@@ -1,8 +1,8 @@
 # TASK.md — Kap-App Progress Log
 
 > Sprint Status: **Active Development & Deployment**
-> Version: **2.4.1+151**
-> Core Goal: Shared Household Shopping, AI Receipt Scanner, Live Price Scraper, Personal Health & Fitness Hub, Mandatory 2FA & Automated Notification Engine
+> Version: **2.5.0**
+> Core Goal: Shared Household Shopping, AI Receipt Scanner, Live Price Scraper, Personal Health & Fitness Hub (Nutrition Engine v2), Mandatory 2FA & Automated Notification Engine
 
 ---
 
@@ -63,3 +63,15 @@
 - [x] Daily automated recurring notifications at 12:00 (Water), 17:00 (Market), 20:00 (Nutrition)
 - [x] Instant live group event push notifications on request creation
 - [x] 100% SUCCESS Release APK Build (`app-arm64-v8a-release.apk`, `app-armeabi-v7a-release.apk`)
+
+### Week 7 — Nutrition Engine v2 & Safety Guardrails
+- [x] Mifflin-St Jeor BMR & TDEE calculation engine refactor
+- [x] **Guardrail 1 (Gender Calorie Floor):** Mandatory minimum 1200 kcal (F) / 1500 kcal (M) with critical warning banner
+- [x] **Guardrail 2 (Kidney Disease Limit):** Max 0.8g/kg protein limit when active; ISSN 0.8–2.4g/kg ranges for healthy users
+- [x] **Guardrail 3 (Allergen Exclusion):** `FoodDatabase` with `filterByAllergens` excluding user allergens (`peanut`, `gluten`, `lactose`, etc.) from UI recommendations
+- [x] Goal-specific macro portioning (Kas Yapımı: 40/40/20, Keto: 22/8/70, Dengeli: 30/40/30)
+- [x] Health profile UI expansion (Kidney switch, Allergen FilterChips, Nutrition Model selector, Food Recommendation cards)
+- [x] Zero hardcoded strings (`app_tr.arb` and `app_en.arb` localization)
+- [x] Self-contained SQL Migration `28_add_nutrition_rules_fields_to_health_profiles.sql`
+- [x] 100% CLEAN `flutter analyze` & `flutter gen-l10n` build
+

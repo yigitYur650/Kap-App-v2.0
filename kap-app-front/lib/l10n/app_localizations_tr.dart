@@ -323,4 +323,156 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dialog_delete => 'Sil';
+
+  @override
+  String get health_title => 'Kişisel Beslenme & Fitness';
+
+  @override
+  String get health_daily_target_calories => 'Günlük Hedef Kalori';
+
+  @override
+  String get health_goal_lose => '🏃‍♂️ Kilo Verme';
+
+  @override
+  String get health_goal_maintain => '🧘‍♀️ Form Koruma';
+
+  @override
+  String get health_goal_gain => '🏋️‍♂️ Kilo Alma';
+
+  @override
+  String get health_bmr_label => 'BMR (Metabolizma)';
+
+  @override
+  String get health_tdee_label => 'TDEE (Harcanan)';
+
+  @override
+  String get health_protein_label => 'Protein';
+
+  @override
+  String get health_carbs_label => 'Karbonhidrat';
+
+  @override
+  String get health_fat_label => 'Yağ';
+
+  @override
+  String get health_water_target_label => 'Su Tüketimi (Hedef)';
+
+  @override
+  String get health_body_fat_label => 'Vücut Yağ Durumu';
+
+  @override
+  String get health_body_measurements_title => 'Vücut Ölçülerim & Hedeflerim';
+
+  @override
+  String get health_weight_label => 'Kilo (kg)';
+
+  @override
+  String get health_height_label => 'Boy (cm)';
+
+  @override
+  String get health_age_label => 'Yaş';
+
+  @override
+  String get health_daily_water_label => 'Günlük Su (Litre)';
+
+  @override
+  String get health_body_fat_pct_label => 'Yağ Oranı (%)';
+
+  @override
+  String get health_gender_label => 'Cinsiyet';
+
+  @override
+  String get health_gender_male => 'Erkek 👨';
+
+  @override
+  String get health_gender_female => 'Kadın 👩';
+
+  @override
+  String get health_activity_level_label => 'Günlük Hareket Seviyesi';
+
+  @override
+  String get health_activity_sedentary => 'Hareketsiz (Masa başı iş)';
+
+  @override
+  String get health_activity_light => 'Hafif Aktif (Haftada 1-3 gün egzersiz)';
+
+  @override
+  String get health_activity_moderate =>
+      'Orta Aktif (Haftada 3-5 gün egzersiz)';
+
+  @override
+  String get health_activity_active => 'Çok Aktif (Haftada 6-7 gün egzersiz)';
+
+  @override
+  String get health_activity_very_active => 'Fiziksel İş / Ağır Antrenman';
+
+  @override
+  String get health_main_goal_label => 'Ana Hedef';
+
+  @override
+  String get health_fitness_goal_label => 'Beslenme Modeli';
+
+  @override
+  String get health_fitness_muscle => '🏋️‍♂️ Kas Yapımı (Yüksek Protein)';
+
+  @override
+  String get health_fitness_keto => '🔥 Yağ Yakımı (Keto / Düşük Karbonhidrat)';
+
+  @override
+  String get health_fitness_balanced => '⚖️ Dengeli & Sürdürülebilir';
+
+  @override
+  String get health_kidney_disease_title => 'Böbrek Rahatsızlığı';
+
+  @override
+  String get health_kidney_disease_subtitle =>
+      'Aktifse, güvenlik için protein alımı maksimum 0.8g/kg ile sınırlandırılır.';
+
+  @override
+  String get health_allergen_title => 'Alerjenler';
+
+  @override
+  String get health_allergen_subtitle =>
+      'Alerjenlerinizi seçin. Bu gıdalar önerilerden çıkarılır.';
+
+  @override
+  String get health_share_with_group_title => 'Grup Arkadaşlarıyla Paylaş';
+
+  @override
+  String get health_share_with_group_subtitle =>
+      'Seçeneği açarsanız gruptaki üyeler beslenme ilerlemenizi görebilir.';
+
+  @override
+  String get health_save_button => 'Kişisel Bilgileri Kaydet';
+
+  @override
+  String get health_save_success =>
+      'Kişisel sağlık profiliniz başarıyla güncellendi!';
+
+  @override
+  String health_save_error(String error) {
+    return 'Hata oluştu: $error';
+  }
+
+  @override
+  String health_calorie_floor_warning(int floor) {
+    return '⚠️ KRİTİK: Hesaplanan kalori hedefiniz güvenli minimum ($floor kcal) altındaydı. Otomatik olarak güvenli tabana ayarlandı.';
+  }
+
+  @override
+  String get health_protein_per_kg_label => 'Protein Oranı';
+
+  @override
+  String health_protein_per_kg_value(String value) {
+    return '$value g/kg';
+  }
+
+  @override
+  String get health_macro_model_label => 'Makro Model';
+
+  @override
+  String get health_recommended_foods_title => 'Önerilen Gıdalar';
+
+  @override
+  String get health_kcal_unit => 'kcal';
 }

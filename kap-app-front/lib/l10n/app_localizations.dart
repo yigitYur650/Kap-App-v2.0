@@ -703,6 +703,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get dialog_delete;
+
+  /// No description provided for @health_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Nutrition & Fitness'**
+  String get health_title;
+
+  /// No description provided for @health_daily_target_calories.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Target Calories'**
+  String get health_daily_target_calories;
+
+  /// No description provided for @health_goal_lose.
+  ///
+  /// In en, this message translates to:
+  /// **'🏃‍♂️ Weight Loss'**
+  String get health_goal_lose;
+
+  /// No description provided for @health_goal_maintain.
+  ///
+  /// In en, this message translates to:
+  /// **'🧘‍♀️ Maintain'**
+  String get health_goal_maintain;
+
+  /// No description provided for @health_goal_gain.
+  ///
+  /// In en, this message translates to:
+  /// **'🏋️‍♂️ Weight Gain'**
+  String get health_goal_gain;
+
+  /// No description provided for @health_bmr_label.
+  ///
+  /// In en, this message translates to:
+  /// **'BMR (Metabolism)'**
+  String get health_bmr_label;
+
+  /// No description provided for @health_tdee_label.
+  ///
+  /// In en, this message translates to:
+  /// **'TDEE (Expenditure)'**
+  String get health_tdee_label;
+
+  /// No description provided for @health_protein_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get health_protein_label;
+
+  /// No description provided for @health_carbs_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbohydrate'**
+  String get health_carbs_label;
+
+  /// No description provided for @health_fat_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get health_fat_label;
+
+  /// No description provided for @health_water_target_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Intake (Target)'**
+  String get health_water_target_label;
+
+  /// No description provided for @health_body_fat_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Fat Status'**
+  String get health_body_fat_label;
+
+  /// No description provided for @health_body_measurements_title.
+  ///
+  /// In en, this message translates to:
+  /// **'My Body Measurements & Goals'**
+  String get health_body_measurements_title;
+
+  /// No description provided for @health_weight_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get health_weight_label;
+
+  /// No description provided for @health_height_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get health_height_label;
+
+  /// No description provided for @health_age_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get health_age_label;
+
+  /// No description provided for @health_daily_water_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Water (L)'**
+  String get health_daily_water_label;
+
+  /// No description provided for @health_body_fat_pct_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat Ratio (%)'**
+  String get health_body_fat_pct_label;
+
+  /// No description provided for @health_gender_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get health_gender_label;
+
+  /// No description provided for @health_gender_male.
+  ///
+  /// In en, this message translates to:
+  /// **'Male 👨'**
+  String get health_gender_male;
+
+  /// No description provided for @health_gender_female.
+  ///
+  /// In en, this message translates to:
+  /// **'Female 👩'**
+  String get health_gender_female;
+
+  /// No description provided for @health_activity_level_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Activity Level'**
+  String get health_activity_level_label;
+
+  /// No description provided for @health_activity_sedentary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sedentary (Desk job)'**
+  String get health_activity_sedentary;
+
+  /// No description provided for @health_activity_light.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightly Active (1-3 days/week)'**
+  String get health_activity_light;
+
+  /// No description provided for @health_activity_moderate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderately Active (3-5 days/week)'**
+  String get health_activity_moderate;
+
+  /// No description provided for @health_activity_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Active (6-7 days/week)'**
+  String get health_activity_active;
+
+  /// No description provided for @health_activity_very_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical Job / Heavy Training'**
+  String get health_activity_very_active;
+
+  /// No description provided for @health_main_goal_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Main Goal'**
+  String get health_main_goal_label;
+
+  /// No description provided for @health_fitness_goal_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Model'**
+  String get health_fitness_goal_label;
+
+  /// No description provided for @health_fitness_muscle.
+  ///
+  /// In en, this message translates to:
+  /// **'🏋️‍♂️ Muscle Building (High Protein)'**
+  String get health_fitness_muscle;
+
+  /// No description provided for @health_fitness_keto.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Fat Loss (Keto / Low Carb)'**
+  String get health_fitness_keto;
+
+  /// No description provided for @health_fitness_balanced.
+  ///
+  /// In en, this message translates to:
+  /// **'⚖️ Balanced & Sustainable'**
+  String get health_fitness_balanced;
+
+  /// No description provided for @health_kidney_disease_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Kidney Disease'**
+  String get health_kidney_disease_title;
+
+  /// No description provided for @health_kidney_disease_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If active, protein intake is limited to max 0.8g/kg for safety.'**
+  String get health_kidney_disease_subtitle;
+
+  /// No description provided for @health_allergen_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergens'**
+  String get health_allergen_title;
+
+  /// No description provided for @health_allergen_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your allergens. These foods will be excluded from recommendations.'**
+  String get health_allergen_subtitle;
+
+  /// No description provided for @health_share_with_group_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with Group Members'**
+  String get health_share_with_group_title;
+
+  /// No description provided for @health_share_with_group_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, group members can see your nutrition progress.'**
+  String get health_share_with_group_subtitle;
+
+  /// No description provided for @health_save_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Personal Info'**
+  String get health_save_button;
+
+  /// No description provided for @health_save_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal health profile has been updated successfully!'**
+  String get health_save_success;
+
+  /// No description provided for @health_save_error.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred: {error}'**
+  String health_save_error(String error);
+
+  /// No description provided for @health_calorie_floor_warning.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ CRITICAL: Your calculated calorie target was below the safe minimum ({floor} kcal). It has been automatically set to the safe floor.'**
+  String health_calorie_floor_warning(int floor);
+
+  /// No description provided for @health_protein_per_kg_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein Ratio'**
+  String get health_protein_per_kg_label;
+
+  /// No description provided for @health_protein_per_kg_value.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} g/kg'**
+  String health_protein_per_kg_value(String value);
+
+  /// No description provided for @health_macro_model_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Model'**
+  String get health_macro_model_label;
+
+  /// No description provided for @health_recommended_foods_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended Foods'**
+  String get health_recommended_foods_title;
+
+  /// No description provided for @health_kcal_unit.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get health_kcal_unit;
 }
 
 class _AppLocalizationsDelegate

@@ -320,4 +320,155 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dialog_delete => 'Delete';
+
+  @override
+  String get health_title => 'Personal Nutrition & Fitness';
+
+  @override
+  String get health_daily_target_calories => 'Daily Target Calories';
+
+  @override
+  String get health_goal_lose => '🏃‍♂️ Weight Loss';
+
+  @override
+  String get health_goal_maintain => '🧘‍♀️ Maintain';
+
+  @override
+  String get health_goal_gain => '🏋️‍♂️ Weight Gain';
+
+  @override
+  String get health_bmr_label => 'BMR (Metabolism)';
+
+  @override
+  String get health_tdee_label => 'TDEE (Expenditure)';
+
+  @override
+  String get health_protein_label => 'Protein';
+
+  @override
+  String get health_carbs_label => 'Carbohydrate';
+
+  @override
+  String get health_fat_label => 'Fat';
+
+  @override
+  String get health_water_target_label => 'Water Intake (Target)';
+
+  @override
+  String get health_body_fat_label => 'Body Fat Status';
+
+  @override
+  String get health_body_measurements_title => 'My Body Measurements & Goals';
+
+  @override
+  String get health_weight_label => 'Weight (kg)';
+
+  @override
+  String get health_height_label => 'Height (cm)';
+
+  @override
+  String get health_age_label => 'Age';
+
+  @override
+  String get health_daily_water_label => 'Daily Water (L)';
+
+  @override
+  String get health_body_fat_pct_label => 'Fat Ratio (%)';
+
+  @override
+  String get health_gender_label => 'Gender';
+
+  @override
+  String get health_gender_male => 'Male 👨';
+
+  @override
+  String get health_gender_female => 'Female 👩';
+
+  @override
+  String get health_activity_level_label => 'Daily Activity Level';
+
+  @override
+  String get health_activity_sedentary => 'Sedentary (Desk job)';
+
+  @override
+  String get health_activity_light => 'Lightly Active (1-3 days/week)';
+
+  @override
+  String get health_activity_moderate => 'Moderately Active (3-5 days/week)';
+
+  @override
+  String get health_activity_active => 'Very Active (6-7 days/week)';
+
+  @override
+  String get health_activity_very_active => 'Physical Job / Heavy Training';
+
+  @override
+  String get health_main_goal_label => 'Main Goal';
+
+  @override
+  String get health_fitness_goal_label => 'Nutrition Model';
+
+  @override
+  String get health_fitness_muscle => '🏋️‍♂️ Muscle Building (High Protein)';
+
+  @override
+  String get health_fitness_keto => '🔥 Fat Loss (Keto / Low Carb)';
+
+  @override
+  String get health_fitness_balanced => '⚖️ Balanced & Sustainable';
+
+  @override
+  String get health_kidney_disease_title => 'Kidney Disease';
+
+  @override
+  String get health_kidney_disease_subtitle =>
+      'If active, protein intake is limited to max 0.8g/kg for safety.';
+
+  @override
+  String get health_allergen_title => 'Allergens';
+
+  @override
+  String get health_allergen_subtitle =>
+      'Select your allergens. These foods will be excluded from recommendations.';
+
+  @override
+  String get health_share_with_group_title => 'Share with Group Members';
+
+  @override
+  String get health_share_with_group_subtitle =>
+      'If enabled, group members can see your nutrition progress.';
+
+  @override
+  String get health_save_button => 'Save Personal Info';
+
+  @override
+  String get health_save_success =>
+      'Your personal health profile has been updated successfully!';
+
+  @override
+  String health_save_error(String error) {
+    return 'An error occurred: $error';
+  }
+
+  @override
+  String health_calorie_floor_warning(int floor) {
+    return '⚠️ CRITICAL: Your calculated calorie target was below the safe minimum ($floor kcal). It has been automatically set to the safe floor.';
+  }
+
+  @override
+  String get health_protein_per_kg_label => 'Protein Ratio';
+
+  @override
+  String health_protein_per_kg_value(String value) {
+    return '$value g/kg';
+  }
+
+  @override
+  String get health_macro_model_label => 'Macro Model';
+
+  @override
+  String get health_recommended_foods_title => 'Recommended Foods';
+
+  @override
+  String get health_kcal_unit => 'kcal';
 }

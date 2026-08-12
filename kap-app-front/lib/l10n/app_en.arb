@@ -105,6 +105,69 @@
   "settings_delete_group_title": "Delete Home?",
   "settings_delete_group_confirm": "Are you sure you want to delete",
   "settings_delete_group_success": "Home deleted successfully.",
-  "dialog_delete": "Delete"
+  "dialog_delete": "Delete",
+
+  "health_title": "Personal Nutrition & Fitness",
+  "health_daily_target_calories": "Daily Target Calories",
+  "health_goal_lose": "🏃‍♂️ Weight Loss",
+  "health_goal_maintain": "🧘‍♀️ Maintain",
+  "health_goal_gain": "🏋️‍♂️ Weight Gain",
+  "health_bmr_label": "BMR (Metabolism)",
+  "health_tdee_label": "TDEE (Expenditure)",
+  "health_protein_label": "Protein",
+  "health_carbs_label": "Carbohydrate",
+  "health_fat_label": "Fat",
+  "health_water_target_label": "Water Intake (Target)",
+  "health_body_fat_label": "Body Fat Status",
+  "health_body_measurements_title": "My Body Measurements & Goals",
+  "health_weight_label": "Weight (kg)",
+  "health_height_label": "Height (cm)",
+  "health_age_label": "Age",
+  "health_daily_water_label": "Daily Water (L)",
+  "health_body_fat_pct_label": "Fat Ratio (%)",
+  "health_gender_label": "Gender",
+  "health_gender_male": "Male 👨",
+  "health_gender_female": "Female 👩",
+  "health_activity_level_label": "Daily Activity Level",
+  "health_activity_sedentary": "Sedentary (Desk job)",
+  "health_activity_light": "Lightly Active (1-3 days/week)",
+  "health_activity_moderate": "Moderately Active (3-5 days/week)",
+  "health_activity_active": "Very Active (6-7 days/week)",
+  "health_activity_very_active": "Physical Job / Heavy Training",
+  "health_main_goal_label": "Main Goal",
+  "health_fitness_goal_label": "Nutrition Model",
+  "health_fitness_muscle": "🏋️‍♂️ Muscle Building (High Protein)",
+  "health_fitness_keto": "🔥 Fat Loss (Keto / Low Carb)",
+  "health_fitness_balanced": "⚖️ Balanced & Sustainable",
+  "health_kidney_disease_title": "Kidney Disease",
+  "health_kidney_disease_subtitle": "If active, protein intake is limited to max 0.8g/kg for safety.",
+  "health_allergen_title": "Allergens",
+  "health_allergen_subtitle": "Select your allergens. These foods will be excluded from recommendations.",
+  "health_share_with_group_title": "Share with Group Members",
+  "health_share_with_group_subtitle": "If enabled, group members can see your nutrition progress.",
+  "health_save_button": "Save Personal Info",
+  "health_save_success": "Your personal health profile has been updated successfully!",
+  "health_save_error": "An error occurred: {error}",
+  "@health_save_error": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "health_calorie_floor_warning": "⚠️ CRITICAL: Your calculated calorie target was below the safe minimum ({floor} kcal). It has been automatically set to the safe floor.",
+  "@health_calorie_floor_warning": {
+    "placeholders": {
+      "floor": { "type": "int" }
+    }
+  },
+  "health_protein_per_kg_label": "Protein Ratio",
+  "health_protein_per_kg_value": "{value} g/kg",
+  "@health_protein_per_kg_value": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "health_macro_model_label": "Macro Model",
+  "health_recommended_foods_title": "Recommended Foods",
+  "health_kcal_unit": "kcal"
 }
 
