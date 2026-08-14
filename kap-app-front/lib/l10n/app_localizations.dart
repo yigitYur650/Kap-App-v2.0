@@ -968,12 +968,6 @@ abstract class AppLocalizations {
   /// **'{value} g/kg'**
   String health_protein_per_kg_value(String value);
 
-  /// No description provided for @health_macro_model_label.
-  ///
-  /// In en, this message translates to:
-  /// **'Macro Model'**
-  String get health_macro_model_label;
-
   /// No description provided for @health_recommended_foods_title.
   ///
   /// In en, this message translates to:
@@ -985,6 +979,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'kcal'**
   String get health_kcal_unit;
+
+  /// No description provided for @quota_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Daily Quota Exceeded 🚀'**
+  String get quota_dialog_title;
+
+  /// No description provided for @quota_dialog_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You have used your 2 free daily AI credits for today. Select an option to continue.'**
+  String get quota_dialog_subtitle;
+
+  /// No description provided for @quota_remaining_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining AI Credits: {count}'**
+  String quota_remaining_label(int count);
+
+  /// No description provided for @quota_pro_unlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'You are Pro (Unlimited AI)'**
+  String get quota_pro_unlimited;
+
+  /// No description provided for @paywall_upgrade_pro_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Kap-App Pro 👑'**
+  String get paywall_upgrade_pro_title;
+
+  /// No description provided for @paywall_upgrade_pro_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited AI recipes, price estimation, receipt scanning, and priority support.'**
+  String get paywall_upgrade_pro_subtitle;
+
+  /// No description provided for @paywall_monthly_plan.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Pro — \$2.99 / mo'**
+  String get paywall_monthly_plan;
+
+  /// No description provided for @paywall_yearly_plan.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly Pro — \$24.99 / yr (2 Months Free)'**
+  String get paywall_yearly_plan;
+
+  /// No description provided for @paywall_buy_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Now'**
+  String get paywall_buy_button;
+
+  /// No description provided for @paywall_watch_ad_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Market Deal: Watch Rewarded Ad 🎬'**
+  String get paywall_watch_ad_title;
+
+  /// No description provided for @paywall_watch_ad_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch a 30-second sponsored video to instantly earn +1 AI credit.'**
+  String get paywall_watch_ad_subtitle;
+
+  /// No description provided for @paywall_watch_ad_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Ad (+1 Credit)'**
+  String get paywall_watch_ad_button;
+
+  /// No description provided for @paywall_referral_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a Friend (+7 Days Pro) 🎁'**
+  String get paywall_referral_title;
+
+  /// No description provided for @paywall_referral_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your referral code with a friend. When they sign up, both of you get 7 days of Pro!'**
+  String get paywall_referral_subtitle;
+
+  /// No description provided for @paywall_referral_code_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Referral Code:'**
+  String get paywall_referral_code_label;
+
+  /// No description provided for @paywall_referral_copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Code'**
+  String get paywall_referral_copy;
+
+  /// No description provided for @paywall_referral_copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Referral code copied to clipboard'**
+  String get paywall_referral_copied;
+
+  /// No description provided for @paywall_enter_code_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Referral Code'**
+  String get paywall_enter_code_title;
+
+  /// No description provided for @paywall_enter_code_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. KAP-X7R9P2'**
+  String get paywall_enter_code_hint;
+
+  /// No description provided for @paywall_claim_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem Code'**
+  String get paywall_claim_button;
+
+  /// No description provided for @paywall_claim_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations! +7 Days of Pro Membership granted! 🎉'**
+  String get paywall_claim_success;
+
+  /// No description provided for @paywall_claim_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to redeem code: {reason}'**
+  String paywall_claim_failed(String reason);
+
+  /// No description provided for @ad_reward_success.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 AI Credit added to your account!'**
+  String get ad_reward_success;
 }
 
 class _AppLocalizationsDelegate

@@ -464,11 +464,86 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get health_macro_model_label => 'Macro Model';
-
-  @override
   String get health_recommended_foods_title => 'Recommended Foods';
 
   @override
   String get health_kcal_unit => 'kcal';
+
+  @override
+  String get quota_dialog_title => 'AI Daily Quota Exceeded 🚀';
+
+  @override
+  String get quota_dialog_subtitle =>
+      'You have used your 2 free daily AI credits for today. Select an option to continue.';
+
+  @override
+  String quota_remaining_label(int count) {
+    return 'Remaining AI Credits: $count';
+  }
+
+  @override
+  String get quota_pro_unlimited => 'You are Pro (Unlimited AI)';
+
+  @override
+  String get paywall_upgrade_pro_title => 'Upgrade to Kap-App Pro 👑';
+
+  @override
+  String get paywall_upgrade_pro_subtitle =>
+      'Unlimited AI recipes, price estimation, receipt scanning, and priority support.';
+
+  @override
+  String get paywall_monthly_plan => 'Monthly Pro — \$2.99 / mo';
+
+  @override
+  String get paywall_yearly_plan => 'Yearly Pro — \$24.99 / yr (2 Months Free)';
+
+  @override
+  String get paywall_buy_button => 'Join Now';
+
+  @override
+  String get paywall_watch_ad_title => 'Market Deal: Watch Rewarded Ad 🎬';
+
+  @override
+  String get paywall_watch_ad_subtitle =>
+      'Watch a 30-second sponsored video to instantly earn +1 AI credit.';
+
+  @override
+  String get paywall_watch_ad_button => 'Watch Ad (+1 Credit)';
+
+  @override
+  String get paywall_referral_title => 'Invite a Friend (+7 Days Pro) 🎁';
+
+  @override
+  String get paywall_referral_subtitle =>
+      'Share your referral code with a friend. When they sign up, both of you get 7 days of Pro!';
+
+  @override
+  String get paywall_referral_code_label => 'Your Referral Code:';
+
+  @override
+  String get paywall_referral_copy => 'Copy Code';
+
+  @override
+  String get paywall_referral_copied => 'Referral code copied to clipboard';
+
+  @override
+  String get paywall_enter_code_title => 'Enter Referral Code';
+
+  @override
+  String get paywall_enter_code_hint => 'E.g. KAP-X7R9P2';
+
+  @override
+  String get paywall_claim_button => 'Redeem Code';
+
+  @override
+  String get paywall_claim_success =>
+      'Congratulations! +7 Days of Pro Membership granted! 🎉';
+
+  @override
+  String paywall_claim_failed(String reason) {
+    return 'Failed to redeem code: $reason';
+  }
+
+  @override
+  String get ad_reward_success => '+1 AI Credit added to your account!';
 }

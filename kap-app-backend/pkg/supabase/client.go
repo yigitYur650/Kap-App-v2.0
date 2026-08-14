@@ -284,3 +284,92 @@ func (c *Client) DeleteAppVersion(id string) error {
 	respBody, _ := io.ReadAll(resp.Body)
 	return fmt.Errorf("supabase API returned status %d: %s", resp.StatusCode, string(respBody))
 }
+
+// CallRPC invokes a PostgreSQL stored function via Supabase REST API POST /rest/v1/rpc/{fnName}.
+func (c *Client) CallRPC(fnName string, payload interface{}, target interface{}) error {
+	reqURL := fmt.Sprintf("%s/rest/v1/rpc/%s", c.URL, fnName)
+
+	var reqBody io.Reader
+	if payload != nil {
+		jsonBytes, err := json.Marshal(payload)
+		if err != nil {
+			return fmt.Errorf("failed to marshal RPC payload: %w", err)
+		}
+		reqBody = bytes.NewReader(jsonBytes)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, reqURL, reqBody)
+	if err != nil {
+		return fmt.Errorf("failed to create RPC request: %w", err)
+	}
+
+	req.Header.Set("apikey", c.ServiceRoleKey)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.ServiceRoleKey))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute RPC request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("RPC %s returned status %d: %s", fnName, resp.StatusCode, string(respBody))
+	}
+
+	if target != nil {
+		if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
+			return fmt.Errorf("failed to decode RPC response: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// RecordWebhookEvent inserts a webhook event into processed_webhook_events if not already processed.
+// Returns (true, nil) if inserted, or (false, nil) if already processed.
+func (c *Client) RecordWebhookEvent(eventID, eventType string) (bool, error) {
+	reqURL := fmt.Sprintf("%s/rest/v1/processed_webhook_events", c.URL)
+
+	body := map[string]string{
+		"event_id":   eventID,
+		"event_type": eventType,
+	}
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return false, fmt.Errorf("failed to marshal webhook event: %w", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, reqURL, bytes.NewReader(jsonBody))
+	if err != nil {
+		return false, fmt.Errorf("failed to create webhook insert request: %w", err)
+	}
+
+	req.Header.Set("apikey", c.ServiceRoleKey)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.ServiceRoleKey))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Prefer", "return=minimal")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute webhook insert request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusNoContent {
+		return true, nil
+	}
+
+	if resp.StatusCode == http.StatusConflict {
+		return false, nil // Event already processed
+	}
+
+	respBody, _ := io.ReadAll(resp.Body)
+	if strings.Contains(string(respBody), "23505") || strings.Contains(string(respBody), "duplicate key") {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("failed to record webhook event status %d: %s", resp.StatusCode, string(respBody))
+}
+

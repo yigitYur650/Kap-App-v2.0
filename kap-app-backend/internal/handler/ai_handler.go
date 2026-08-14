@@ -3,6 +3,7 @@ package handler
 import (
 	"strings"
 
+	"kap-app-backend/internal/repository"
 	"kap-app-backend/internal/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,11 +11,13 @@ import (
 
 type AIHandler struct {
 	aiService *service.AIService
+	subRepo   repository.SubscriptionRepository
 }
 
-func NewAIHandler(aiService *service.AIService) *AIHandler {
+func NewAIHandler(aiService *service.AIService, subRepo repository.SubscriptionRepository) *AIHandler {
 	return &AIHandler{
 		aiService: aiService,
+		subRepo:   subRepo,
 	}
 }
 
@@ -22,8 +25,26 @@ type EstimatePricesReq struct {
 	Items []service.ItemSpecDTO `json:"items"`
 }
 
-// EstimatePricesHandler (POST /api/v1/ai/estimate-prices) calculates estimated prices, categories, unit specs and variant notes.
+// EstimatePricesHandler (POST /api/v1/ai/estimate-prices) calculates estimated prices.
 func (h *AIHandler) EstimatePricesHandler(c *fiber.Ctx) error {
+	userID, _ := c.Locals("userID").(string)
+
+	if userID != "" && h.subRepo != nil {
+		creditRes, err := h.subRepo.ConsumeAICredit(userID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed_quota_check",
+			})
+		}
+		if creditRes != nil && !creditRes.Success {
+			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
+				"error":             "quota_exceeded",
+				"message":           "Günlük AI hakkınız tükendi. Pro'ya yükseltin veya ödüllü reklam izleyin.",
+				"remaining_credits": 0,
+			})
+		}
+	}
+
 	var req EstimatePricesReq
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -37,7 +58,6 @@ func (h *AIHandler) EstimatePricesHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Limit list size to max 50 items per request and sanitize inputs
 	if len(req.Items) > 50 {
 		req.Items = req.Items[:50]
 	}
@@ -62,8 +82,26 @@ type ScanReceiptReq struct {
 	Base64Image string `json:"base64_image"`
 }
 
-// ScanReceiptHandler (POST /api/v1/ai/scan-receipt) processes a receipt image in RAM and returns parsed items.
+// ScanReceiptHandler (POST /api/v1/ai/scan-receipt) processes a receipt image.
 func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
+	userID, _ := c.Locals("userID").(string)
+
+	if userID != "" && h.subRepo != nil {
+		creditRes, err := h.subRepo.ConsumeAICredit(userID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed_quota_check",
+			})
+		}
+		if creditRes != nil && !creditRes.Success {
+			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
+				"error":             "quota_exceeded",
+				"message":           "Günlük AI hakkınız tükendi. Pro'ya yükseltin veya ödüllü reklam izleyin.",
+				"remaining_credits": 0,
+			})
+		}
+	}
+
 	var req ScanReceiptReq
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -77,7 +115,6 @@ func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Enforce 10 MB base64 payload size limit
 	if len(req.Base64Image) > 10*1024*1024 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "image payload exceeds 10MB limit",
@@ -99,25 +136,39 @@ func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-// GetShoppingRecommendationsHandler (POST /api/v1/ai/recommendations) provides AI shopping insights (health, savings, recipes, storage).
+type AIRecommendationReq struct {
+	Items   []service.ItemSpecDTO          `json:"items"`
+	Profile *service.UserHealthProfileDTO `json:"health_profile"`
+}
+
+// GetShoppingRecommendationsHandler (POST /api/v1/ai/recommendations)
 func (h *AIHandler) GetShoppingRecommendationsHandler(c *fiber.Ctx) error {
-	var req struct {
-		Items       []service.ItemSpecDTO         `json:"items"`
-		UserProfile *service.UserHealthProfileDTO `json:"user_profile,omitempty"`
+	userID, _ := c.Locals("userID").(string)
+
+	if userID != "" && h.subRepo != nil {
+		creditRes, err := h.subRepo.ConsumeAICredit(userID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed_quota_check",
+			})
+		}
+		if creditRes != nil && !creditRes.Success {
+			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
+				"error":             "quota_exceeded",
+				"message":           "Günlük AI hakkınız tükendi. Pro'ya yükseltin veya ödüllü reklam izleyin.",
+				"remaining_credits": 0,
+			})
+		}
 	}
+
+	var req AIRecommendationReq
 	if err := c.BodyParser(&req); err != nil {
-		req.Items = []service.ItemSpecDTO{}
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid_payload",
+		})
 	}
 
-	if len(req.Items) > 50 {
-		req.Items = req.Items[:50]
-	}
-
-	for i := range req.Items {
-		req.Items[i].ItemName = sanitizeInput(req.Items[i].ItemName, 100)
-	}
-
-	res, err := h.aiService.GetShoppingRecommendations(req.Items, req.UserProfile)
+	res, err := h.aiService.GetShoppingRecommendations(req.Items, req.Profile)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
@@ -127,12 +178,10 @@ func (h *AIHandler) GetShoppingRecommendationsHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-func sanitizeInput(input string, maxLen int) string {
-	cleaned := strings.ReplaceAll(input, "\n", " ")
-	cleaned = strings.ReplaceAll(cleaned, "\r", "")
-	cleaned = strings.TrimSpace(cleaned)
-	if len(cleaned) > maxLen {
-		cleaned = cleaned[:maxLen]
+func sanitizeInput(val string, maxLen int) string {
+	val = strings.TrimSpace(val)
+	if len(val) > maxLen {
+		return val[:maxLen]
 	}
-	return cleaned
+	return val
 }

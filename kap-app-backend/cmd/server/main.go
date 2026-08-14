@@ -48,6 +48,7 @@ func main() {
 
 	// Repositories
 	userRepo := repository.NewSupabaseUserRepository(sbClient)
+	subRepo := repository.NewSubscriptionRepository(sbClient)
 
 	// Services
 	authSvc := authService.NewAuthService(userRepo)
@@ -56,7 +57,8 @@ func main() {
 	// Handlers
 	authHandler := handler.NewAuthHandler(authSvc)
 	versionHandler := handler.NewAppVersionHandler(sbClient)
-	aiHandler := handler.NewAIHandler(aiSvc)
+	subHandler := handler.NewSubscriptionHandler(subRepo, cfg.RevenueCatWebhookSecret)
+	aiHandler := handler.NewAIHandler(aiSvc, subRepo)
 
 	// API Routing Groups
 	api := app.Group("/api")
@@ -65,9 +67,19 @@ func main() {
 	// Public App Update Route
 	v1.Get("/app/check-update", versionHandler.CheckUpdateHandler)
 
+	// RevenueCat Webhook (Public with optional Bearer Secret validation)
+	v1.Post("/subscriptions/webhook", subHandler.RevenueCatWebhookHandler)
+
 	// Protected Auth Routes
 	authGroup := v1.Group("/auth", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))
 	authHandler.RegisterRoutes(authGroup)
+
+	// Protected Subscription & Referral Routes
+	subGroup := v1.Group("/subscriptions", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))
+	subGroup.Get("/status", subHandler.GetStatusHandler)
+
+	refGroup := v1.Group("/referral", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL))
+	refGroup.Post("/claim", subHandler.ClaimReferralHandler)
 
 	// Protected System Admin Routes
 	adminGroup := v1.Group("/admin", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL), middleware.AdminRequired(sbClient))
@@ -75,7 +87,7 @@ func main() {
 	adminGroup.Delete("/app-version/:id", versionHandler.DeleteVersionHandler)
 	adminGroup.Post("/push-notification", versionHandler.SendPushNotificationHandler)
 
-	// Protected AI Routes (Rate Limited: Max 20 per hour)
+	// Protected AI Routes (Rate Limited: Max 20 per hour + AI Credit Quota check)
 	aiGroup := v1.Group("/ai", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL), middleware.AIRateLimiter(20, 1*time.Hour))
 	aiGroup.Post("/estimate-prices", aiHandler.EstimatePricesHandler)
 	aiGroup.Post("/scan-receipt", aiHandler.ScanReceiptHandler)

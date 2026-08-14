@@ -11,6 +11,9 @@ import 'core/navigation/router.dart';
 import 'core/providers/shared_preferences_provider.dart';
 import 'core/localization/custom_shadcn_localizations.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -19,6 +22,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb) {
+    try {
+      await MobileAds.instance.initialize();
+    } catch (e) {
+      debugPrint('MobileAds init warning: $e');
+    }
+  }
 
   try {
     await Firebase.initializeApp();

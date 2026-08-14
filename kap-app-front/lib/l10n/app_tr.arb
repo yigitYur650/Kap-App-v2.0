@@ -147,7 +147,30 @@
   "health_protein_per_kg_value": "{value} g/kg",
   "health_macro_model_label": "Makro Model",
   "health_recommended_foods_title": "Önerilen Gıdalar",
-  "health_kcal_unit": "kcal"
+  "health_kcal_unit": "kcal",
+  "quota_dialog_title": "AI Günlük Limitiniz Doldu 🚀",
+  "quota_dialog_subtitle": "Ücretsiz hesabınız için bugünkü 2 AI hakkınızı kullandınız. İşleme devam etmek için bir seçenek belirleyin.",
+  "quota_remaining_label": "Kalan AI Hakkınız: {count}",
+  "quota_pro_unlimited": "Pro Üyesiniz (Sınırsız AI)",
+  "paywall_upgrade_pro_title": "Kap-App Pro'ya Yükselt 👑",
+  "paywall_upgrade_pro_subtitle": "Sınırsız AI tarif, fiyat tahmini, fiş tarama ve öncelikli destek.",
+  "paywall_monthly_plan": "Aylık Pro — ₺49.99 / ay",
+  "paywall_yearly_plan": "Yıllık Pro — ₺399.99 / yıl (2 Ay Bedava)",
+  "paywall_buy_button": "Hemen Katıl",
+  "paywall_watch_ad_title": "Market Fırsatı: Ödüllü Reklam İzle 🎬",
+  "paywall_watch_ad_subtitle": "30 saniyelik bir sponsorlu video izleyerek anında +1 AI Kullanım Hakkı kazanın.",
+  "paywall_watch_ad_button": "Reklam İzle (+1 Hak)",
+  "paywall_referral_title": "Arkadaşını Davet Et (+7 Gün Pro) 🎁",
+  "paywall_referral_subtitle": "Kendi davet kodunuzu arkadaşınızla paylaşın, kaydolduğunda ikinize de 7 gün Pro tanımlansın!",
+  "paywall_referral_code_label": "Davet Kodunuz:",
+  "paywall_referral_copy": "Kodu Kopyala",
+  "paywall_referral_copied": "Davet kodu panoya kopyalandı",
+  "paywall_enter_code_title": "Davet Kodu Gir",
+  "paywall_enter_code_hint": "Örn: KAP-X7R9P2",
+  "paywall_claim_button": "Kodu Kullan",
+  "paywall_claim_success": "Tebrikler! +7 Günlük Pro Üyeliğiniz Tanımlandı! 🎉",
+  "paywall_claim_failed": "Davet kodu doğrulanamadı: {reason}",
+  "ad_reward_success": "+1 AI Kullanım Hakkı Hesabınıza Eklendi!"
 }
 
 

@@ -75,3 +75,36 @@
 - [x] Self-contained SQL Migration `28_add_nutrition_rules_fields_to_health_profiles.sql`
 - [x] 100% CLEAN `flutter analyze` & `flutter gen-l10n` build
 
+---
+
+## 🚀 Sprint 8 — AI Kota, Monetizasyon & Abonelik Altyapısı (SSOT)
+
+> **Proje:** Kap-App v2.0  
+> **Modül:** AI Kota, Monetizasyon, Referral & Subscription Altyapısı  
+> **Tarih:** 2026-08-15  
+
+### 🗄️ Aşama 1: Veritabanı & RLS Katmanı (Supabase / PostgreSQL)
+- [x] **Task 1.1:** `29_add_ai_usage_and_subscriptions.sql` migrasyonu (`user_ai_usage`, `user_subscriptions`, `referral_codes`, `referral_logs`, `processed_webhook_events`).
+- [x] **Task 1.2:** `consume_ai_credit(p_user_id UUID)` atomic stored procedure (FOR UPDATE kilidi ve günlük otomatik reset).
+- [x] **Task 1.3:** `claim_referral_reward(p_referrer_code TEXT, p_new_user_id UUID, p_device_hash TEXT)` fonksiyonu (Post-2FA & Device Fingerprinting).
+- [x] **Task 1.4:** Row Level Security (RLS) politikaları ve performans indeksleri.
+
+### ⚙️ Aşama 2: Backend Katmanı (Go / Fiber)
+- [x] **Task 2.1:** Domain modellerinin eklenmesi (`internal/domain/subscription.go`, `internal/domain/ai_usage.go`).
+- [x] **Task 2.2:** Repository katmanında kredi tüketim ve abonelik sorguları (`internal/repository/subscription_repository.go`).
+- [x] **Task 2.3:** `AIService` ve `AIHandler` refaktörü (Kredi kontrolü & `402 Payment Required` hatası).
+- [x] **Task 2.4:** RevenueCat Webhook Handler (`POST /api/v1/subscriptions/webhook`) & Idempotency kontrolü.
+- [x] **Task 2.5:** Referral doğrulama endpoint'i (`POST /api/v1/referral/claim`).
+
+### 📱 Aşama 3: Frontend Katmanı (Flutter & Riverpod)
+- [x] **Task 3.1:** `purchases_flutter` & `google_mobile_ads` bağımlılıklarının eklenmesi ve `pubspec.yaml` versiyon güncellemesi.
+- [x] **Task 3.2:** `subscription_provider.dart` ve `ai_quota_provider.dart` state notifier'ları.
+- [x] **Task 3.3:** **Paywall / Limit Dialog (shadcn/ui standartlarında):** Pro Yükseltme, Ödüllü Reklam İzleme (+1), Arkadaş Daveti (+7 Gün Pro).
+- [x] **Task 3.4:** i18n `.arb` dosyalarına yeni anahtarların eklenmesi (`app_tr.arb`, `app_en.arb`).
+
+### 🧪 Aşama 4: Test & Edge Cases
+- [x] **Task 4.1:** Eşzamanlı istek (concurrency) ve atomic RPC testleri.
+- [x] **Task 4.2:** Referral anti-fraud ve device fingerprinting testleri.
+- [x] **Task 4.3:** Webhook idempotency testleri.
+
+

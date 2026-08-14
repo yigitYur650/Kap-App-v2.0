@@ -468,11 +468,86 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get health_macro_model_label => 'Makro Model';
-
-  @override
   String get health_recommended_foods_title => 'Önerilen Gıdalar';
 
   @override
   String get health_kcal_unit => 'kcal';
+
+  @override
+  String get quota_dialog_title => 'AI Günlük Limitiniz Doldu 🚀';
+
+  @override
+  String get quota_dialog_subtitle =>
+      'Ücretsiz hesabınız için bugünkü 2 AI hakkınızı kullandınız. İşleme devam etmek için bir seçenek belirleyin.';
+
+  @override
+  String quota_remaining_label(int count) {
+    return 'Kalan AI Hakkınız: $count';
+  }
+
+  @override
+  String get quota_pro_unlimited => 'Pro Üyesiniz (Sınırsız AI)';
+
+  @override
+  String get paywall_upgrade_pro_title => 'Kap-App Pro\'ya Yükselt 👑';
+
+  @override
+  String get paywall_upgrade_pro_subtitle =>
+      'Sınırsız AI tarif, fiyat tahmini, fiş tarama ve öncelikli destek.';
+
+  @override
+  String get paywall_monthly_plan => 'Aylık Pro — ₺49.99 / ay';
+
+  @override
+  String get paywall_yearly_plan => 'Yıllık Pro — ₺399.99 / yıl (2 Ay Bedava)';
+
+  @override
+  String get paywall_buy_button => 'Hemen Katıl';
+
+  @override
+  String get paywall_watch_ad_title => 'Market Fırsatı: Ödüllü Reklam İzle 🎬';
+
+  @override
+  String get paywall_watch_ad_subtitle =>
+      '30 saniyelik bir sponsorlu video izleyerek anında +1 AI Kullanım Hakkı kazanın.';
+
+  @override
+  String get paywall_watch_ad_button => 'Reklam İzle (+1 Hak)';
+
+  @override
+  String get paywall_referral_title => 'Arkadaşını Davet Et (+7 Gün Pro) 🎁';
+
+  @override
+  String get paywall_referral_subtitle =>
+      'Kendi davet kodunuzu arkadaşınızla paylaşın, kaydolduğunda ikinize de 7 gün Pro tanımlansın!';
+
+  @override
+  String get paywall_referral_code_label => 'Davet Kodunuz:';
+
+  @override
+  String get paywall_referral_copy => 'Kodu Kopyala';
+
+  @override
+  String get paywall_referral_copied => 'Davet kodu panoya kopyalandı';
+
+  @override
+  String get paywall_enter_code_title => 'Davet Kodu Gir';
+
+  @override
+  String get paywall_enter_code_hint => 'Örn: KAP-X7R9P2';
+
+  @override
+  String get paywall_claim_button => 'Kodu Kullan';
+
+  @override
+  String get paywall_claim_success =>
+      'Tebrikler! +7 Günlük Pro Üyeliğiniz Tanımlandı! 🎉';
+
+  @override
+  String paywall_claim_failed(String reason) {
+    return 'Davet kodu doğrulanamadı: $reason';
+  }
+
+  @override
+  String get ad_reward_success => '+1 AI Kullanım Hakkı Hesabınıza Eklendi!';
 }

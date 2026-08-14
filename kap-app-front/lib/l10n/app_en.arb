@@ -166,8 +166,40 @@
       "value": { "type": "String" }
     }
   },
-  "health_macro_model_label": "Macro Model",
   "health_recommended_foods_title": "Recommended Foods",
-  "health_kcal_unit": "kcal"
+  "health_kcal_unit": "kcal",
+  "quota_dialog_title": "AI Daily Quota Exceeded 🚀",
+  "quota_dialog_subtitle": "You have used your 2 free daily AI credits for today. Select an option to continue.",
+  "quota_remaining_label": "Remaining AI Credits: {count}",
+  "@quota_remaining_label": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "quota_pro_unlimited": "You are Pro (Unlimited AI)",
+  "paywall_upgrade_pro_title": "Upgrade to Kap-App Pro 👑",
+  "paywall_upgrade_pro_subtitle": "Unlimited AI recipes, price estimation, receipt scanning, and priority support.",
+  "paywall_monthly_plan": "Monthly Pro — $2.99 / mo",
+  "paywall_yearly_plan": "Yearly Pro — $24.99 / yr (2 Months Free)",
+  "paywall_buy_button": "Join Now",
+  "paywall_watch_ad_title": "Market Deal: Watch Rewarded Ad 🎬",
+  "paywall_watch_ad_subtitle": "Watch a 30-second sponsored video to instantly earn +1 AI credit.",
+  "paywall_watch_ad_button": "Watch Ad (+1 Credit)",
+  "paywall_referral_title": "Invite a Friend (+7 Days Pro) 🎁",
+  "paywall_referral_subtitle": "Share your referral code with a friend. When they sign up, both of you get 7 days of Pro!",
+  "paywall_referral_code_label": "Your Referral Code:",
+  "paywall_referral_copy": "Copy Code",
+  "paywall_referral_copied": "Referral code copied to clipboard",
+  "paywall_enter_code_title": "Enter Referral Code",
+  "paywall_enter_code_hint": "E.g. KAP-X7R9P2",
+  "paywall_claim_button": "Redeem Code",
+  "paywall_claim_success": "Congratulations! +7 Days of Pro Membership granted! 🎉",
+  "paywall_claim_failed": "Failed to redeem code: {reason}",
+  "@paywall_claim_failed": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
+  "ad_reward_success": "+1 AI Credit added to your account!"
 }
 

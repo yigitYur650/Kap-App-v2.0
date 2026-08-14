@@ -16,6 +16,7 @@ type Config struct {
 	CORSAllowedOrigins     string
 	GroqAPIKey             string
 	GeminiAPIKey           string
+	RevenueCatWebhookSecret string
 }
 
 // LoadConfig loads application configuration from environment variables and optionally a .env file.
@@ -42,6 +43,7 @@ func LoadConfig() *Config {
 
 	groqAPIKey := os.Getenv("GROQ_API_KEY")
 	geminiAPIKey := os.Getenv("GEMINI_API_KEY")
+	revCatSecret := os.Getenv("REVENUECAT_WEBHOOK_SECRET")
 
 	return &Config{
 		Port:                   port,
@@ -51,5 +53,6 @@ func LoadConfig() *Config {
 		CORSAllowedOrigins:     corsAllowedOrigins,
 		GroqAPIKey:             groqAPIKey,
 		GeminiAPIKey:           geminiAPIKey,
+		RevenueCatWebhookSecret: revCatSecret,
 	}
 }
