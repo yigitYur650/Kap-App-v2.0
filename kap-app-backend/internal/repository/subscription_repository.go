@@ -245,19 +245,28 @@ func (r *supabaseSubscriptionRepository) ProcessRevenueCatWebhook(event *domain.
 }
 
 func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPro bool, durationMonths int) (map[string]interface{}, error) {
-	targetID := strings.TrimSpace(userID)
+	inputUserID := strings.TrimSpace(userID)
 	inputEmail := strings.TrimSpace(strings.ToLower(email))
 
-	// 1. Check if input is directly a UUID
+	var targetID string
+
+	// 1. If inputUserID is a valid 36-character UUID
+	if len(inputUserID) == 36 && strings.Contains(inputUserID, "-") {
+		targetID = inputUserID
+	}
+
+	// 2. If inputEmail is actually a 36-character UUID
 	if targetID == "" && len(inputEmail) == 36 && strings.Contains(inputEmail, "-") {
 		targetID = inputEmail
 	}
-	if targetID == "" && len(userID) == 36 && strings.Contains(userID, "-") {
-		targetID = userID
+
+	searchEmail := inputEmail
+	if searchEmail == "" && strings.Contains(inputUserID, "@") {
+		searchEmail = strings.ToLower(inputUserID)
 	}
 
-	// 2. Search in Supabase Auth Admin Users API
-	if targetID == "" && inputEmail != "" {
+	// 3. Search in Supabase Auth Admin Users API
+	if targetID == "" && searchEmail != "" {
 		authURL := fmt.Sprintf("%s/auth/v1/admin/users", r.client.URL)
 		reqAuth, err := http.NewRequest(http.MethodGet, authURL, nil)
 		if err == nil {
@@ -273,7 +282,7 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 				}
 				if errDec := json.NewDecoder(respAuth.Body).Decode(&authRes); errDec == nil {
 					for _, u := range authRes.Users {
-						if strings.EqualFold(strings.TrimSpace(u.Email), inputEmail) {
+						if strings.EqualFold(strings.TrimSpace(u.Email), searchEmail) {
 							targetID = u.ID
 							break
 						}
@@ -284,9 +293,9 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 		}
 	}
 
-	// 3. Fallback: Search in profiles table
-	if targetID == "" && inputEmail != "" {
-		profileURL := fmt.Sprintf("%s/rest/v1/profiles?email=eq.%s&select=id", r.client.URL, url.QueryEscape(inputEmail))
+	// 4. Fallback: Search in profiles table
+	if targetID == "" && searchEmail != "" {
+		profileURL := fmt.Sprintf("%s/rest/v1/profiles?email=eq.%s&select=id", r.client.URL, url.QueryEscape(searchEmail))
 		reqProf, err := http.NewRequest(http.MethodGet, profileURL, nil)
 		if err == nil {
 			reqProf.Header.Set("apikey", r.client.ServiceRoleKey)
@@ -306,7 +315,11 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 	}
 
 	if targetID == "" {
-		return nil, fmt.Errorf("kullanıcı '%s' veritabanında bulunamadı. Lütfen kullanıcının UUID bilgisini girin.", email)
+		displayInput := email
+		if displayInput == "" {
+			displayInput = userID
+		}
+		return nil, fmt.Errorf("kullanıcı '%s' veritabanında bulunamadı. Lütfen kullanıcının UUID bilgisini girin.", displayInput)
 	}
 
 	var expiresAt *time.Time
