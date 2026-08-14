@@ -302,21 +302,23 @@ class SettingsScreen extends ConsumerWidget {
                                 : Colors.white.withOpacity(0.05),
                           ),
                         ),
-                        child: ListTile(
-                          onTap: () {
-                            ref.read(activeGroupProvider.notifier).switchGroup(group);
-                          },
-                        leading: Icon(
-                          Icons.home_outlined,
-                          color: isActive ? AppColors.primary : Colors.grey,
-                        ),
-                        title: Text(
-                          group.name,
-                          style: AppTypography.bodyLg.copyWith(
-                            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            onTap: () {
+                              ref.read(activeGroupProvider.notifier).switchGroup(group);
+                            },
+                          leading: Icon(
+                            Icons.home_outlined,
+                            color: isActive ? AppColors.primary : Colors.grey,
                           ),
-                        ),
-                        trailing: Row(
+                          title: Text(
+                            group.name,
+                            style: AppTypography.bodyLg.copyWith(
+                              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                          trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             // Delete button (only for admins or group creators)

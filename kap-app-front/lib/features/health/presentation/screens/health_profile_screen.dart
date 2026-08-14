@@ -654,21 +654,24 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                           : Colors.white12,
                     ),
                   ),
-                  child: SwitchListTile(
-                    activeThumbColor: Colors.orangeAccent,
-                    title: Text(
-                      localizations.health_kidney_disease_title,
-                      style: AppTypography.bodyLg
-                          .copyWith(color: Colors.white),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: SwitchListTile(
+                      activeThumbColor: Colors.orangeAccent,
+                      title: Text(
+                        localizations.health_kidney_disease_title,
+                        style: AppTypography.bodyLg
+                            .copyWith(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        localizations.health_kidney_disease_subtitle,
+                        style: AppTypography.bodyMd
+                            .copyWith(color: AppColors.textMuted),
+                      ),
+                      value: _hasKidneyDisease,
+                      onChanged: (val) =>
+                          setState(() => _hasKidneyDisease = val),
                     ),
-                    subtitle: Text(
-                      localizations.health_kidney_disease_subtitle,
-                      style: AppTypography.bodyMd
-                          .copyWith(color: AppColors.textMuted),
-                    ),
-                    value: _hasKidneyDisease,
-                    onChanged: (val) =>
-                        setState(() => _hasKidneyDisease = val),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -725,20 +728,23 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white12),
                   ),
-                  child: SwitchListTile(
-                    activeThumbColor: AppColors.primary,
-                    title: Text(
-                      localizations.health_share_with_group_title,
-                      style: AppTypography.bodyLg
-                          .copyWith(color: Colors.white),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: SwitchListTile(
+                      activeThumbColor: AppColors.primary,
+                      title: Text(
+                        localizations.health_share_with_group_title,
+                        style: AppTypography.bodyLg
+                            .copyWith(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        localizations.health_share_with_group_subtitle,
+                        style: AppTypography.bodyMd
+                            .copyWith(color: AppColors.textMuted),
+                      ),
+                      value: _isPublic,
+                      onChanged: (val) => setState(() => _isPublic = val),
                     ),
-                    subtitle: Text(
-                      localizations.health_share_with_group_subtitle,
-                      style: AppTypography.bodyMd
-                          .copyWith(color: AppColors.textMuted),
-                    ),
-                    value: _isPublic,
-                    onChanged: (val) => setState(() => _isPublic = val),
                   ),
                 ),
                 const SizedBox(height: 24),
