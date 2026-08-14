@@ -1040,22 +1040,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 16),
-
-          TextField(
-            controller: _bonusCreditsController,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              labelText: 'Ekstra Bonus Hak Ekle (Opsiyonel)',
-              hintText: '0',
-              labelStyle: TextStyle(color: Colors.white70),
-              prefixIcon: Icon(Icons.stars_rounded, color: Colors.amber),
-              filled: true,
-              fillColor: Color(0xFF1F2022),
-              border: OutlineInputBorder(),
-            ),
-          ),
           const SizedBox(height: 24),
 
           if (_isGrantingPro)

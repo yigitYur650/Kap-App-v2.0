@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kap_app_front/features/subscription/presentation/providers/ai_quota_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-class KapAppBrandLogo extends StatelessWidget {
+class KapAppBrandLogo extends ConsumerWidget {
   final double fontSize;
   final bool showBadge;
 
@@ -13,7 +15,10 @@ class KapAppBrandLogo extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quotaState = ref.watch(aiQuotaProvider);
+    final isPro = quotaState.isPro;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -23,57 +28,80 @@ class KapAppBrandLogo extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(fontSize > 28 ? 10 : 6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFE50914),
-                    Color(0xFFFF334B),
-                  ],
+                gradient: LinearGradient(
+                  colors: isPro
+                      ? [const Color(0xFFFFB300), const Color(0xFFFF6F00)]
+                      : [const Color(0xFFE50914), const Color(0xFFFF334B)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(fontSize > 28 ? 14 : 10),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: isPro ? Colors.amber.withOpacity(0.5) : AppColors.primary.withOpacity(0.5),
                     blurRadius: 16,
                     spreadRadius: 2,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.shopping_bag_outlined,
+              child: Icon(
+                isPro ? Icons.workspace_premium_rounded : Icons.shopping_bag_outlined,
                 color: Colors.white,
-                size: 26,
+                size: fontSize > 28 ? 26 : 18,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [
-                  Color(0xFFFFFFFF),
-                  Color(0xFFFF727A),
-                  Color(0xFFE50914),
-                ],
+              shaderCallback: (bounds) => LinearGradient(
+                colors: isPro
+                    ? [const Color(0xFFFFFFFF), const Color(0xFFFFD54F), const Color(0xFFFFB300)]
+                    : [const Color(0xFFFFFFFF), const Color(0xFFFF727A), const Color(0xFFE50914)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ).createShader(bounds),
-              child: Text(
-                'KAP-APP',
-                style: AppTypography.display.copyWith(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 4.0,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      color: AppColors.primary.withOpacity(0.8),
-                      blurRadius: 20,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'KAP-APP',
+                    style: AppTypography.display.copyWith(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 3.0,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: isPro ? Colors.amber.withOpacity(0.8) : AppColors.primary.withOpacity(0.8),
+                          blurRadius: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isPro) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.amber.shade800, Colors.amber.shade600],
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'PRO 👑',
+                        style: TextStyle(
+                          fontSize: (fontSize * 0.45).clamp(10.0, 16.0),
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
                     ),
                   ],
-                ),
+                ],
               ),
             ),
           ],
@@ -83,17 +111,17 @@ class KapAppBrandLogo extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.12),
+              color: isPro ? Colors.amber.withOpacity(0.15) : AppColors.primary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
+                color: isPro ? Colors.amber.withOpacity(0.4) : AppColors.primary.withOpacity(0.3),
                 width: 1,
               ),
             ),
             child: Text(
-              'AKILLI EV & ALIŞVERİŞ ASİSTANI',
+              isPro ? 'PRO ÜYE — SINIRSIZ AI KULLANIMI 👑' : 'AKILLI EV & ALIŞVERİŞ ASİSTANI',
               style: AppTypography.labelSm.copyWith(
-                color: const Color(0xFFFF8A92),
+                color: isPro ? Colors.amber.shade300 : const Color(0xFFFF8A92),
                 letterSpacing: 1.8,
                 fontWeight: FontWeight.w600,
                 fontSize: 10,
