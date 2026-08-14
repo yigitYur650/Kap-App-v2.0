@@ -589,6 +589,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           ? Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight + 16.0),
               child: FloatingActionButton(
+                heroTag: 'shopping_list_fab',
                 onPressed: () => _showAddRequestSheet(context),
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,

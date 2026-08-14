@@ -631,6 +631,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           : Padding(
               padding: EdgeInsets.only(bottom: bottomNavHeight + 12),
               child: FloatingActionButton.extended(
+                heroTag: 'inventory_fab',
                 onPressed: _openAddItemSheet,
                 backgroundColor: AppColors.primary,
                 icon: const Icon(Icons.add, color: Colors.white),
