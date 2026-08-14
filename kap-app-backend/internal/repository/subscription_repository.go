@@ -357,7 +357,11 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 	if respUsage.StatusCode >= 300 {
 		b, _ := io.ReadAll(respUsage.Body)
 		respUsage.Body.Close()
-		return nil, fmt.Errorf("user_ai_usage veritabanı güncelleme hatası (%d): %s", respUsage.StatusCode, string(b))
+		errStr := string(b)
+		if strings.Contains(errStr, "PGRST205") || strings.Contains(errStr, "schema cache") || respUsage.StatusCode == 404 {
+			return nil, fmt.Errorf("Supabase veritabanında 'user_ai_usage' tablosu bulunamadı! Lütfen Supabase Dashboard -> SQL Editor alanında 29_add_ai_usage_and_subscriptions.sql dosyasındaki SQL kodlarını çalıştırın.")
+		}
+		return nil, fmt.Errorf("user_ai_usage veritabanı güncelleme hatası (%d): %s", respUsage.StatusCode, errStr)
 	}
 	respUsage.Body.Close()
 
