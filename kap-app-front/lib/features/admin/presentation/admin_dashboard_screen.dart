@@ -970,6 +970,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           ),
         );
         _targetUserEmailController.clear();
+        ref.read(aiQuotaProvider.notifier).fetchQuota();
       } else {
         final err = jsonDecode(resp.body)['error'] ?? 'İşlem başarısız';
         ScaffoldMessenger.of(context).showSnackBar(

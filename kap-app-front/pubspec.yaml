@@ -2,7 +2,7 @@ name: kap_app_front
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 2.4.1+168
+version: 2.4.1+169
 
 environment:
   sdk: ^3.12.2

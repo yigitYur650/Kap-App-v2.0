@@ -60,10 +60,35 @@ func (r *supabaseSubscriptionRepository) GetUserAIStatus(userID string) (*domain
 		ReferralCode:     "KAP-FREE",
 	}
 
+	isProFromSub := false
+	subURL := fmt.Sprintf("%s/rest/v1/user_subscriptions?user_id=eq.%s&status=eq.active&select=expires_at", r.client.URL, url.QueryEscape(userID))
+	reqSub, errSub := http.NewRequest(http.MethodGet, subURL, nil)
+	if errSub == nil {
+		reqSub.Header.Set("apikey", r.client.ServiceRoleKey)
+		reqSub.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
+		respSub, errDoSub := r.client.HTTPClient.Do(reqSub)
+		if errDoSub == nil && respSub.StatusCode == http.StatusOK {
+			var subs []struct {
+				ExpiresAt *time.Time `json:"expires_at"`
+			}
+			if errDec := json.NewDecoder(respSub.Body).Decode(&subs); errDec == nil && len(subs) > 0 {
+				exp := subs[0].ExpiresAt
+				if exp == nil || exp.After(time.Now()) {
+					isProFromSub = true
+				}
+			}
+			respSub.Body.Close()
+		}
+	}
+
 	// Fetch AI usage with graceful fallback
 	usageURL := fmt.Sprintf("%s/rest/v1/user_ai_usage?user_id=eq.%s&select=*", r.client.URL, url.QueryEscape(userID))
 	req, err := http.NewRequest(http.MethodGet, usageURL, nil)
 	if err != nil {
+		if isProFromSub {
+			defaultDTO.IsPro = true
+			defaultDTO.RemainingCredits = 999999
+		}
 		return defaultDTO, nil
 	}
 	req.Header.Set("apikey", r.client.ServiceRoleKey)
@@ -71,21 +96,33 @@ func (r *supabaseSubscriptionRepository) GetUserAIStatus(userID string) (*domain
 
 	resp, err := r.client.HTTPClient.Do(req)
 	if err != nil {
+		if isProFromSub {
+			defaultDTO.IsPro = true
+			defaultDTO.RemainingCredits = 999999
+		}
 		return defaultDTO, nil
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		if isProFromSub {
+			defaultDTO.IsPro = true
+			defaultDTO.RemainingCredits = 999999
+		}
 		return defaultDTO, nil
 	}
 
 	var usages []domain.UserAIUsage
 	if err := json.NewDecoder(resp.Body).Decode(&usages); err != nil || len(usages) == 0 {
+		if isProFromSub {
+			defaultDTO.IsPro = true
+			defaultDTO.RemainingCredits = 999999
+		}
 		return defaultDTO, nil
 	}
 
 	u := usages[0]
-	isPro := u.IsPro
+	isPro := u.IsPro || isProFromSub
 	freeLimit := u.FreeDailyLimit
 	bonus := u.BonusCredits
 	usedToday := u.UsedCountToday
@@ -280,7 +317,7 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 		durationText = fmt.Sprintf("%d Ay", durationMonths)
 	}
 
-	usageURL := fmt.Sprintf("%s/rest/v1/user_ai_usage", r.client.URL)
+	usageURL := fmt.Sprintf("%s/rest/v1/user_ai_usage?on_conflict=user_id", r.client.URL)
 	usageBody := map[string]interface{}{
 		"user_id":    targetID,
 		"is_pro":     isPro,
