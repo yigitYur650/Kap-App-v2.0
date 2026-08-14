@@ -968,6 +968,12 @@ abstract class AppLocalizations {
   /// **'{value} g/kg'**
   String health_protein_per_kg_value(String value);
 
+  /// No description provided for @health_macro_model_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Model'**
+  String get health_macro_model_label;
+
   /// No description provided for @health_recommended_foods_title.
   ///
   /// In en, this message translates to:

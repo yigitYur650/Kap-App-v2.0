@@ -468,6 +468,9 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get health_macro_model_label => 'Makro Model';
+
+  @override
   String get health_recommended_foods_title => 'Önerilen Gıdalar';
 
   @override

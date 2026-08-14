@@ -166,6 +166,7 @@
       "value": { "type": "String" }
     }
   },
+  "health_macro_model_label": "Macro Model",
   "health_recommended_foods_title": "Recommended Foods",
   "health_kcal_unit": "kcal",
   "quota_dialog_title": "AI Daily Quota Exceeded 🚀",
