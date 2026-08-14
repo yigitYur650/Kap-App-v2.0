@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/ai_quota_provider.dart';
-import '../providers/subscription_provider.dart';
 
 class PaywallDialog extends ConsumerStatefulWidget {
   const PaywallDialog({super.key});
@@ -64,7 +63,6 @@ class _PaywallDialogState extends ConsumerState<PaywallDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final quotaState = ref.watch(aiQuotaProvider);
-    final subState = ref.watch(subscriptionProvider);
     final theme = Theme.of(context);
 
     return Dialog(
