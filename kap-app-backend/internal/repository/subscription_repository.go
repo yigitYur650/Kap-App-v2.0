@@ -206,34 +206,65 @@ func (r *supabaseSubscriptionRepository) ProcessRevenueCatWebhook(event *domain.
 }
 
 func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPro bool, bonusCredits int) (map[string]interface{}, error) {
-	targetID := userID
+	targetID := strings.TrimSpace(userID)
+	inputEmail := strings.TrimSpace(strings.ToLower(email))
 
-	if targetID == "" && email != "" {
-		profileURL := fmt.Sprintf("%s/rest/v1/profiles?email=eq.%s&select=id", r.client.URL, url.QueryEscape(email))
-		req, err := http.NewRequest(http.MethodGet, profileURL, nil)
+	// 1. Check if input is directly a UUID
+	if targetID == "" && len(inputEmail) == 36 && strings.Contains(inputEmail, "-") {
+		targetID = inputEmail
+	}
+
+	// 2. Search in Supabase Auth Admin Users API
+	if targetID == "" && inputEmail != "" {
+		authURL := fmt.Sprintf("%s/auth/v1/admin/users", r.client.URL)
+		reqAuth, err := http.NewRequest(http.MethodGet, authURL, nil)
 		if err == nil {
-			req.Header.Set("apikey", r.client.ServiceRoleKey)
-			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
-			resp, errDo := r.client.HTTPClient.Do(req)
-			if errDo == nil && resp.StatusCode == http.StatusOK {
+			reqAuth.Header.Set("apikey", r.client.ServiceRoleKey)
+			reqAuth.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
+			respAuth, errDo := r.client.HTTPClient.Do(reqAuth)
+			if errDo == nil && respAuth.StatusCode == http.StatusOK {
+				var authRes struct {
+					Users []struct {
+						ID    string `json:"id"`
+						Email string `json:"email"`
+					} `json:"users"`
+				}
+				if errDec := json.NewDecoder(respAuth.Body).Decode(&authRes); errDec == nil {
+					for _, u := range authRes.Users {
+						if strings.EqualFold(strings.TrimSpace(u.Email), inputEmail) {
+							targetID = u.ID
+							break
+						}
+					}
+				}
+				respAuth.Body.Close()
+			}
+		}
+	}
+
+	// 3. Fallback: Search in profiles table
+	if targetID == "" && inputEmail != "" {
+		profileURL := fmt.Sprintf("%s/rest/v1/profiles?email=eq.%s&select=id", r.client.URL, url.QueryEscape(inputEmail))
+		reqProf, err := http.NewRequest(http.MethodGet, profileURL, nil)
+		if err == nil {
+			reqProf.Header.Set("apikey", r.client.ServiceRoleKey)
+			reqProf.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
+			respProf, errDo := r.client.HTTPClient.Do(reqProf)
+			if errDo == nil && respProf.StatusCode == http.StatusOK {
 				var profiles []struct {
 					ID string `json:"id"`
 				}
-				_ = json.NewDecoder(resp.Body).Decode(&profiles)
-				resp.Body.Close()
+				_ = json.NewDecoder(respProf.Body).Decode(&profiles)
+				respProf.Body.Close()
 				if len(profiles) > 0 {
 					targetID = profiles[0].ID
 				}
 			}
 		}
-
-		if targetID == "" && len(email) == 36 && strings.Contains(email, "-") {
-			targetID = email
-		}
 	}
 
 	if targetID == "" {
-		return nil, fmt.Errorf("kullanıcı bulunamadı. Lütfen geçerli bir Kullanıcı ID (UUID) veya E-posta girin")
+		return nil, fmt.Errorf("kullanıcı '%s' veritabanında bulunamadı. Lütfen E-posta adresini veya Supabase User ID (UUID) bilgisini kontrol edin.", email)
 	}
 
 	usageURL := fmt.Sprintf("%s/rest/v1/user_ai_usage", r.client.URL)
