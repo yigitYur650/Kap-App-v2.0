@@ -31,10 +31,16 @@ func (h *SubscriptionHandler) GetStatusHandler(c *fiber.Ctx) error {
 	}
 
 	status, err := h.subRepo.GetUserAIStatus(userID)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	if err != nil || status == nil {
+		status = &domain.UserAIStatusDTO{
+			UserID:           userID,
+			IsPro:            false,
+			RemainingCredits: 2,
+			FreeDailyLimit:   2,
+			BonusCredits:     0,
+			UsedCountToday:   0,
+			ReferralCode:     "KAP-FREE",
+		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(status)
