@@ -1,6 +1,6 @@
 class AppConstants {
   static const String backendBaseUrl = String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'http://localhost:8080',
+    defaultValue: 'https://kap-app-backend.onrender.com',
   );
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -332,39 +331,56 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 	}
 
 	nowStr := time.Now().Format(time.RFC3339)
+	todayStr := time.Now().Format("2006-01-02")
 
-	usageURL := fmt.Sprintf("%s/rest/v1/user_ai_usage?on_conflict=user_id", r.client.URL)
+	// 1. Try PATCH on user_ai_usage first
+	usagePatchURL := fmt.Sprintf("%s/rest/v1/user_ai_usage?user_id=eq.%s", r.client.URL, url.QueryEscape(targetID))
 	usageBody := map[string]interface{}{
-		"user_id":    targetID,
 		"is_pro":     isPro,
 		"updated_at": nowStr,
 	}
-	if expiresAt != nil {
-		usageBody["expires_at"] = expiresAt.Format(time.RFC3339)
-	}
-	jsonBytesUsage, _ := json.Marshal(usageBody)
+	jsonBytesPatch, _ := json.Marshal(usageBody)
 
-	reqUsage, _ := http.NewRequest(http.MethodPost, usageURL, bytes.NewReader(jsonBytesUsage))
-	reqUsage.Header.Set("apikey", r.client.ServiceRoleKey)
-	reqUsage.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
-	reqUsage.Header.Set("Content-Type", "application/json")
-	reqUsage.Header.Set("Prefer", "resolution=merge-duplicates")
+	reqPatch, _ := http.NewRequest(http.MethodPatch, usagePatchURL, bytes.NewReader(jsonBytesPatch))
+	reqPatch.Header.Set("apikey", r.client.ServiceRoleKey)
+	reqPatch.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
+	reqPatch.Header.Set("Content-Type", "application/json")
+	reqPatch.Header.Set("Prefer", "return=representation")
 
-	respUsage, errUsage := r.client.HTTPClient.Do(reqUsage)
-	if errUsage != nil {
-		return nil, fmt.Errorf("user_ai_usage veritabanına ulaşılamadı: %v", errUsage)
-	}
-	if respUsage.StatusCode >= 300 {
-		b, _ := io.ReadAll(respUsage.Body)
-		respUsage.Body.Close()
-		errStr := string(b)
-		if strings.Contains(errStr, "PGRST205") || strings.Contains(errStr, "schema cache") || respUsage.StatusCode == 404 {
-			return nil, fmt.Errorf("Supabase veritabanında 'user_ai_usage' tablosu bulunamadı! Lütfen Supabase Dashboard -> SQL Editor alanında 29_add_ai_usage_and_subscriptions.sql dosyasındaki SQL kodlarını çalıştırın.")
+	respPatch, errPatch := r.client.HTTPClient.Do(reqPatch)
+	patched := false
+	if errPatch == nil && respPatch.StatusCode == http.StatusOK {
+		var updatedRows []map[string]interface{}
+		if errDec := json.NewDecoder(respPatch.Body).Decode(&updatedRows); errDec == nil && len(updatedRows) > 0 {
+			patched = true
 		}
-		return nil, fmt.Errorf("user_ai_usage veritabanı güncelleme hatası (%d): %s", respUsage.StatusCode, errStr)
+		respPatch.Body.Close()
 	}
-	respUsage.Body.Close()
 
+	// 2. If PATCH didn't update any row, POST new row to user_ai_usage
+	if !patched {
+		usagePostURL := fmt.Sprintf("%s/rest/v1/user_ai_usage", r.client.URL)
+		newUsageBody := map[string]interface{}{
+			"user_id":          targetID,
+			"is_pro":           isPro,
+			"free_daily_limit": 2,
+			"bonus_credits":    0,
+			"used_count_today": 0,
+			"last_reset_date":  todayStr,
+			"updated_at":       nowStr,
+		}
+		jsonBytesPost, _ := json.Marshal(newUsageBody)
+		reqPost, _ := http.NewRequest(http.MethodPost, usagePostURL, bytes.NewReader(jsonBytesPost))
+		reqPost.Header.Set("apikey", r.client.ServiceRoleKey)
+		reqPost.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
+		reqPost.Header.Set("Content-Type", "application/json")
+		respPost, errPost := r.client.HTTPClient.Do(reqPost)
+		if errPost == nil {
+			respPost.Body.Close()
+		}
+	}
+
+	// 3. Upsert user_subscriptions
 	statusStr := "expired"
 	if isPro {
 		statusStr = "active"
