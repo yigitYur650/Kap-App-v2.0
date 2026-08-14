@@ -16,6 +16,7 @@ type SubscriptionRepository interface {
 	ConsumeAICredit(userID string) (*domain.AICreditConsumptionResult, error)
 	GetUserAIStatus(userID string) (*domain.UserAIStatusDTO, error)
 	ClaimReferral(referrerCode, newUserID, deviceHash string) (map[string]interface{}, error)
+	GrantUserPro(userID, email string, isPro bool, bonusCredits int) (map[string]interface{}, error)
 	ProcessRevenueCatWebhook(event *domain.RevenueCatEvent) error
 	RecordWebhookEvent(eventID, eventType string) (bool, error)
 }
@@ -202,4 +203,88 @@ func (r *supabaseSubscriptionRepository) ProcessRevenueCatWebhook(event *domain.
 	}
 
 	return nil
+}
+
+func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPro bool, bonusCredits int) (map[string]interface{}, error) {
+	targetID := userID
+
+	if targetID == "" && email != "" {
+		profileURL := fmt.Sprintf("%s/rest/v1/profiles?email=eq.%s&select=id", r.client.URL, url.QueryEscape(email))
+		req, err := http.NewRequest(http.MethodGet, profileURL, nil)
+		if err == nil {
+			req.Header.Set("apikey", r.client.ServiceRoleKey)
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
+			resp, errDo := r.client.HTTPClient.Do(req)
+			if errDo == nil && resp.StatusCode == http.StatusOK {
+				var profiles []struct {
+					ID string `json:"id"`
+				}
+				_ = json.NewDecoder(resp.Body).Decode(&profiles)
+				resp.Body.Close()
+				if len(profiles) > 0 {
+					targetID = profiles[0].ID
+				}
+			}
+		}
+
+		if targetID == "" && len(email) == 36 && strings.Contains(email, "-") {
+			targetID = email
+		}
+	}
+
+	if targetID == "" {
+		return nil, fmt.Errorf("kullanıcı bulunamadı. Lütfen geçerli bir Kullanıcı ID (UUID) veya E-posta girin")
+	}
+
+	usageURL := fmt.Sprintf("%s/rest/v1/user_ai_usage", r.client.URL)
+	usageBody := map[string]interface{}{
+		"user_id":       targetID,
+		"is_pro":        isPro,
+		"bonus_credits": bonusCredits,
+		"updated_at":    "now()",
+	}
+	jsonBytesUsage, _ := json.Marshal(usageBody)
+
+	reqUsage, _ := http.NewRequest(http.MethodPost, usageURL, bytes.NewReader(jsonBytesUsage))
+	reqUsage.Header.Set("apikey", r.client.ServiceRoleKey)
+	reqUsage.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
+	reqUsage.Header.Set("Content-Type", "application/json")
+	reqUsage.Header.Set("Prefer", "resolution=merge-duplicates")
+
+	respUsage, errUsage := r.client.HTTPClient.Do(reqUsage)
+	if errUsage == nil {
+		respUsage.Body.Close()
+	}
+
+	statusStr := "expired"
+	if isPro {
+		statusStr = "active"
+	}
+	subURL := fmt.Sprintf("%s/rest/v1/user_subscriptions", r.client.URL)
+	subBody := map[string]interface{}{
+		"user_id":    targetID,
+		"status":     statusStr,
+		"store":      "admin_granted",
+		"updated_at": "now()",
+	}
+	jsonBytesSub, _ := json.Marshal(subBody)
+
+	reqSub, _ := http.NewRequest(http.MethodPost, subURL, bytes.NewReader(jsonBytesSub))
+	reqSub.Header.Set("apikey", r.client.ServiceRoleKey)
+	reqSub.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
+	reqSub.Header.Set("Content-Type", "application/json")
+	reqSub.Header.Set("Prefer", "resolution=merge-duplicates")
+
+	respSub, errSub := r.client.HTTPClient.Do(reqSub)
+	if errSub == nil {
+		respSub.Body.Close()
+	}
+
+	return map[string]interface{}{
+		"success":       true,
+		"user_id":       targetID,
+		"is_pro":        isPro,
+		"bonus_credits": bonusCredits,
+		"message":       "Kullanıcının Pro üyelik durumu başarıyla güncellendi.",
+	}, nil
 }

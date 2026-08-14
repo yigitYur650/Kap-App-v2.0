@@ -86,6 +86,7 @@ func main() {
 	adminGroup.Post("/app-version", versionHandler.CreateVersionHandler)
 	adminGroup.Delete("/app-version/:id", versionHandler.DeleteVersionHandler)
 	adminGroup.Post("/push-notification", versionHandler.SendPushNotificationHandler)
+	adminGroup.Post("/user-pro", subHandler.GrantUserProHandler)
 
 	// Protected AI Routes (Rate Limited: Max 20 per hour + AI Credit Quota check)
 	aiGroup := v1.Group("/ai", middleware.AuthRequired(cfg.SupabaseJWTSecret, cfg.SupabaseURL), middleware.AIRateLimiter(20, 1*time.Hour))

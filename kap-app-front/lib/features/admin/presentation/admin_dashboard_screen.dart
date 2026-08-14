@@ -33,13 +33,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
   final _notifBodyController = TextEditingController();
   bool _isSendingNotification = false;
 
+  // Pro / Premium Management Controllers
+  final _targetUserEmailController = TextEditingController();
+  final _bonusCreditsController = TextEditingController(text: '0');
+  bool _isGrantingPro = false;
+
   bool _isAdminChecked = false;
   bool _isAdminAuthorized = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _verifyAdminAccess();
   }
 
@@ -52,6 +57,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     _changelogController.dispose();
     _notifTitleController.dispose();
     _notifBodyController.dispose();
+    _targetUserEmailController.dispose();
+    _bonusCreditsController.dispose();
     super.dispose();
   }
 
@@ -415,6 +422,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             Tab(icon: Icon(Icons.system_update), text: 'Sürüm Yayınla (OTA)'),
             Tab(icon: Icon(Icons.notifications_active), text: 'Anlık Bildirim'),
             Tab(icon: Icon(Icons.alarm_on_rounded), text: 'Otomatik Hatırlatıcılar'),
+            Tab(icon: Icon(Icons.workspace_premium_rounded), text: 'Pro / Premium Tanımla'),
           ],
         ),
       ),
@@ -769,6 +777,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               );
             },
           ),
+          _buildProManagementTab(isCompact),
         ],
       ),
     );
@@ -895,6 +904,194 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           },
         );
       },
+    );
+  }
+
+  Future<void> _grantProStatus(bool isPro) async {
+    final email = _targetUserEmailController.text.trim();
+    final bonus = int.tryParse(_bonusCreditsController.text.trim()) ?? 0;
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lütfen kullanıcının E-posta adresini veya UUID\'sini girin.'),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isGrantingPro = true);
+
+    try {
+      final client = Supabase.instance.client;
+      final jwtToken = client.auth.currentSession?.accessToken;
+
+      const backendUrl = String.fromEnvironment(
+        'GO_BACKEND_URL',
+        defaultValue: String.fromEnvironment(
+          'BACKEND_URL',
+          defaultValue: 'http://localhost:8080',
+        ),
+      );
+
+      final resp = await http.post(
+        Uri.parse('$backendUrl/api/v1/admin/user-pro'),
+        headers: {
+          'Authorization': 'Bearer $jwtToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'user_email': email,
+          'is_pro': isPro,
+          'bonus_credits': bonus,
+        }),
+      );
+
+      if (!mounted) return;
+
+      if (resp.statusCode == 200) {
+        final msg = isPro
+            ? '👑 Kullanıcıya Pro üyelik başarıyla tanımlandı!'
+            : 'ℹ️ Kullanıcı Pro üyelikten çıkarıldı (Ücretsiz mod).';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: isPro ? Colors.amber.shade800 : Colors.teal,
+          ),
+        );
+        _targetUserEmailController.clear();
+      } else {
+        final err = jsonDecode(resp.body)['error'] ?? 'İşlem başarısız';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $err'), backgroundColor: AppColors.primary),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Hata: $e'), backgroundColor: AppColors.primary),
+      );
+    } finally {
+      if (mounted) setState(() => _isGrantingPro = false);
+    }
+  }
+
+  Widget _buildProManagementTab(bool isCompact) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(isCompact ? 16 : 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.amber.shade900.withOpacity(0.8), Colors.amber.shade700.withOpacity(0.9)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.workspace_premium_rounded, size: 40, color: Colors.white),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Kap-App Pro / Premium Yönetimi 👑',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'İstediğiniz kullanıcıya anında sınırsız AI erişimi (Pro) tanımlayabilir veya ücretsiz moda alabilirsiniz.',
+                        style: TextStyle(fontSize: 13, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          Text('Kullanıcı Bilgileri', style: AppTypography.headlineLg.copyWith(fontSize: 18)),
+          const SizedBox(height: 12),
+
+          TextField(
+            controller: _targetUserEmailController,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Kullanıcı E-Posta Adresi veya UUID',
+              hintText: 'ornek@email.com veya UUID',
+              labelStyle: TextStyle(color: Colors.white70),
+              prefixIcon: Icon(Icons.email_outlined, color: Colors.white70),
+              filled: true,
+              fillColor: Color(0xFF1F2022),
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          TextField(
+            controller: _bonusCreditsController,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Ekstra Bonus Hak Ekle (Opsiyonel)',
+              hintText: '0',
+              labelStyle: TextStyle(color: Colors.white70),
+              prefixIcon: Icon(Icons.stars_rounded, color: Colors.amber),
+              filled: true,
+              fillColor: Color(0xFF1F2022),
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          if (_isGrantingPro)
+            const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          else ...[
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () => _grantProStatus(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber.shade700,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.workspace_premium_rounded, color: Colors.white),
+                label: const Text(
+                  '👑 Pro Üyelik Tanımla (Aktif Et)',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton.icon(
+                onPressed: () => _grantProStatus(false),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.redAccent),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.remove_circle_outline_rounded, color: Colors.redAccent),
+                label: const Text(
+                  '❌ Pro Üyeliği İptal Et (Ücretsiz Moda Al)',
+                  style: TextStyle(color: Colors.redAccent, fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

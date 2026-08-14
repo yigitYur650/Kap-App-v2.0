@@ -140,7 +140,40 @@ func (h *SubscriptionHandler) RevenueCatWebhookHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status": "processed",
-	})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "ok"})
+}
+
+type GrantUserProReq struct {
+	UserID       string `json:"user_id"`
+	UserEmail    string `json:"user_email"`
+	IsPro        bool   `json:"is_pro"`
+	BonusCredits int    `json:"bonus_credits"`
+}
+
+// GrantUserProHandler (POST /api/v1/admin/user-pro) allows admins to grant/revoke Pro status.
+func (h *SubscriptionHandler) GrantUserProHandler(c *fiber.Ctx) error {
+	var req GrantUserProReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid_payload",
+		})
+	}
+
+	targetUserID := strings.TrimSpace(req.UserID)
+	email := strings.TrimSpace(req.UserEmail)
+
+	if targetUserID == "" && email == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "user_id or user_email is required",
+		})
+	}
+
+	res, err := h.subRepo.GrantUserPro(targetUserID, email, req.IsPro, req.BonusCredits)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(res)
 }

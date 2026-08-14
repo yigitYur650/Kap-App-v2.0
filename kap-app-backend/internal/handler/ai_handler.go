@@ -35,8 +35,12 @@ func (h *AIHandler) EstimatePricesHandler(c *fiber.Ctx) error {
 		if err != nil {
 			log.Printf("[AIHandler] Quota check warning (non-blocking): %v", err)
 		} else if creditRes != nil && !creditRes.Success {
-			log.Printf("[AIHandler] User %s daily AI quota reached (pass-through mode)", userID)
-			// Pro quota blocking paused per user request
+			log.Printf("[AIHandler] User %s daily AI quota reached", userID)
+			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
+				"error":   "ai_quota_exceeded",
+				"message": "Günlük ücretsiz AI kullanım hakkınız bitti. Mağazadan Pro üyelik alabilir veya ekstra hak kazanabilirsiniz.",
+				"result":  creditRes,
+			})
 		}
 	}
 
@@ -86,7 +90,12 @@ func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
 		if err != nil {
 			log.Printf("[AIHandler] Quota check warning (non-blocking): %v", err)
 		} else if creditRes != nil && !creditRes.Success {
-			log.Printf("[AIHandler] User %s daily AI quota reached (pass-through mode)", userID)
+			log.Printf("[AIHandler] User %s daily AI quota reached", userID)
+			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
+				"error":   "ai_quota_exceeded",
+				"message": "Günlük ücretsiz AI kullanım hakkınız bitti. Mağazadan Pro üyelik alabilir veya ekstra hak kazanabilirsiniz.",
+				"result":  creditRes,
+			})
 		}
 	}
 
@@ -138,7 +147,12 @@ func (h *AIHandler) GetShoppingRecommendationsHandler(c *fiber.Ctx) error {
 		if err != nil {
 			log.Printf("[AIHandler] Quota check warning (non-blocking): %v", err)
 		} else if creditRes != nil && !creditRes.Success {
-			log.Printf("[AIHandler] User %s daily AI quota reached (pass-through mode)", userID)
+			log.Printf("[AIHandler] User %s daily AI quota reached", userID)
+			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
+				"error":   "ai_quota_exceeded",
+				"message": "Günlük ücretsiz AI kullanım hakkınız bitti. Mağazadan Pro üyelik alabilir veya ekstra hak kazanabilirsiniz.",
+				"result":  creditRes,
+			})
 		}
 	}
 
