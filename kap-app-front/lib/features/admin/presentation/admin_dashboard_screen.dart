@@ -9,6 +9,7 @@ import '../../auth/presentation/providers/auth_provider.dart';
 import 'package:kap_app_front/features/admin/data/notification_admin_repository.dart';
 import 'package:kap_app_front/features/admin/domain/models/scheduled_notification.dart';
 import 'package:kap_app_front/core/services/notification_service.dart';
+import 'package:kap_app_front/features/subscription/presentation/providers/ai_quota_provider.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
