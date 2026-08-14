@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -317,11 +318,13 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 		durationText = fmt.Sprintf("%d Ay", durationMonths)
 	}
 
+	nowStr := time.Now().Format(time.RFC3339)
+
 	usageURL := fmt.Sprintf("%s/rest/v1/user_ai_usage?on_conflict=user_id", r.client.URL)
 	usageBody := map[string]interface{}{
 		"user_id":    targetID,
 		"is_pro":     isPro,
-		"updated_at": "now()",
+		"updated_at": nowStr,
 	}
 	if expiresAt != nil {
 		usageBody["expires_at"] = expiresAt.Format(time.RFC3339)
@@ -335,9 +338,15 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 	reqUsage.Header.Set("Prefer", "resolution=merge-duplicates")
 
 	respUsage, errUsage := r.client.HTTPClient.Do(reqUsage)
-	if errUsage == nil {
-		respUsage.Body.Close()
+	if errUsage != nil {
+		return nil, fmt.Errorf("user_ai_usage veritabanına ulaşılamadı: %v", errUsage)
 	}
+	if respUsage.StatusCode >= 300 {
+		b, _ := io.ReadAll(respUsage.Body)
+		respUsage.Body.Close()
+		return nil, fmt.Errorf("user_ai_usage veritabanı güncelleme hatası (%d): %s", respUsage.StatusCode, string(b))
+	}
+	respUsage.Body.Close()
 
 	statusStr := "expired"
 	if isPro {
@@ -348,7 +357,7 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 		"user_id":    targetID,
 		"status":     statusStr,
 		"store":      "admin_granted",
-		"updated_at": "now()",
+		"updated_at": nowStr,
 	}
 	if expiresAt != nil {
 		subBody["expires_at"] = expiresAt.Format(time.RFC3339)
@@ -359,7 +368,6 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 	reqSub.Header.Set("apikey", r.client.ServiceRoleKey)
 	reqSub.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.client.ServiceRoleKey))
 	reqSub.Header.Set("Content-Type", "application/json")
-	reqSub.Header.Set("Prefer", "resolution=merge-duplicates")
 
 	respSub, errSub := r.client.HTTPClient.Do(reqSub)
 	if errSub == nil {
