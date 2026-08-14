@@ -46,8 +46,8 @@ func (m *mockSubscriptionRepo) ClaimReferral(referrerCode, newUserID, deviceHash
 	return m.claimRes, nil
 }
 
-func (m *mockSubscriptionRepo) GrantUserPro(userID, email string, isPro bool, bonusCredits int) (map[string]interface{}, error) {
-	return map[string]interface{}{"success": true, "user_id": userID, "is_pro": isPro}, nil
+func (m *mockSubscriptionRepo) GrantUserPro(userID, email string, isPro bool, durationMonths int) (map[string]interface{}, error) {
+	return map[string]interface{}{"success": true, "user_id": userID, "is_pro": isPro, "duration_months": durationMonths}, nil
 }
 
 func (m *mockSubscriptionRepo) ProcessRevenueCatWebhook(event *domain.RevenueCatEvent) error {

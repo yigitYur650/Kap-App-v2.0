@@ -141,6 +141,31 @@ class SettingsScreen extends ConsumerWidget {
                               color: AppColors.secondary.withOpacity(0.6),
                             ),
                           ),
+                          const SizedBox(height: 6),
+                          InkWell(
+                            onTap: () => _copyToClipboard(context, user.id),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.fingerprint, size: 14, color: AppColors.primary.withOpacity(0.8)),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    'ID: ${user.id}',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontFamily: 'monospace',
+                                      color: Colors.white.withOpacity(0.6),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(Icons.copy_rounded, size: 13, color: AppColors.primary.withOpacity(0.8)),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),

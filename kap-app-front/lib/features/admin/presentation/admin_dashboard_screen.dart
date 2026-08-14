@@ -36,6 +36,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
   // Pro / Premium Management Controllers
   final _targetUserEmailController = TextEditingController();
   final _bonusCreditsController = TextEditingController(text: '0');
+  int _selectedDurationMonths = 1;
   bool _isGrantingPro = false;
 
   bool _isAdminChecked = false;
@@ -948,16 +949,19 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         },
         body: jsonEncode({
           'user_email': email,
+          'user_id': email,
           'is_pro': isPro,
-          'bonus_credits': bonus,
+          'duration_months': _selectedDurationMonths,
         }),
       );
 
       if (!mounted) return;
 
       if (resp.statusCode == 200) {
+        final resData = jsonDecode(resp.body);
+        final durText = resData['duration_text'] ?? '';
         final msg = isPro
-            ? '👑 Kullanıcıya Pro üyelik başarıyla tanımlandı!'
+            ? '👑 Kullanıcıya $durText Pro üyelik başarıyla tanımlandı!'
             : 'ℹ️ Kullanıcı Pro üyelikten çıkarıldı (Ücretsiz mod).';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1013,7 +1017,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'İstediğiniz kullanıcıya anında sınırsız AI erişimi (Pro) tanımlayabilir veya ücretsiz moda alabilirsiniz.',
+                        'İstediğiniz kullanıcıya e-posta veya UUID ile istediğiniz süre boyunca Pro üyelik tanımlayabilirsiniz.',
                         style: TextStyle(fontSize: 13, color: Colors.white70),
                       ),
                     ],
@@ -1031,13 +1035,46 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             controller: _targetUserEmailController,
             style: const TextStyle(color: Colors.white),
             decoration: const InputDecoration(
-              labelText: 'Kullanıcı E-Posta Adresi veya UUID',
-              hintText: 'ornek@email.com veya UUID',
+              labelText: 'Kullanıcı E-Posta Adresi veya Supabase UUID',
+              hintText: 'ornek@email.com veya 9f8a...',
               labelStyle: TextStyle(color: Colors.white70),
               prefixIcon: Icon(Icons.email_outlined, color: Colors.white70),
               filled: true,
               fillColor: Color(0xFF1F2022),
               border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Text('Pro Üyelik Süresi', style: AppTypography.headlineLg.copyWith(fontSize: 16)),
+          const SizedBox(height: 8),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F2022),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<int>(
+                value: _selectedDurationMonths,
+                dropdownColor: const Color(0xFF1F2022),
+                isExpanded: true,
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
+                items: const [
+                  DropdownMenuItem(value: 1, child: Text('1 Ay Pro Üyelik', style: TextStyle(color: Colors.white))),
+                  DropdownMenuItem(value: 3, child: Text('3 Ay Pro Üyelik', style: TextStyle(color: Colors.white))),
+                  DropdownMenuItem(value: 6, child: Text('6 Ay Pro Üyelik', style: TextStyle(color: Colors.white))),
+                  DropdownMenuItem(value: 12, child: Text('1 Yıl (12 Ay) Pro Üyelik', style: TextStyle(color: Colors.white))),
+                  DropdownMenuItem(value: 0, child: Text('♾️ Sınırsız / Ömür Boyu Pro', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold))),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedDurationMonths = val);
+                  }
+                },
+              ),
             ),
           ),
           const SizedBox(height: 24),

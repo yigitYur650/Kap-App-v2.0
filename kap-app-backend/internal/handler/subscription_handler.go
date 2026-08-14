@@ -144,10 +144,10 @@ func (h *SubscriptionHandler) RevenueCatWebhookHandler(c *fiber.Ctx) error {
 }
 
 type GrantUserProReq struct {
-	UserID       string `json:"user_id"`
-	UserEmail    string `json:"user_email"`
-	IsPro        bool   `json:"is_pro"`
-	BonusCredits int    `json:"bonus_credits"`
+	UserID         string `json:"user_id"`
+	UserEmail      string `json:"user_email"`
+	IsPro          bool   `json:"is_pro"`
+	DurationMonths int    `json:"duration_months"`
 }
 
 // GrantUserProHandler (POST /api/v1/admin/user-pro) allows admins to grant/revoke Pro status.
@@ -168,7 +168,7 @@ func (h *SubscriptionHandler) GrantUserProHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	res, err := h.subRepo.GrantUserPro(targetUserID, email, req.IsPro, req.BonusCredits)
+	res, err := h.subRepo.GrantUserPro(targetUserID, email, req.IsPro, req.DurationMonths)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"kap-app-backend/internal/domain"
 	"kap-app-backend/pkg/supabase"
@@ -16,7 +17,7 @@ type SubscriptionRepository interface {
 	ConsumeAICredit(userID string) (*domain.AICreditConsumptionResult, error)
 	GetUserAIStatus(userID string) (*domain.UserAIStatusDTO, error)
 	ClaimReferral(referrerCode, newUserID, deviceHash string) (map[string]interface{}, error)
-	GrantUserPro(userID, email string, isPro bool, bonusCredits int) (map[string]interface{}, error)
+	GrantUserPro(userID, email string, isPro bool, durationMonths int) (map[string]interface{}, error)
 	ProcessRevenueCatWebhook(event *domain.RevenueCatEvent) error
 	RecordWebhookEvent(eventID, eventType string) (bool, error)
 }
@@ -205,13 +206,16 @@ func (r *supabaseSubscriptionRepository) ProcessRevenueCatWebhook(event *domain.
 	return nil
 }
 
-func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPro bool, bonusCredits int) (map[string]interface{}, error) {
+func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPro bool, durationMonths int) (map[string]interface{}, error) {
 	targetID := strings.TrimSpace(userID)
 	inputEmail := strings.TrimSpace(strings.ToLower(email))
 
 	// 1. Check if input is directly a UUID
 	if targetID == "" && len(inputEmail) == 36 && strings.Contains(inputEmail, "-") {
 		targetID = inputEmail
+	}
+	if targetID == "" && len(userID) == 36 && strings.Contains(userID, "-") {
+		targetID = userID
 	}
 
 	// 2. Search in Supabase Auth Admin Users API
@@ -264,15 +268,26 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 	}
 
 	if targetID == "" {
-		return nil, fmt.Errorf("kullanıcı '%s' veritabanında bulunamadı. Lütfen E-posta adresini veya Supabase User ID (UUID) bilgisini kontrol edin.", email)
+		return nil, fmt.Errorf("kullanıcı '%s' veritabanında bulunamadı. Lütfen kullanıcının UUID bilgisini girin.", email)
+	}
+
+	var expiresAt *time.Time
+	durationText := "Sınırsız (Ömür Boyu)"
+
+	if isPro && durationMonths > 0 {
+		exp := time.Now().AddDate(0, durationMonths, 0)
+		expiresAt = &exp
+		durationText = fmt.Sprintf("%d Ay", durationMonths)
 	}
 
 	usageURL := fmt.Sprintf("%s/rest/v1/user_ai_usage", r.client.URL)
 	usageBody := map[string]interface{}{
-		"user_id":       targetID,
-		"is_pro":        isPro,
-		"bonus_credits": bonusCredits,
-		"updated_at":    "now()",
+		"user_id":    targetID,
+		"is_pro":     isPro,
+		"updated_at": "now()",
+	}
+	if expiresAt != nil {
+		usageBody["expires_at"] = expiresAt.Format(time.RFC3339)
 	}
 	jsonBytesUsage, _ := json.Marshal(usageBody)
 
@@ -298,6 +313,9 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 		"store":      "admin_granted",
 		"updated_at": "now()",
 	}
+	if expiresAt != nil {
+		subBody["expires_at"] = expiresAt.Format(time.RFC3339)
+	}
 	jsonBytesSub, _ := json.Marshal(subBody)
 
 	reqSub, _ := http.NewRequest(http.MethodPost, subURL, bytes.NewReader(jsonBytesSub))
@@ -312,10 +330,11 @@ func (r *supabaseSubscriptionRepository) GrantUserPro(userID, email string, isPr
 	}
 
 	return map[string]interface{}{
-		"success":       true,
-		"user_id":       targetID,
-		"is_pro":        isPro,
-		"bonus_credits": bonusCredits,
-		"message":       "Kullanıcının Pro üyelik durumu başarıyla güncellendi.",
+		"success":         true,
+		"user_id":         targetID,
+		"is_pro":          isPro,
+		"duration_text":   durationText,
+		"duration_months": durationMonths,
+		"message":         fmt.Sprintf("Kullanıcıya %s Pro üyelik tanımlandı.", durationText),
 	}, nil
 }
