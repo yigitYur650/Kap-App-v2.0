@@ -625,6 +625,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
 
           // Tab 3: Scheduled Automated Notifications
           _buildScheduledNotificationsTab(),
+
+          // Tab 4: Pro / Premium Management
+          _buildProManagementTab(),
         ],
       ),
     );
@@ -641,20 +644,23 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '⏰ Günlük Otomatik Hatırlatıcılar',
-                    style: AppTypography.headlineLg.copyWith(color: AppColors.text, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Her gün belirli saatlerde kullanıcılara otomatik gönderilecek bildirimler.',
-                    style: AppTypography.bodyLg.copyWith(color: AppColors.secondary),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '⏰ Günlük Otomatik Hatırlatıcılar',
+                      style: AppTypography.headlineLg.copyWith(color: AppColors.text, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Her gün belirli saatlerde kullanıcılara otomatik gönderilecek bildirimler.',
+                      style: AppTypography.bodyLg.copyWith(color: AppColors.secondary),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: _showAddScheduledNotificationDialog,
                 style: ElevatedButton.styleFrom(
@@ -777,7 +783,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               );
             },
           ),
-          _buildProManagementTab(),
         ],
       ),
     );
