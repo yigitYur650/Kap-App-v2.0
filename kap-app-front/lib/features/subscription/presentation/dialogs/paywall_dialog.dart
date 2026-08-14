@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/ai_quota_provider.dart';
 import '../providers/subscription_provider.dart';
@@ -24,61 +23,8 @@ class PaywallDialog extends ConsumerStatefulWidget {
 
 class _PaywallDialogState extends ConsumerState<PaywallDialog> {
   final TextEditingController _referralCodeController = TextEditingController();
-  RewardedAd? _rewardedAd;
-  bool _isAdLoading = false;
   String? _referralMessage;
   bool _isClaimingReferral = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRewardedAd();
-  }
-
-  void _loadRewardedAd() {
-    if (kIsWeb) return;
-    setState(() => _isAdLoading = true);
-
-    // Test Rewarded Ad Unit ID for Android
-    const adUnitId = 'ca-app-pub-3940256099942544/5224354917';
-
-    RewardedAd.load(
-      adUnitId: adUnitId,
-      request: const AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (ad) {
-          setState(() {
-            _rewardedAd = ad;
-            _isAdLoading = false;
-          });
-        },
-        onAdFailedToLoad: (error) {
-          setState(() => _isAdLoading = false);
-        },
-      ),
-    );
-  }
-
-  void _showRewardedAd(AppLocalizations l10n) {
-    if (_rewardedAd != null) {
-      _rewardedAd!.show(
-        onUserEarnedReward: (adWithoutView, reward) {
-          ref.read(aiQuotaProvider.notifier).addBonusCredit();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.ad_reward_success)),
-          );
-          Navigator.of(context).pop();
-        },
-      );
-    } else {
-      // Fallback for Web/Test environment
-      ref.read(aiQuotaProvider.notifier).addBonusCredit();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.ad_reward_success)),
-      );
-      Navigator.of(context).pop();
-    }
-  }
 
   Future<void> _claimReferralCode(AppLocalizations l10n) async {
     final code = _referralCodeController.text.trim();
@@ -111,7 +57,6 @@ class _PaywallDialogState extends ConsumerState<PaywallDialog> {
   @override
   void dispose() {
     _referralCodeController.dispose();
-    _rewardedAd?.dispose();
     super.dispose();
   }
 
@@ -184,7 +129,7 @@ class _PaywallDialogState extends ConsumerState<PaywallDialog> {
               ),
               const SizedBox(height: 20),
 
-              // Option 1: Upgrade to Pro Card
+              // Option 1: Open Store Screen
               _buildOptionCard(
                 context: context,
                 icon: Icons.star_rounded,
@@ -194,29 +139,29 @@ class _PaywallDialogState extends ConsumerState<PaywallDialog> {
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         minimumSize: const Size.fromHeight(44),
                       ),
-                      onPressed: () {
-                        final offerings = subState.offerings;
-                        if (offerings?.current != null && offerings!.current!.availablePackages.isNotEmpty) {
-                          ref.read(subscriptionProvider.notifier).purchasePackage(offerings.current!.availablePackages.first);
-                        }
-                      },
-                      child: Text(
-                        l10n.paywall_monthly_plan,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      icon: const Icon(Icons.storefront_rounded),
+                      label: const Text(
+                        'Mağazayı Aç & Paketleri İncele 👑',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.push('/store');
+                      },
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 14),
 
-              // Option 2: Watch Rewarded Ad Card
+              // Option 2: Watch Rewarded Ad / Market Opportunity
               _buildOptionCard(
                 context: context,
                 icon: Icons.play_circle_fill_rounded,
@@ -234,10 +179,16 @@ class _PaywallDialogState extends ConsumerState<PaywallDialog> {
                     ),
                     icon: const Icon(Icons.ondemand_video_rounded),
                     label: Text(
-                      _isAdLoading ? 'Yükleniyor...' : l10n.paywall_watch_ad_button,
+                      l10n.paywall_watch_ad_button,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    onPressed: _isAdLoading ? null : () => _showRewardedAd(l10n),
+                    onPressed: () {
+                      ref.read(aiQuotaProvider.notifier).addBonusCredit();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.ad_reward_success)),
+                      );
+                      Navigator.of(context).pop();
+                    },
                   ),
                 ),
               ),

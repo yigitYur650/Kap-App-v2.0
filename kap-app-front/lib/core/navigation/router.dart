@@ -14,6 +14,8 @@ import 'package:kap_app_front/core/navigation/shell_screen.dart';
 
 import 'package:kap_app_front/features/auth/presentation/screens/otp_verification_screen.dart';
 
+import 'package:kap_app_front/features/subscription/presentation/screens/store_screen.dart';
+
 /// Provider that exposes the GoRouter configuration and rebuilds on auth state changes.
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -62,6 +64,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin',
         builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/store',
+        builder: (context, state) => const StoreScreen(),
       ),
       
       // Bottom Navigation Stateful Shell Route

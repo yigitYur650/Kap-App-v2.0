@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strings"
 
 	"kap-app-backend/internal/repository"
@@ -32,16 +33,10 @@ func (h *AIHandler) EstimatePricesHandler(c *fiber.Ctx) error {
 	if userID != "" && h.subRepo != nil {
 		creditRes, err := h.subRepo.ConsumeAICredit(userID)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "failed_quota_check",
-			})
-		}
-		if creditRes != nil && !creditRes.Success {
-			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
-				"error":             "quota_exceeded",
-				"message":           "Günlük AI hakkınız tükendi. Pro'ya yükseltin veya ödüllü reklam izleyin.",
-				"remaining_credits": 0,
-			})
+			log.Printf("[AIHandler] Quota check warning (non-blocking): %v", err)
+		} else if creditRes != nil && !creditRes.Success {
+			log.Printf("[AIHandler] User %s daily AI quota reached (pass-through mode)", userID)
+			// Pro quota blocking paused per user request
 		}
 	}
 
@@ -89,16 +84,9 @@ func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
 	if userID != "" && h.subRepo != nil {
 		creditRes, err := h.subRepo.ConsumeAICredit(userID)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "failed_quota_check",
-			})
-		}
-		if creditRes != nil && !creditRes.Success {
-			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
-				"error":             "quota_exceeded",
-				"message":           "Günlük AI hakkınız tükendi. Pro'ya yükseltin veya ödüllü reklam izleyin.",
-				"remaining_credits": 0,
-			})
+			log.Printf("[AIHandler] Quota check warning (non-blocking): %v", err)
+		} else if creditRes != nil && !creditRes.Success {
+			log.Printf("[AIHandler] User %s daily AI quota reached (pass-through mode)", userID)
 		}
 	}
 
@@ -148,16 +136,9 @@ func (h *AIHandler) GetShoppingRecommendationsHandler(c *fiber.Ctx) error {
 	if userID != "" && h.subRepo != nil {
 		creditRes, err := h.subRepo.ConsumeAICredit(userID)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "failed_quota_check",
-			})
-		}
-		if creditRes != nil && !creditRes.Success {
-			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
-				"error":             "quota_exceeded",
-				"message":           "Günlük AI hakkınız tükendi. Pro'ya yükseltin veya ödüllü reklam izleyin.",
-				"remaining_credits": 0,
-			})
+			log.Printf("[AIHandler] Quota check warning (non-blocking): %v", err)
+		} else if creditRes != nil && !creditRes.Success {
+			log.Printf("[AIHandler] User %s daily AI quota reached (pass-through mode)", userID)
 		}
 	}
 
