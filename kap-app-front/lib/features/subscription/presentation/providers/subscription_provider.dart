@@ -35,9 +35,14 @@ class SubscriptionState {
   }
 }
 
-class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
-  SubscriptionNotifier() : super(const SubscriptionState()) {
-    initRevenueCat();
+final subscriptionProvider =
+    NotifierProvider<SubscriptionNotifier, SubscriptionState>(SubscriptionNotifier.new);
+
+class SubscriptionNotifier extends Notifier<SubscriptionState> {
+  @override
+  SubscriptionState build() {
+    Future.microtask(() => initRevenueCat());
+    return const SubscriptionState();
   }
 
   Future<void> initRevenueCat() async {
@@ -79,7 +84,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
   Future<bool> purchasePackage(Package package) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      CustomerInfo customerInfo = await Purchases.purchasePackage(package);
+      final customerInfo = (await Purchases.purchasePackage(package)).customerInfo;
       final isPro = customerInfo.entitlements.active.containsKey('pro');
       state = state.copyWith(
         isLoading: false,
@@ -99,7 +104,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
   Future<void> restorePurchases() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      CustomerInfo customerInfo = await Purchases.restorePurchases();
+      final customerInfo = await Purchases.restorePurchases();
       final isPro = customerInfo.entitlements.active.containsKey('pro');
       state = state.copyWith(
         isLoading: false,
@@ -114,7 +119,3 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
     }
   }
 }
-
-final subscriptionProvider = StateNotifierProvider<SubscriptionNotifier, SubscriptionState>((ref) {
-  return SubscriptionNotifier();
-});

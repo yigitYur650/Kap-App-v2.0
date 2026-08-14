@@ -36,9 +36,15 @@ class AIQuotaState {
   }
 }
 
-class AIQuotaNotifier extends StateNotifier<AIQuotaState> {
-  AIQuotaNotifier() : super(const AIQuotaState()) {
-    fetchQuota();
+final aiQuotaProvider =
+    NotifierProvider<AIQuotaNotifier, AIQuotaState>(AIQuotaNotifier.new);
+
+class AIQuotaNotifier extends Notifier<AIQuotaState> {
+  @override
+  AIQuotaState build() {
+    // Schedule fetch after build phase
+    Future.microtask(() => fetchQuota());
+    return const AIQuotaState();
   }
 
   Future<void> fetchQuota() async {
@@ -117,7 +123,3 @@ class AIQuotaNotifier extends StateNotifier<AIQuotaState> {
     }
   }
 }
-
-final aiQuotaProvider = StateNotifierProvider<AIQuotaNotifier, AIQuotaState>((ref) {
-  return AIQuotaNotifier();
-});
