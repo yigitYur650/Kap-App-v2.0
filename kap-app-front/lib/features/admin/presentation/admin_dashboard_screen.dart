@@ -777,7 +777,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               );
             },
           ),
-          _buildProManagementTab(isCompact),
+          _buildProManagementTab(),
         ],
       ),
     );
@@ -977,7 +977,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     }
   }
 
-  Widget _buildProManagementTab(bool isCompact) {
+  Widget _buildProManagementTab() {
+    final isCompact = MediaQuery.of(context).size.width < 480;
     return SingleChildScrollView(
       padding: EdgeInsets.all(isCompact ? 16 : 24),
       child: Column(
