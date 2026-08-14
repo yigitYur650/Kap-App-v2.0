@@ -289,25 +289,24 @@ class SettingsScreen extends ConsumerWidget {
                     final group = groups[index];
                     final isActive = activeGroup?.id == group.id;
 
-                    return Material(
-                      color: const Color(0xFF141414),
-                      borderRadius: BorderRadius.circular(10),
-                      clipBehavior: Clip.antiAlias,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isActive
-                                ? AppColors.primary.withOpacity(0.5)
-                                : Colors.white.withOpacity(0.05),
-                          ),
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF141414),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isActive
+                              ? AppColors.primary.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.05),
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: ListTile(
-                            onTap: () {
-                              ref.read(activeGroupProvider.notifier).switchGroup(group);
-                            },
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        clipBehavior: Clip.antiAlias,
+                        child: ListTile(
+                          onTap: () {
+                            ref.read(activeGroupProvider.notifier).switchGroup(group);
+                          },
                           leading: Icon(
                             Icons.home_outlined,
                             color: isActive ? AppColors.primary : Colors.grey,
@@ -319,26 +318,25 @@ class SettingsScreen extends ConsumerWidget {
                             ),
                           ),
                           trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Delete button (only for admins or group creators)
-                            IconButton(
-                              icon: Icon(
-                                Icons.delete_outline,
-                                size: 20,
-                                color: AppColors.primary.withOpacity(0.7),
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                  color: AppColors.primary.withOpacity(0.7),
+                                ),
+                                onPressed: () => _confirmDeleteGroup(
+                                  context, ref, group.id, group.name,
+                                ),
                               ),
-                              onPressed: () => _confirmDeleteGroup(
-                                context, ref, group.id, group.name,
-                              ),
-                            ),
-                            if (isActive)
-                              const Icon(Icons.check_circle, color: AppColors.primary),
-                          ],
+                              if (isActive)
+                                const Icon(Icons.check_circle, color: AppColors.primary),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
+                    );
                   },
                 );
               },
