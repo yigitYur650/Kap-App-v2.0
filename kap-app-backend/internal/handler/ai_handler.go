@@ -69,8 +69,9 @@ func (h *AIHandler) EstimatePricesHandler(c *fiber.Ctx) error {
 
 	res, err := h.aiService.EstimatePrices(req.Items)
 	if err != nil {
+		log.Printf("[AIHandler] EstimatePrices internal error: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "failed_to_estimate_prices",
 		})
 	}
 
@@ -120,13 +121,17 @@ func (h *AIHandler) ScanReceiptHandler(c *fiber.Ctx) error {
 
 	res, err := h.aiService.ScanReceipt(req.Base64Image)
 	if err != nil {
+		log.Printf("[AIHandler] ScanReceipt internal error: %v", err)
 		status := fiber.StatusInternalServerError
 		errStr := err.Error()
 		if strings.Contains(errStr, "429") || strings.Contains(strings.ToLower(errStr), "kotasına ulaşıldı") {
 			status = fiber.StatusTooManyRequests
+			return c.Status(status).JSON(fiber.Map{
+				"error": "rate_limit_exceeded",
+			})
 		}
 		return c.Status(status).JSON(fiber.Map{
-			"error": errStr,
+			"error": "scan_receipt_failed",
 		})
 	}
 
@@ -165,8 +170,9 @@ func (h *AIHandler) GetShoppingRecommendationsHandler(c *fiber.Ctx) error {
 
 	res, err := h.aiService.GetShoppingRecommendations(req.Items, req.Profile)
 	if err != nil {
+		log.Printf("[AIHandler] GetShoppingRecommendations internal error: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "get_recommendations_failed",
 		})
 	}
 
@@ -175,8 +181,9 @@ func (h *AIHandler) GetShoppingRecommendationsHandler(c *fiber.Ctx) error {
 
 func sanitizeInput(val string, maxLen int) string {
 	val = strings.TrimSpace(val)
-	if len(val) > maxLen {
-		return val[:maxLen]
+	runes := []rune(val)
+	if len(runes) > maxLen {
+		return string(runes[:maxLen])
 	}
 	return val
 }

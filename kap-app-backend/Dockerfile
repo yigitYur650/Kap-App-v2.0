@@ -24,12 +24,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server ./cmd/server/ma
 # Step 2: Final runtime stage
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata \
+    && addgroup -S appgroup && adduser -S appuser -G appgroup
 
-WORKDIR /root/
+WORKDIR /home/appuser/
 
-# Copy binary from builder
-COPY --from=builder /app/server .
+# Copy binary from builder and assign ownership
+COPY --from=builder --chown=appuser:appgroup /app/server .
+
+USER appuser
 
 # Expose port
 EXPOSE 8080

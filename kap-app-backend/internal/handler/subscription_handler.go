@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strings"
 
 	"kap-app-backend/internal/domain"
@@ -79,8 +80,9 @@ func (h *SubscriptionHandler) ClaimReferralHandler(c *fiber.Ctx) error {
 
 	res, err := h.subRepo.ClaimReferral(req.ReferrerCode, userID, req.DeviceHash)
 	if err != nil {
+		log.Printf("[SubscriptionHandler] ClaimReferral error: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "referral_claim_failed",
 		})
 	}
 
@@ -94,15 +96,20 @@ func (h *SubscriptionHandler) ClaimReferralHandler(c *fiber.Ctx) error {
 
 // RevenueCatWebhookHandler (POST /api/v1/subscriptions/webhook) handles webhooks from RevenueCat.
 func (h *SubscriptionHandler) RevenueCatWebhookHandler(c *fiber.Ctx) error {
-	// Secret Header Check if configured
-	if h.webhookSecret != "" {
-		authHeader := c.Get("Authorization")
-		expectedHeader := "Bearer " + h.webhookSecret
-		if authHeader != expectedHeader && authHeader != h.webhookSecret {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "unauthorized_webhook",
-			})
-		}
+	// Secret Header Check
+	if h.webhookSecret == "" {
+		log.Printf("[WARN] RevenueCat webhook secret not configured, rejecting request")
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"error": "webhook_not_configured",
+		})
+	}
+
+	authHeader := c.Get("Authorization")
+	expectedHeader := "Bearer " + h.webhookSecret
+	if authHeader != expectedHeader && authHeader != h.webhookSecret {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "unauthorized_webhook",
+		})
 	}
 
 	var payload domain.RevenueCatWebhookPayload
@@ -135,8 +142,9 @@ func (h *SubscriptionHandler) RevenueCatWebhookHandler(c *fiber.Ctx) error {
 	}
 
 	if err := h.subRepo.ProcessRevenueCatWebhook(&event); err != nil {
+		log.Printf("[SubscriptionHandler] ProcessRevenueCatWebhook error: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "webhook_processing_failed",
 		})
 	}
 
@@ -170,8 +178,9 @@ func (h *SubscriptionHandler) GrantUserProHandler(c *fiber.Ctx) error {
 
 	res, err := h.subRepo.GrantUserPro(targetUserID, email, req.IsPro, req.DurationMonths)
 	if err != nil {
+		log.Printf("[SubscriptionHandler] GrantUserPro error: %v", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "grant_pro_failed",
 		})
 	}
 

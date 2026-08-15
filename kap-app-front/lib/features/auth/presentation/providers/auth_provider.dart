@@ -50,8 +50,11 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
 
   /// Updates the authentication state with the specified user profile.
   void updateState(AppUser? user) {
-    _invalidateAllUserProviders();
+    // Set state FIRST so dependent providers see the new value when they rebuild.
     state = AsyncValue.data(user);
+    // Defer invalidation to the next microtask to break the synchronous
+    // circular dependency chain (isSystemAdminProvider watches authProvider).
+    Future.microtask(() => _invalidateAllUserProviders());
   }
 
   void _invalidateAllUserProviders() {
@@ -80,8 +83,6 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   Future<void> signOut() async {
     final supabaseClient = ref.read(supabaseClientProvider);
     await supabaseClient.auth.signOut();
-
-    _invalidateAllUserProviders();
     updateState(null);
   }
 }

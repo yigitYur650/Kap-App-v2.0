@@ -28,6 +28,23 @@ func NewAIService(groqKey, geminiKey string) *AIService {
 	}
 }
 
+func sanitizeForPrompt(input string) string {
+	input = strings.TrimSpace(input)
+	var sb strings.Builder
+	for _, r := range input {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') ||
+			r == ' ' || r == '.' || r == ',' || r == ';' || r == ':' || r == '-' || r == '/' || r == '(' || r == ')' || r == '%' ||
+			r == 'ç' || r == 'Ç' || r == 'ğ' || r == 'Ğ' || r == 'ı' || r == 'İ' || r == 'ö' || r == 'Ö' || r == 'ş' || r == 'Ş' || r == 'ü' || r == 'Ü' {
+			sb.WriteRune(r)
+		}
+	}
+	cleaned := sb.String()
+	for strings.Contains(cleaned, "  ") {
+		cleaned = strings.ReplaceAll(cleaned, "  ", " ")
+	}
+	return strings.TrimSpace(cleaned)
+}
+
 type ItemSpecDTO struct {
 	ItemName string `json:"item_name"`
 	Quantity string `json:"quantity,omitempty"`
@@ -125,9 +142,12 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 
 	var formattedItems []string
 	for _, spec := range items {
-		str := spec.ItemName
-		if spec.Quantity != "" || spec.Unit != "" {
-			str += fmt.Sprintf(" (Miktar: %s %s)", spec.Quantity, spec.Unit)
+		cleanName := sanitizeForPrompt(spec.ItemName)
+		cleanQty := sanitizeForPrompt(spec.Quantity)
+		cleanUnit := sanitizeForPrompt(spec.Unit)
+		str := cleanName
+		if cleanQty != "" || cleanUnit != "" {
+			str += fmt.Sprintf(" (Miktar: %s %s)", cleanQty, cleanUnit)
 		}
 		formattedItems = append(formattedItems, str)
 	}
@@ -270,19 +290,20 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
 
 	jsonBytes, _ := json.Marshal(reqBody)
 
-	// Try vision-capable Gemini models in sequence (prioritizing current 2026 model aliases)
+	// Try vision-capable Gemini models in sequence
 	candidateModels := []string{"gemini-flash-latest", "gemini-3.6-flash", "gemini-flash-lite-latest", "gemini-2.0-flash"}
 	var lastErr error
 	var isQuotaError bool
 
 	for _, model := range candidateModels {
-		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, s.geminiKey)
+		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent", model)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
 		if err != nil {
 			lastErr = err
 			continue
 		}
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("x-goog-api-key", s.geminiKey)
 
 		resp, err := s.client.Do(req)
 		if err != nil {
@@ -299,7 +320,7 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
 			if resp.StatusCode == http.StatusTooManyRequests || strings.Contains(bodyStr, "Quota exceeded") || strings.Contains(bodyStr, "429") {
 				isQuotaError = true
 			}
-			lastErr = fmt.Errorf("gemini vision error status=%d", resp.StatusCode)
+			lastErr = fmt.Errorf("gemini status=%d", resp.StatusCode)
 			continue
 		}
 
@@ -313,7 +334,7 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
 			} `json:"candidates"`
 		}
 
-		if err := json.Unmarshal(bodyBytes, &geminiResp); err != nil || len(geminiResp.Candidates) == 0 {
+		if err := json.Unmarshal(bodyBytes, &geminiResp); err != nil || len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
 			lastErr = fmt.Errorf("invalid gemini response format")
 			continue
 		}
@@ -322,7 +343,7 @@ Yalnızca aşağıdaki JSON formatında yanıt ver, başka hiçbir açıklama ya
 		start := strings.Index(rawText, "{")
 		end := strings.LastIndex(rawText, "}")
 		if start < 0 || end <= start {
-			lastErr = fmt.Errorf("no json structure found in receipt scan response")
+			lastErr = fmt.Errorf("json bounds not found in gemini text")
 			continue
 		}
 
@@ -364,11 +385,23 @@ func (s *AIService) queryGroqOrGeminiText(prompt string) (string, error) {
 
 func (s *AIService) queryGroq(prompt string) (string, error) {
 	url := "https://api.groq.com/openai/v1/chat/completions"
-	reqBody := map[string]interface{}{
-		"model": "llama-3.3-70b-versatile",
-		"messages": []map[string]string{
+
+	var messages []map[string]string
+	parts := strings.SplitN(prompt, "\n\nKULLANICI GİRDİSİ / ÜRÜNLER:\n", 2)
+	if len(parts) == 2 {
+		messages = []map[string]string{
+			{"role": "system", "content": parts[0]},
+			{"role": "user", "content": parts[1]},
+		}
+	} else {
+		messages = []map[string]string{
 			{"role": "user", "content": prompt},
-		},
+		}
+	}
+
+	reqBody := map[string]interface{}{
+		"model":       "llama-3.3-70b-versatile",
+		"messages":    messages,
 		"temperature": 0.2,
 	}
 
@@ -422,13 +455,14 @@ func (s *AIService) queryGeminiText(prompt string) (string, error) {
 	var lastErr error
 
 	for _, model := range candidateModels {
-		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, s.geminiKey)
+		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent", model)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
 		if err != nil {
 			lastErr = err
 			continue
 		}
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("x-goog-api-key", s.geminiKey)
 
 		resp, err := s.client.Do(req)
 		if err != nil {
@@ -497,7 +531,10 @@ func (s *AIService) GetShoppingRecommendations(items []ItemSpecDTO, profile *Use
 
 	var names []string
 	for _, item := range items {
-		names = append(names, item.ItemName)
+		cleanName := sanitizeForPrompt(item.ItemName)
+		if cleanName != "" {
+			names = append(names, cleanName)
+		}
 	}
 
 	profileContext := ""

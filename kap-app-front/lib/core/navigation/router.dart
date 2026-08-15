@@ -16,9 +16,12 @@ import 'package:kap_app_front/features/auth/presentation/screens/otp_verificatio
 
 import 'package:kap_app_front/features/subscription/presentation/screens/store_screen.dart';
 
+import 'package:kap_app_front/features/admin/presentation/providers/admin_provider.dart';
+
 /// Provider that exposes the GoRouter configuration and rebuilds on auth state changes.
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
+  final isAdmin = ref.watch(isSystemAdminProvider).value ?? false;
 
   return GoRouter(
     initialLocation: '/',
@@ -31,6 +34,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggingIn = state.matchedLocation == '/login';
       final isRegistering = state.matchedLocation == '/register';
       final isVerifyingOTP = state.matchedLocation == '/verify-otp';
+      final isAdminRoute = state.matchedLocation == '/admin';
 
       if (!isLoggedIn) {
         if (!isLoggingIn && !isRegistering && !isVerifyingOTP) {
@@ -38,6 +42,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
       } else {
         if (isLoggingIn || isRegistering || isVerifyingOTP) {
+          return '/';
+        }
+        if (isAdminRoute && !isAdmin) {
           return '/';
         }
       }

@@ -258,6 +258,14 @@ func AuthRequired(jwtSecret string, supabaseURL string) fiber.Handler {
 			})
 		}
 
+		if aud, ok := claims["aud"].(string); ok && aud != "" {
+			if aud != "authenticated" {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "Invalid token audience (aud)",
+				})
+			}
+		}
+
 		sub, ok := claims["sub"].(string)
 		if !ok || sub == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{

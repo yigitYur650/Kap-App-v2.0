@@ -21,10 +21,19 @@ func NewPlaywrightPriceService() *PlaywrightPriceService {
 }
 
 func (s *PlaywrightPriceService) FetchLivePrice(query string) (*ItemPriceEstimate, error) {
+	cleanedQuery := sanitizeForPrompt(query)
+	runes := []rune(cleanedQuery)
+	if len(runes) > 200 {
+		cleanedQuery = string(runes[:200])
+	}
+	if cleanedQuery == "" {
+		return nil, fmt.Errorf("invalid or empty search query")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "node", s.scriptPath, fmt.Sprintf("--query=%s", query))
+	cmd := exec.CommandContext(ctx, "node", s.scriptPath, "--query="+cleanedQuery)
 	outputBytes, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("playwright execution failed: %w", err)

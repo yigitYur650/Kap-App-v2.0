@@ -36,13 +36,7 @@ void main() async {
     defaultValue: 'placeholder-anon-key',
   );
 
-  print('SUPABASE_URL: $supabaseUrl');
-  print('SUPABASE_ANON_KEY length: ${supabaseAnonKey.length}');
-  if (supabaseAnonKey.length > 10) {
-    print('SUPABASE_ANON_KEY prefix: ${supabaseAnonKey.substring(0, 10)}...');
-  } else {
-    print('SUPABASE_ANON_KEY value: $supabaseAnonKey');
-  }
+
 
   await Supabase.initialize(
     url: supabaseUrl,

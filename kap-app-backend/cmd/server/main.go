@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -25,13 +26,47 @@ func main() {
 
 	// Initialize Fiber application
 	app := fiber.New(fiber.Config{
-		AppName: "Kap-App Backend v2.0",
+		AppName:   "Kap-App Backend v2.0",
+		BodyLimit: 12 * 1024 * 1024, // 12MB payload limit for receipt image uploads
 	})
 
-	// Manual CORS middleware — replaces Fiber's cors.New which has bugs with wildcard origins in preflight.
-	// WARNING: In production, replace "*" with explicit origins from cfg.CORSAllowedOrigins.
+	// Security Headers Middleware (OWASP Recommended)
 	app.Use(func(c *fiber.Ctx) error {
-		c.Set("Access-Control-Allow-Origin", "*")
+		c.Set("X-Content-Type-Options", "nosniff")
+		c.Set("X-Frame-Options", "DENY")
+		c.Set("X-XSS-Protection", "1; mode=block")
+		c.Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		c.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		return c.Next()
+	})
+
+	// Dynamic CORS Middleware matching origins against cfg.CORSAllowedOrigins
+	allowedOrigins := strings.Split(cfg.CORSAllowedOrigins, ",")
+	for i := range allowedOrigins {
+		allowedOrigins[i] = strings.TrimSpace(allowedOrigins[i])
+	}
+
+	app.Use(func(c *fiber.Ctx) error {
+		origin := c.Get("Origin")
+		allowOrigin := ""
+
+		if cfg.CORSAllowedOrigins == "*" {
+			allowOrigin = "*"
+		} else if origin != "" {
+			for _, allowed := range allowedOrigins {
+				if allowed == "*" || allowed == origin {
+					allowOrigin = origin
+					break
+				}
+			}
+		} else if len(allowedOrigins) > 0 {
+			allowOrigin = allowedOrigins[0]
+		}
+
+		if allowOrigin != "" {
+			c.Set("Access-Control-Allow-Origin", allowOrigin)
+		}
+		c.Set("Vary", "Origin")
 		c.Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
 		c.Set("Access-Control-Allow-Headers", "Origin,Content-Type,Authorization,Accept")
 		if c.Method() == "OPTIONS" {
@@ -146,10 +181,10 @@ func main() {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 
-	// Create a context with a 10-second timeout for the shutdown window.
-	// This ensures in-flight requests (unique_code generation, DB writes, etc.)
+	// Create a context with a 25-second timeout for the shutdown window.
+	// This ensures in-flight AI requests, DB writes, and unique_code generation
 	// have time to complete before the process exits.
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 
 	// Initiate graceful shutdown — Fiber stops accepting new requests

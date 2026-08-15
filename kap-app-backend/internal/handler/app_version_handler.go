@@ -39,8 +39,9 @@ func NewAppVersionHandler(sbClient *supabase.Client) *AppVersionHandler {
 func (h *AppVersionHandler) CheckUpdateHandler(c *fiber.Ctx) error {
 	latest, err := h.sbClient.GetLatestAppVersion()
 	if err != nil {
+		log.Printf("[AppVersionHandler] CheckUpdate error: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "failed_to_check_update",
 		})
 	}
 
@@ -77,8 +78,9 @@ func (h *AppVersionHandler) CreateVersionHandler(c *fiber.Ctx) error {
 	req.CreatedBy = userID
 
 	if err := h.sbClient.CreateAppVersion(&req); err != nil {
+		log.Printf("[AppVersionHandler] CreateAppVersion error: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "failed_to_create_version",
 		})
 	}
 
@@ -98,8 +100,9 @@ func (h *AppVersionHandler) DeleteVersionHandler(c *fiber.Ctx) error {
 	}
 
 	if err := h.sbClient.DeleteAppVersion(id); err != nil {
+		log.Printf("[AppVersionHandler] DeleteAppVersion error: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "failed_to_delete_version",
 		})
 	}
 
@@ -133,7 +136,7 @@ func (h *AppVersionHandler) SendPushNotificationHandler(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("[FCM v1 OAuth2 Error] %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": fmt.Sprintf("service_account_error: %v", err),
+			"error": "push_notification_config_error",
 		})
 	}
 
@@ -164,8 +167,9 @@ func (h *AppVersionHandler) SendPushNotificationHandler(c *fiber.Ctx) error {
 	jsonBytes, _ := json.Marshal(payload)
 	httpReq, err := http.NewRequest("POST", fcmURL, bytes.NewBuffer(jsonBytes))
 	if err != nil {
+		log.Printf("[FCM NewRequest Error] %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "push_notification_request_failed",
 		})
 	}
 
@@ -177,7 +181,7 @@ func (h *AppVersionHandler) SendPushNotificationHandler(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("[FCM v1 HTTP Request Error] %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "push_notification_dispatch_failed",
 		})
 	}
 	defer resp.Body.Close()
@@ -188,7 +192,6 @@ func (h *AppVersionHandler) SendPushNotificationHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "push_notification_dispatched_successfully",
 		"status":  resp.StatusCode,
-		"result":  string(respBytes),
 	})
 }
 
