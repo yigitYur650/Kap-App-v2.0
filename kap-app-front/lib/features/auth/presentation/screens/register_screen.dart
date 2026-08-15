@@ -83,15 +83,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     constraints: const BoxConstraints(maxWidth: 400),
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF141414).withOpacity(0.75),
+                      color: const Color(0xFF141414).withValues(alpha: 0.75),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         width: 1.0,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           blurRadius: 25,
                           offset: const Offset(0, 10),
                         )
@@ -111,10 +111,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.15),
+                              color: AppColors.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: AppColors.primary.withOpacity(0.3),
+                                color: AppColors.primary.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -146,11 +146,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           decoration: InputDecoration(
                             hintText: localizations.auth_register_display_name_label,
                             hintStyle: AppTypography.bodyLg.copyWith(
-                              color: AppColors.secondary.withOpacity(0.4),
+                              color: AppColors.secondary.withValues(alpha: 0.4),
                             ),
                             prefixIcon: Icon(
                               Icons.person_outline,
-                              color: AppColors.secondary.withOpacity(0.5),
+                              color: AppColors.secondary.withValues(alpha: 0.5),
                             ),
                             filled: true,
                             fillColor: const Color(0xFF1A1A1A),
@@ -185,11 +185,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           decoration: InputDecoration(
                             hintText: localizations.auth_register_email_label,
                             hintStyle: AppTypography.bodyLg.copyWith(
-                              color: AppColors.secondary.withOpacity(0.4),
+                              color: AppColors.secondary.withValues(alpha: 0.4),
                             ),
                             prefixIcon: Icon(
                               Icons.mail_outline,
-                              color: AppColors.secondary.withOpacity(0.5),
+                              color: AppColors.secondary.withValues(alpha: 0.5),
                             ),
                             filled: true,
                             fillColor: const Color(0xFF1A1A1A),
@@ -224,18 +224,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           decoration: InputDecoration(
                             hintText: localizations.auth_register_password_label,
                             hintStyle: AppTypography.bodyLg.copyWith(
-                              color: AppColors.secondary.withOpacity(0.4),
+                              color: AppColors.secondary.withValues(alpha: 0.4),
                             ),
                             prefixIcon: Icon(
                               Icons.lock_outline,
-                              color: AppColors.secondary.withOpacity(0.5),
+                              color: AppColors.secondary.withValues(alpha: 0.5),
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: AppColors.secondary.withOpacity(0.5),
+                                color: AppColors.secondary.withValues(alpha: 0.5),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -276,18 +276,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           decoration: InputDecoration(
                             hintText: localizations.auth_register_confirm_password_label,
                             hintStyle: AppTypography.bodyLg.copyWith(
-                              color: AppColors.secondary.withOpacity(0.4),
+                              color: AppColors.secondary.withValues(alpha: 0.4),
                             ),
                             prefixIcon: Icon(
                               Icons.lock_outline,
-                              color: AppColors.secondary.withOpacity(0.5),
+                              color: AppColors.secondary.withValues(alpha: 0.5),
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscureConfirmPassword
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: AppColors.secondary.withOpacity(0.5),
+                                color: AppColors.secondary.withValues(alpha: 0.5),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -332,12 +332,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               disabledBackgroundColor:
-                                  AppColors.primary.withOpacity(0.6),
+                                  AppColors.primary.withValues(alpha: 0.6),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               elevation: 8,
-                              shadowColor: AppColors.primary.withOpacity(0.4),
+                              shadowColor: AppColors.primary.withValues(alpha: 0.4),
                             ),
                             child: registerState.status.isInProgress
                                 ? const SizedBox(
@@ -364,7 +364,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             Text(
                               '${localizations.auth_register_login_prompt} ',
                               style: AppTypography.bodyMd.copyWith(
-                                color: AppColors.secondary.withOpacity(0.4),
+                                color: AppColors.secondary.withValues(alpha: 0.4),
                               ),
                             ),
                             GestureDetector(

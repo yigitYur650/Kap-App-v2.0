@@ -117,14 +117,14 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
         backgroundColor: const Color(0xFF141414),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
         title: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -171,7 +171,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF1F2022),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: Text(
                   widget.version.changelog!,

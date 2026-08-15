@@ -20,7 +20,7 @@ class ActiveListSummaryCard extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: const Color(0xFF141414).withOpacity(0.7),
+          color: const Color(0xFF141414).withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(12),
           border: const Border(
             left: BorderSide(color: AppColors.primary, width: 4),
@@ -43,7 +43,7 @@ class ActiveListSummaryCard extends ConsumerWidget {
                   data: (items) => Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -54,7 +54,7 @@ class ActiveListSummaryCard extends ConsumerWidget {
                     ),
                   ),
                   loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                 ),
               ],
             ),

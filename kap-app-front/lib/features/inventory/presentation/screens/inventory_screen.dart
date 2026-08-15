@@ -350,13 +350,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
+                            const Row(
                               children: [
-                                const Text('🍳', style: TextStyle(fontSize: 22)),
-                                const SizedBox(width: 10),
+                                Text('🍳', style: TextStyle(fontSize: 22)),
+                                SizedBox(width: 10),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
+                                  children: [
                                     Text(
                                       'Ne Pişirsem? (AI Tarif Önerisi)',
                                       style: TextStyle(

@@ -12,7 +12,7 @@ class BlobPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(opacity)
+      ..color = color.withValues(alpha: opacity)
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 80); // Glow blur
 

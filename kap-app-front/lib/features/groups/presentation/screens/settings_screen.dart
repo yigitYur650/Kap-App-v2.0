@@ -109,13 +109,13 @@ class SettingsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF141414),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor: AppColors.primary.withOpacity(0.2),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
                       child: Text(
                         user.displayName.substring(0, 1).toUpperCase(),
                         style: const TextStyle(
@@ -138,7 +138,7 @@ class SettingsScreen extends ConsumerWidget {
                           Text(
                             user.email,
                             style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.secondary.withOpacity(0.6),
+                              color: AppColors.secondary.withValues(alpha: 0.6),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -148,7 +148,7 @@ class SettingsScreen extends ConsumerWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.fingerprint, size: 14, color: AppColors.primary.withOpacity(0.8)),
+                                Icon(Icons.fingerprint, size: 14, color: AppColors.primary.withValues(alpha: 0.8)),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
@@ -157,12 +157,12 @@ class SettingsScreen extends ConsumerWidget {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontFamily: 'monospace',
-                                      color: Colors.white.withOpacity(0.6),
+                                      color: Colors.white.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                Icon(Icons.copy_rounded, size: 13, color: AppColors.primary.withOpacity(0.8)),
+                                Icon(Icons.copy_rounded, size: 13, color: AppColors.primary.withValues(alpha: 0.8)),
                               ],
                             ),
                           ),
@@ -183,24 +183,24 @@ class SettingsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.amber.shade900.withOpacity(0.8), Colors.amber.shade700.withOpacity(0.9)],
+                      colors: [Colors.amber.shade900.withValues(alpha: 0.8), Colors.amber.shade700.withValues(alpha: 0.9)],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.amber.withOpacity(0.2),
+                        color: Colors.amber.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Icon(Icons.storefront_rounded, color: Colors.white, size: 26),
-                      const SizedBox(width: 12),
-                      const Expanded(
+                      Icon(Icons.storefront_rounded, color: Colors.white, size: 26),
+                      SizedBox(width: 12),
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -216,7 +216,7 @@ class SettingsScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Colors.white),
+                      Icon(Icons.chevron_right_rounded, color: Colors.white),
                     ],
                   ),
                 ),
@@ -240,7 +240,7 @@ class SettingsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF141414),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +259,7 @@ class SettingsScreen extends ConsumerWidget {
                             Text(
                               localizations.settings_join_code,
                               style: AppTypography.labelSm.copyWith(
-                                color: AppColors.secondary.withOpacity(0.5),
+                                color: AppColors.secondary.withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -301,7 +301,7 @@ class SettingsScreen extends ConsumerWidget {
                   return Text(
                     localizations.settings_no_groups_found,
                     style: AppTypography.bodyMd.copyWith(
-                      color: AppColors.secondary.withOpacity(0.6),
+                      color: AppColors.secondary.withValues(alpha: 0.6),
                     ),
                   );
                 }
@@ -309,7 +309,7 @@ class SettingsScreen extends ConsumerWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: groups.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final group = groups[index];
                     final isActive = activeGroup?.id == group.id;
@@ -320,8 +320,8 @@ class SettingsScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isActive
-                              ? AppColors.primary.withOpacity(0.5)
-                              : Colors.white.withOpacity(0.05),
+                              ? AppColors.primary.withValues(alpha: 0.5)
+                              : Colors.white.withValues(alpha: 0.05),
                         ),
                       ),
                       child: Material(
@@ -349,7 +349,7 @@ class SettingsScreen extends ConsumerWidget {
                                 icon: Icon(
                                   Icons.delete_outline,
                                   size: 20,
-                                  color: AppColors.primary.withOpacity(0.7),
+                                  color: AppColors.primary.withValues(alpha: 0.7),
                                 ),
                                 onPressed: () => _confirmDeleteGroup(
                                   context, ref, group.id, group.name,

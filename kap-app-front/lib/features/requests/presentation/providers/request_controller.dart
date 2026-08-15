@@ -54,7 +54,7 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
   }) async {
     final activeGroup = ref.read(activeGroupProvider);
     if (activeGroup == null) {
-      return Left(ServerFailure('No active group selected.'));
+      return const Left(ServerFailure('No active group selected.'));
     }
 
     final repository = ref.read(requestRepositoryProvider);
@@ -92,7 +92,7 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
   }) async {
     final activeGroup = ref.read(activeGroupProvider);
     if (activeGroup == null) {
-      return Left(ServerFailure('No active group selected.'));
+      return const Left(ServerFailure('No active group selected.'));
     }
 
     final previousList = state.value ?? [];
@@ -129,7 +129,7 @@ class RequestController extends AsyncNotifier<List<RequestModel>> {
   }) async {
     final activeGroup = ref.read(activeGroupProvider);
     if (activeGroup == null) {
-      return Left(ServerFailure('No active group selected.'));
+      return const Left(ServerFailure('No active group selected.'));
     }
 
     final previousList = state.value ?? [];

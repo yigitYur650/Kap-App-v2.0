@@ -147,7 +147,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
             decoration: InputDecoration(
               hintText: localizations.add_request_item_name_hint,
               hintStyle: TextStyle(
-                color: AppColors.secondary.withOpacity(0.4),
+                color: AppColors.secondary.withValues(alpha: 0.4),
               ),
               filled: true,
               fillColor: const Color(0xFF1A1A1A),
@@ -202,10 +202,10 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
                     labelText: localizations.add_request_quantity_label,
                     hintText: localizations.add_request_quantity_hint,
                     hintStyle: TextStyle(
-                      color: AppColors.secondary.withOpacity(0.4),
+                      color: AppColors.secondary.withValues(alpha: 0.4),
                     ),
                     labelStyle: TextStyle(
-                      color: AppColors.secondary.withOpacity(0.7),
+                      color: AppColors.secondary.withValues(alpha: 0.7),
                       fontSize: 12,
                     ),
                     filled: true,
@@ -245,7 +245,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
                       hint: Text(
                         localizations.add_request_unit_label,
                         style: TextStyle(
-                          color: AppColors.secondary.withOpacity(0.4),
+                          color: AppColors.secondary.withValues(alpha: 0.4),
                           fontSize: 14,
                         ),
                       ),
@@ -278,7 +278,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
                 children: [
                   Icon(
                     Icons.lock_outline,
-                    color: AppColors.secondary.withOpacity(0.7),
+                    color: AppColors.secondary.withValues(alpha: 0.7),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -290,7 +290,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
               ),
               Switch(
                 value: _isPrivate,
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 onChanged: (val) {
                   setState(() {
                     _isPrivate = val;
@@ -323,7 +323,7 @@ class _AddRequestBottomSheetState extends ConsumerState<AddRequestBottomSheet> {
                       hint: Text(
                         localizations.add_request_private_to_label,
                         style: TextStyle(
-                          color: AppColors.secondary.withOpacity(0.4),
+                          color: AppColors.secondary.withValues(alpha: 0.4),
                         ),
                       ),
                       dropdownColor: const Color(0xFF141414),

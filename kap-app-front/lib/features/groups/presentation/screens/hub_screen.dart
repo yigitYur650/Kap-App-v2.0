@@ -111,7 +111,7 @@ class HubScreen extends ConsumerWidget {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: members.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 8),
+                            separatorBuilder: (_, _) => const SizedBox(height: 8),
                             itemBuilder: (context, index) {
                               return GroupMemberTile(member: members[index]);
                             },
@@ -126,7 +126,7 @@ class HubScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 60.0),
                         child: Column(
                           children: [
-                            Icon(Icons.house_outlined, size: 64, color: AppColors.secondary.withOpacity(0.3)),
+                            Icon(Icons.house_outlined, size: 64, color: AppColors.secondary.withValues(alpha: 0.3)),
                             const SizedBox(height: 16),
                             Text(
                               localizations.hub_no_group_joined,
@@ -157,7 +157,7 @@ class HubScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFF141414),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withOpacity(0.05)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -179,7 +179,7 @@ class HubScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFF141414),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withOpacity(0.05)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,

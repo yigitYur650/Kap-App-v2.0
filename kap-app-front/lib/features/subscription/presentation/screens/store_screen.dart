@@ -54,14 +54,14 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        title: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.storefront_rounded, color: Colors.amber),
-            const SizedBox(width: 8),
+            Icon(Icons.storefront_rounded, color: Colors.amber),
+            SizedBox(width: 8),
             Text(
               'Kap-App Mağazası',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -170,7 +170,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                 border: Border.all(color: Colors.amber, width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.amber.withOpacity(0.15),
+                    color: Colors.amber.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -435,7 +435,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: color.withOpacity(0.15),
+            backgroundColor: color.withValues(alpha: 0.15),
             radius: 18,
             child: Icon(icon, color: color, size: 20),
           ),

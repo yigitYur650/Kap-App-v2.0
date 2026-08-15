@@ -78,7 +78,7 @@ class _ShellScreenState extends State<ShellScreen> {
                     bottom: bottomPadding > 0 ? bottomPadding : 12,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D0E0F).withOpacity(0.9),
+                    color: const Color(0xFF0D0E0F).withValues(alpha: 0.9),
                     border: const Border(
                       top: BorderSide(
                         color: Color(0xFF242424),
@@ -143,7 +143,7 @@ class _ShellScreenState extends State<ShellScreen> {
     return Builder(
       builder: (context) {
         final isActive = widget.navigationShell.currentIndex == index;
-        final color = isActive ? AppColors.primary : AppColors.secondary.withOpacity(0.5);
+        final color = isActive ? AppColors.primary : AppColors.secondary.withValues(alpha: 0.5);
 
         return GestureDetector(
           onTap: () => _onTabSelect(index),
@@ -181,7 +181,7 @@ class _ShellScreenState extends State<ShellScreen> {
                   boxShadow: isActive
                       ? [
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.8),
+                            color: AppColors.primary.withValues(alpha: 0.8),
                             blurRadius: 8,
                             spreadRadius: 2,
                           )

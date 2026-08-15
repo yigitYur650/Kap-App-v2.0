@@ -143,7 +143,7 @@ class _InventoryRecipeDialogState extends State<InventoryRecipeDialog> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: _categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
                 itemBuilder: (context, idx) {
                   final cat = _categories[idx];
                   final isSelected = cat['key'] == _selectedFilter;

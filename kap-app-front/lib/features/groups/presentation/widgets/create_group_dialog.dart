@@ -70,7 +70,7 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
             style: AppTypography.bodyLg,
             decoration: InputDecoration(
               hintText: localizations.group_create_name_hint,
-              hintStyle: TextStyle(color: AppColors.secondary.withOpacity(0.4)),
+              hintStyle: TextStyle(color: AppColors.secondary.withValues(alpha: 0.4)),
               filled: true,
               fillColor: const Color(0xFF1A1A1A),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

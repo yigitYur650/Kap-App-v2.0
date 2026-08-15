@@ -26,8 +26,8 @@ class RequestCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isDone
-              ? AppColors.primary.withOpacity(0.15)
-              : Colors.white.withOpacity(0.05),
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.05),
         ),
       ),
       child: Row(
@@ -102,9 +102,9 @@ class RequestCard extends ConsumerWidget {
                         curve: Curves.easeInOutCubic,
                         style: AppTypography.bodyLg.copyWith(
                           decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
-                          decorationColor: AppColors.secondary.withOpacity(0.5),
+                          decorationColor: AppColors.secondary.withValues(alpha: 0.5),
                           color: isDone
-                              ? AppColors.secondary.withOpacity(0.4)
+                              ? AppColors.secondary.withValues(alpha: 0.4)
                               : AppColors.text,
                         ),
                         child: Text(request.itemName),
@@ -115,7 +115,7 @@ class RequestCard extends ConsumerWidget {
                       Icon(
                         Icons.lock_outline,
                         size: 16,
-                        color: AppColors.secondary.withOpacity(0.5),
+                        color: AppColors.secondary.withValues(alpha: 0.5),
                       ),
                     ],
                   ],
@@ -128,8 +128,8 @@ class RequestCard extends ConsumerWidget {
                       duration: const Duration(milliseconds: 250),
                       style: AppTypography.labelSm.copyWith(
                         color: isDone
-                            ? AppColors.secondary.withOpacity(0.3)
-                            : AppColors.secondary.withOpacity(0.5),
+                            ? AppColors.secondary.withValues(alpha: 0.3)
+                            : AppColors.secondary.withValues(alpha: 0.5),
                       ),
                       child: Text(
                         '${request.quantity ?? ''}${request.quantity != null && request.unit != null ? ' ' : ''}${request.unit ?? ''}',
@@ -146,7 +146,7 @@ class RequestCard extends ConsumerWidget {
             icon: Icon(
               Icons.delete_outline_rounded,
               size: 20,
-              color: AppColors.primary.withOpacity(0.7),
+              color: AppColors.primary.withValues(alpha: 0.7),
             ),
             onPressed: () async {
               final result = await ref.read(requestControllerProvider.notifier).deleteRequest(

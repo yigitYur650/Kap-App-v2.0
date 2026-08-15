@@ -416,7 +416,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                       children: [
                         Text(
                           entry.key,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
@@ -683,7 +683,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                 const SizedBox(height: 4),
                 Text(
                   localizations.health_allergen_subtitle,
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -921,7 +921,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                 color: prefixColor ?? AppColors.primary, size: 18)
             : null,
         labelText: label,
-        labelStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
+        labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
         filled: true,
         fillColor: const Color(0xFF1E1E1E),
         contentPadding:

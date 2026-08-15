@@ -40,7 +40,7 @@ class KapAppBrandLogo extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(fontSize > 28 ? 14 : 10),
                 boxShadow: [
                   BoxShadow(
-                    color: isPro ? Colors.amber.withOpacity(0.5) : AppColors.primary.withOpacity(0.5),
+                    color: isPro ? Colors.amber.withValues(alpha: 0.5) : AppColors.primary.withValues(alpha: 0.5),
                     blurRadius: 16,
                     spreadRadius: 2,
                     offset: const Offset(0, 4),
@@ -74,7 +74,7 @@ class KapAppBrandLogo extends ConsumerWidget {
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          color: isPro ? Colors.amber.withOpacity(0.8) : AppColors.primary.withOpacity(0.8),
+                          color: isPro ? Colors.amber.withValues(alpha: 0.8) : AppColors.primary.withValues(alpha: 0.8),
                           blurRadius: 20,
                         ),
                       ],
@@ -111,10 +111,10 @@ class KapAppBrandLogo extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: isPro ? Colors.amber.withOpacity(0.15) : AppColors.primary.withOpacity(0.12),
+              color: isPro ? Colors.amber.withValues(alpha: 0.15) : AppColors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isPro ? Colors.amber.withOpacity(0.4) : AppColors.primary.withOpacity(0.3),
+                color: isPro ? Colors.amber.withValues(alpha: 0.4) : AppColors.primary.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),

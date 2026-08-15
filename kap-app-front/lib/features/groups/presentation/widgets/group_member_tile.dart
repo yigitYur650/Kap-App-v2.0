@@ -22,7 +22,7 @@ class GroupMemberTile extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.primary.withOpacity(0.2),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
             child: Text(
               member.user.displayName.substring(0, 1).toUpperCase(),
               style: const TextStyle(color: AppColors.primary),

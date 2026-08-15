@@ -68,7 +68,7 @@ class _JoinGroupDialogState extends ConsumerState<JoinGroupDialog> {
         textCapitalization: TextCapitalization.characters,
         decoration: InputDecoration(
           hintText: localizations.group_join_code_hint,
-          hintStyle: TextStyle(color: AppColors.secondary.withOpacity(0.4)),
+          hintStyle: TextStyle(color: AppColors.secondary.withValues(alpha: 0.4)),
           filled: true,
           fillColor: const Color(0xFF1A1A1A),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

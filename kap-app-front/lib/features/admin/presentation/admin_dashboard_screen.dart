@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/theme/app_typography.dart';
-import '../../auth/presentation/providers/auth_provider.dart';
 import 'package:kap_app_front/features/admin/data/notification_admin_repository.dart';
 import 'package:kap_app_front/features/admin/domain/models/scheduled_notification.dart';
 import 'package:kap_app_front/core/services/notification_service.dart';
@@ -219,7 +218,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               decoration: BoxDecoration(
                 color: const Color(0xFF141414),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: Row(
                 children: [
@@ -247,7 +246,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.2),
+                                  color: AppColors.primary.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Text('Zorunlu', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
@@ -695,7 +694,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: list.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = list[index];
                   final icon = item.notificationType == 'water'
@@ -847,7 +846,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedType,
+                      initialValue: selectedType,
                       dropdownColor: const Color(0xFF2C2C2E),
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
@@ -999,20 +998,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.amber.shade900.withOpacity(0.8), Colors.amber.shade700.withOpacity(0.9)],
+                colors: [Colors.amber.shade900.withValues(alpha: 0.8), Colors.amber.shade700.withValues(alpha: 0.9)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Icon(Icons.workspace_premium_rounded, size: 40, color: Colors.white),
-                const SizedBox(width: 16),
+                Icon(Icons.workspace_premium_rounded, size: 40, color: Colors.white),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'Kap-App Pro / Premium Yönetimi 👑',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),

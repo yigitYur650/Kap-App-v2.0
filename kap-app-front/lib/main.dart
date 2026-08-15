@@ -93,7 +93,7 @@ class KapApp extends ConsumerWidget {
     return ShadcnApp.router(
       routerConfig: router,
       themeMode: ThemeMode.dark, // Enforce dark theme
-      theme: ThemeData.dark(
+      theme: const ThemeData.dark(
         colorScheme: customDarkScheme,
       ),
       localizationsDelegates: const [
