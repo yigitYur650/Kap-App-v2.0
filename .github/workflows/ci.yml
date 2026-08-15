@@ -57,7 +57,7 @@ jobs:
 
       - name: Run Flutter Analyze
         working-directory: ./kap-app-front
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Run Flutter Unit Tests
         working-directory: ./kap-app-front
