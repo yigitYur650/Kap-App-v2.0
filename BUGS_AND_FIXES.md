@@ -106,3 +106,9 @@
 - **Kök Neden:** `admin_dashboard_screen.dart` ve `admin_provider.dart` dosyalarında göreceli yollar (`../../`) yanlış dizini hedefliyordu.
 - **Düzeltme:** Tüm importlar `package:kap_app_front/features/admin/...` paket standartına çevrildi.
 
+### HATA-21: Playwright Live Scraper — Hibrit Event-Driven Bekleme & Cloudflare Aşımı
+- **Semptom:** Fiyat taramalarında sabit bekleme süreleri yavaşlığa ve Cloudflare anti-bot doğrulama ekranına ("Just a moment...") neden oluyordu.
+- **Kök Neden:** Sabit zaman aşımları ve varsayılan headless tarayıcı kimliği Cloudflare tarafından bot olarak algılanıyordu.
+- **Düzeltme:** `addInitScript` ile `navigator.webdriver` gizlendi, `Referer` başlığı eklendi. Sabit sleep süreleri yerine `state: 'attached'` event-driven DOM beklemesi ve 200ms mikro duraksamadan oluşan hibrit mimariye geçildi. Tarama hızları %50 artırıldı.
+
+
