@@ -51,13 +51,21 @@ async function scrapePrice(query) {
       }
     });
 
+    await context.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    });
+
     const page = await context.newPage();
     const searchUrl = `https://www.akakce.com/arama/?q=${encodeURIComponent(query)}`;
     
     const sleep = ms => new Promise(res => setTimeout(res, ms));
 
     try {
-      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 6000 });
+      await page.goto(searchUrl, { 
+        waitUntil: 'domcontentloaded', 
+        timeout: 6000,
+        referer: 'https://www.akakce.com/'
+      });
     } catch (e) {
       // Continue even if navigation timeout occurs
     }
