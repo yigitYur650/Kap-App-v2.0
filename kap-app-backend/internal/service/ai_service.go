@@ -134,25 +134,54 @@ func getBaselinePrice(itemName string) ItemPriceEstimate {
 	}
 }
 
-// EstimatePrices returns estimated Turkish Lira price ranges, unit specs, variant notes & categories.
+// EstimatePrices returns estimated Turkish Lira price ranges using a multi-stage pipeline: Playwright Live Scraper -> Groq AI -> Gemini AI -> Baseline Standard.
 func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult, error) {
 	if len(items) == 0 {
 		return &PriceEstimationResult{Items: []ItemPriceEstimate{}, TotalPrice: 0}, nil
 	}
 
-	var formattedItems []string
-	for _, spec := range items {
-		cleanName := sanitizeForPrompt(spec.ItemName)
-		cleanQty := sanitizeForPrompt(spec.Quantity)
-		cleanUnit := sanitizeForPrompt(spec.Unit)
-		str := cleanName
-		if cleanQty != "" || cleanUnit != "" {
-			str += fmt.Sprintf(" (Miktar: %s %s)", cleanQty, cleanUnit)
+	var finalItems []ItemPriceEstimate
+	var unresolvedSpecs []ItemSpecDTO
+
+	// Stage 1: Primary Source — Playwright Live Targeted Web Scraper
+	if s.marketPriceSvc != nil {
+		for _, spec := range items {
+			cleanName := sanitizeForPrompt(spec.ItemName)
+			if cleanName == "" {
+				continue
+			}
+			pwEst, pwErr := s.marketPriceSvc.FetchLiveMarketPrice(cleanName)
+			if pwErr == nil && pwEst != nil && pwEst.EstimatedPrice > 0 {
+				pwEst.ItemName = spec.ItemName
+				if spec.Quantity != "" || spec.Unit != "" {
+					pwEst.UnitSpec = fmt.Sprintf("%s %s (Canlı Market)", spec.Quantity, spec.Unit)
+				}
+				pwEst.SourceMarket = "Canlı Web Taraması (Playwright)"
+				finalItems = append(finalItems, *pwEst)
+				log.Printf("[AI Pipeline] Stage 1 (Playwright) succeeded for '%s': %.2f TL", spec.ItemName, pwEst.EstimatedPrice)
+			} else {
+				unresolvedSpecs = append(unresolvedSpecs, spec)
+			}
 		}
-		formattedItems = append(formattedItems, str)
+	} else {
+		unresolvedSpecs = items
 	}
 
-	prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye'nin en yaygın zincir marketi MİGROS ve BİM/A101 tekil raf etiket fiyatlarını %%100 TUTARLI VE KESİN bilen uzman asistansın.
+	// Stage 2 & Stage 3: AI Failover Pipeline — Groq (Primary AI) -> Gemini (Backup AI)
+	if len(unresolvedSpecs) > 0 {
+		var formattedItems []string
+		for _, spec := range unresolvedSpecs {
+			cleanName := sanitizeForPrompt(spec.ItemName)
+			cleanQty := sanitizeForPrompt(spec.Quantity)
+			cleanUnit := sanitizeForPrompt(spec.Unit)
+			str := cleanName
+			if cleanQty != "" || cleanUnit != "" {
+				str += fmt.Sprintf(" (Miktar: %s %s)", cleanQty, cleanUnit)
+			}
+			formattedItems = append(formattedItems, str)
+		}
+
+		prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye'nin en yaygın zincir marketi MİGROS ve BİM/A101 tekil raf etiket fiyatlarını %%100 TUTARLI VE KESİN bilen uzman asistansın.
 
 GÜNCEL TEK REFERANS MARKET (MİGROS & BİM/A101) RAF FİYATI STANDARTLARI (2026):
 - 1L Tam Yağlı Süt (Sütaş/Pınar/İçim/Dost): 39.50 TL (Migros / BİM Raf Fiyatı)
@@ -194,29 +223,28 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
   ]
 }`, strings.Join(formattedItems, ", "))
 
-	var finalItems []ItemPriceEstimate
-	respJSON, err := s.queryGroqOrGeminiText(prompt)
-	if err == nil && respJSON != "" {
-		var aiRes PriceEstimationResult
-		if unerr := json.Unmarshal([]byte(respJSON), &aiRes); unerr != nil {
-			start := strings.Index(respJSON, "{")
-			end := strings.LastIndex(respJSON, "}")
-			if start >= 0 && end > start {
-				_ = json.Unmarshal([]byte(respJSON[start:end+1]), &aiRes)
+		respJSON, err := s.queryGroqOrGeminiText(prompt)
+		if err == nil && respJSON != "" {
+			var aiRes PriceEstimationResult
+			if unerr := json.Unmarshal([]byte(respJSON), &aiRes); unerr != nil {
+				start := strings.Index(respJSON, "{")
+				end := strings.LastIndex(respJSON, "}")
+				if start >= 0 && end > start {
+					_ = json.Unmarshal([]byte(respJSON[start:end+1]), &aiRes)
+				}
 			}
-		}
 
-		// Deduplicate and validate items from AI
-		seen := make(map[string]bool)
-		for _, item := range aiRes.Items {
-			if item.ItemName != "" && !seen[item.ItemName] && item.EstimatedPrice > 0 {
-				seen[item.ItemName] = true
-				finalItems = append(finalItems, item)
+			seen := make(map[string]bool)
+			for _, item := range aiRes.Items {
+				if item.ItemName != "" && !seen[item.ItemName] && item.EstimatedPrice > 0 {
+					seen[item.ItemName] = true
+					finalItems = append(finalItems, item)
+				}
 			}
 		}
 	}
 
-	// Ensure EVERY requested item has a price (fill missing items with baseline)
+	// Stage 4: Safety Baseline Fallback — Ensure EVERY requested item has a price
 	for _, spec := range items {
 		found := false
 		for _, fi := range finalItems {
@@ -226,6 +254,7 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
 			}
 		}
 		if !found {
+			log.Printf("[AI Pipeline] Stage 4: Falling back to baseline price for '%s'", spec.ItemName)
 			finalItems = append(finalItems, getBaselinePrice(spec.ItemName))
 		}
 	}

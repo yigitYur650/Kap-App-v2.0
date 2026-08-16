@@ -58,6 +58,12 @@ func main() {
 					allowOrigin = origin
 					break
 				}
+				// Support dynamic localhost / 127.0.0.1 ports for Flutter Web development
+				if (strings.Contains(allowed, "localhost") || strings.Contains(allowed, "127.0.0.1")) &&
+					(strings.HasPrefix(origin, "http://localhost:") || strings.HasPrefix(origin, "http://127.0.0.1:")) {
+					allowOrigin = origin
+					break
+				}
 			}
 		} else if len(allowedOrigins) > 0 {
 			allowOrigin = allowedOrigins[0]

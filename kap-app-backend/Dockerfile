@@ -21,16 +21,23 @@ COPY . .
 # Build lightweight, statically-linked binary
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server ./cmd/server/main.go
 
-# Step 2: Final runtime stage
+# Step 2: Final runtime stage with Node.js & Chromium for Playwright scraper support
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates tzdata \
+RUN apk --no-cache add ca-certificates tzdata nodejs npm chromium nss freetype harfbuzz ttf-freefont \
     && addgroup -S appgroup && adduser -S appuser -G appgroup
+
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+    PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /home/appuser/
 
 # Copy binary from builder and assign ownership
 COPY --from=builder --chown=appuser:appgroup /app/server .
+COPY --from=builder --chown=appuser:appgroup /app/package.json /app/package-lock.json* ./
+COPY --from=builder --chown=appuser:appgroup /app/scripts ./scripts
+
+RUN npm install --only=production
 
 USER appuser
 

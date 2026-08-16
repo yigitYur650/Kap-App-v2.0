@@ -1,5 +1,19 @@
 const path = require('path');
-const { chromium } = require(path.join(__dirname, '../../kap-app-front/node_modules/playwright'));
+let chromium;
+try {
+  chromium = require('playwright').chromium;
+} catch (e1) {
+  try {
+    chromium = require(path.join(__dirname, '../node_modules/playwright')).chromium;
+  } catch (e2) {
+    try {
+      chromium = require(path.join(__dirname, '../../kap-app-front/node_modules/playwright')).chromium;
+    } catch (e3) {
+      console.log(JSON.stringify({ error: "Playwright module missing: " + e1.message }));
+      process.exit(1);
+    }
+  }
+}
 
 async function scrapePrice(query) {
   if (!query) {
@@ -9,10 +23,14 @@ async function scrapePrice(query) {
 
   let browser;
   try {
-    browser = await chromium.launch({
+    const launchOpts = {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    });
+    };
+    if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+      launchOpts.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+    }
+    browser = await chromium.launch(launchOpts);
 
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -23,42 +41,51 @@ async function scrapePrice(query) {
     const searchUrl = `https://www.akakce.com/arama/?q=${encodeURIComponent(query)}`;
     
     try {
-      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 7000 });
-      await page.waitForTimeout(1000);
+      await page.goto(searchUrl, { waitUntil: 'load', timeout: 8000 });
     } catch (e) {
       // Continue even if navigation timeout occurs
     }
 
-    // Wait for network to settle so redirects finish
-    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    await page.waitForTimeout(1500);
 
-    const { items, rawPrices } = await page.evaluate(() => {
-      const cards = Array.from(document.querySelectorAll('li.p-card, div.p-card, ul#b > li, div.prc-box, .p_v8, span.pb_v8, span.pt_v8, b.p_v8'));
-      const parsedItems = [];
-      const allPrices = [];
-      const priceRegex = /(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:TL|₺)/i;
+    let itemsData = { items: [], rawPrices: [] };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        itemsData = await page.evaluate(() => {
+          const cards = Array.from(document.querySelectorAll('li.p-card, div.p-card, ul#b > li, div.prc-box, .p_v8, span.pb_v8, span.pt_v8, b.p_v8'));
+          const parsedItems = [];
+          const allPrices = [];
+          const priceRegex = /(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:TL|₺)/i;
 
-      for (const card of cards) {
-        const titleEl = card.querySelector('h3, .pn_v8, a.p-link, .title, strong');
-        const priceEl = card.querySelector('.pt_v8, .pb_v8, .p_v8, .price, span.price') || card;
-        
-        const titleText = titleEl ? titleEl.innerText.trim() : '';
-        const priceText = priceEl ? priceEl.innerText.trim() : '';
+          for (const card of cards) {
+            const titleEl = card.querySelector('h3, .pn_v8, a.p-link, .title, strong');
+            const priceEl = card.querySelector('.pt_v8, .pb_v8, .p_v8, .price, span.price') || card;
+            
+            const titleText = titleEl ? titleEl.innerText.trim() : '';
+            const priceText = priceEl ? priceEl.innerText.trim() : '';
 
-        const match = priceText.match(priceRegex);
-        if (match) {
-          const val = parseFloat(match[1].replace(',', '.'));
-          if (!isNaN(val) && val >= 5.0 && val <= 3500.0) {
-            allPrices.push(val);
-            if (titleText) {
-              parsedItems.push({ title: titleText, price: val });
+            const match = priceText.match(priceRegex);
+            if (match) {
+              const val = parseFloat(match[1].replace(',', '.'));
+              if (!isNaN(val) && val >= 5.0 && val <= 3500.0) {
+                allPrices.push(val);
+                if (titleText) {
+                  parsedItems.push({ title: titleText, price: val });
+                }
+              }
             }
           }
-        }
-      }
 
-      return { items: parsedItems, rawPrices: allPrices };
-    });
+          return { items: parsedItems, rawPrices: allPrices };
+        });
+        if (itemsData && itemsData.rawPrices && itemsData.rawPrices.length > 0) {
+          break;
+        }
+      } catch (evalErr) {
+        await page.waitForTimeout(1000);
+      }
+    }
+    const { items, rawPrices } = itemsData;
 
     await browser.close();
 

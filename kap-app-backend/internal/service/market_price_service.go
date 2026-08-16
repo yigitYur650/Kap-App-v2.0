@@ -32,7 +32,7 @@ var userAgents = []string{
 	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
 }
 
-// FetchLiveMarketPrice queries live Turkish grocery prices with sub-10ms cache lookup and Playwright fallback.
+// FetchLiveMarketPrice queries live Turkish grocery prices with sub-10ms cache lookup, primary Playwright web scraper, and HTTP scraper fallback.
 func (s *MarketPriceService) FetchLiveMarketPrice(productName string) (*ItemPriceEstimate, error) {
 	cleanName := strings.TrimSpace(productName)
 	if cleanName == "" {
@@ -44,14 +44,7 @@ func (s *MarketPriceService) FetchLiveMarketPrice(productName string) (*ItemPric
 		return cached, nil
 	}
 
-	// 2. HTTP scraper path
-	est, err := s.fetchFromAkakce(cleanName)
-	if err == nil && est != nil && est.EstimatedPrice > 0 {
-		s.cacheSvc.Set(cleanName, *est)
-		return est, nil
-	}
-
-	// 3. Fallback to Playwright Headless Web Scraper
+	// 2. Primary Scraper: Playwright Headless Browser Scraper
 	if s.playwrightSvc != nil {
 		if pwEst, pwErr := s.playwrightSvc.FetchLivePrice(cleanName); pwErr == nil && pwEst != nil && pwEst.EstimatedPrice > 0 {
 			s.cacheSvc.Set(cleanName, *pwEst)
@@ -59,7 +52,14 @@ func (s *MarketPriceService) FetchLiveMarketPrice(productName string) (*ItemPric
 		}
 	}
 
-	return nil, fmt.Errorf("could not fetch live price for %s: %v", cleanName, err)
+	// 3. Secondary Fallback Scraper: HTTP scraper path
+	est, err := s.fetchFromAkakce(cleanName)
+	if err == nil && est != nil && est.EstimatedPrice > 0 {
+		s.cacheSvc.Set(cleanName, *est)
+		return est, nil
+	}
+
+	return nil, fmt.Errorf("could not fetch live price for %s", cleanName)
 }
 
 func (s *MarketPriceService) fetchFromAkakce(query string) (*ItemPriceEstimate, error) {

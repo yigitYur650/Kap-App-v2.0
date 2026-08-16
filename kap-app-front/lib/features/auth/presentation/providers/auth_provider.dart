@@ -65,7 +65,6 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
 
     ref.invalidate(userGroupsProvider);
     ref.invalidate(activeGroupProvider);
-    ref.invalidate(isSystemAdminProvider);
     ref.invalidate(healthProfileProvider);
   }
 
