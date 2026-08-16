@@ -67,7 +67,7 @@ async function scrapePrice(query) {
     try {
       await page.goto(searchUrl, { 
         waitUntil: 'domcontentloaded', 
-        timeout: 8000,
+        timeout: 5000,
         referer: 'https://www.akakce.com/'
       });
     } catch (e) {
@@ -75,7 +75,7 @@ async function scrapePrice(query) {
     }
 
     // 1. Event-based DOM attach listener (Event-driven Playwright wait)
-    await page.waitForSelector('ul#b > li, span.pt_v8, span.pb_v8, b.p_v8', { state: 'attached', timeout: 4000 }).catch(() => {});
+    await page.waitForSelector('ul#b > li, span.pt_v8, span.pb_v8, b.p_v8', { state: 'attached', timeout: 3000 }).catch(() => {});
     // 2. Safety margin micro-pause (200ms sleep for innerText stabilization)
     await sleep(200);
 
