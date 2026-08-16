@@ -49,15 +49,20 @@ async function scrapePrice(query) {
     const searchUrl = `https://www.akakce.com/arama/?q=${encodeURIComponent(query)}`;
     
     try {
-      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 4500 });
+      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 7000 });
     } catch (e) {
       // Continue even if navigation timeout occurs
     }
 
-    await page.waitForTimeout(600);
+    if (!page.isClosed()) {
+      try {
+        await page.waitForTimeout(500);
+      } catch (_) {}
+    }
 
     let itemsData = { items: [], rawPrices: [] };
     for (let attempt = 0; attempt < 2; attempt++) {
+      if (page.isClosed()) break;
       try {
         itemsData = await page.evaluate(() => {
           const cards = Array.from(document.querySelectorAll('li.p-card, div.p-card, ul#b > li, div.prc-box, .p_v8, span.pb_v8, span.pt_v8, b.p_v8'));
