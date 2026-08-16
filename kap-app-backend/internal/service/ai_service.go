@@ -173,8 +173,9 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 					}
 					pwEst.SourceMarket = "Canlı Web Taraması (Playwright)"
 					finalItems = append(finalItems, *pwEst)
-					log.Printf("[AI Pipeline] Stage 1 (Playwright) succeeded for '%s': %.2f TL", itemSpec.ItemName, pwEst.EstimatedPrice)
+					log.Printf("[AI Pipeline] [STAGE 1 PLAYWRIGHT SUCCESS] '%s' -> %.2f TL (Source: %s)", itemSpec.ItemName, pwEst.EstimatedPrice, pwEst.SourceMarket)
 				} else {
+					log.Printf("[AI Pipeline] [STAGE 1 PLAYWRIGHT FAILED] '%s' -> Error: %v (Passing to Stage 2: Groq AI)", itemSpec.ItemName, pwErr)
 					unresolvedSpecs = append(unresolvedSpecs, itemSpec)
 				}
 			}(spec, cleanName)
@@ -186,6 +187,12 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 
 	// Stage 2 & Stage 3: AI Failover Pipeline — Groq (Primary AI) -> Gemini (Backup AI)
 	if len(unresolvedSpecs) > 0 {
+		var unresolvedNames []string
+		for _, u := range unresolvedSpecs {
+			unresolvedNames = append(unresolvedNames, u.ItemName)
+		}
+		log.Printf("[AI Pipeline] Starting Stage 2 (Groq AI) for %d unresolved items: %v", len(unresolvedSpecs), unresolvedNames)
+
 		var formattedItems []string
 		for _, spec := range unresolvedSpecs {
 			cleanName := sanitizeForPrompt(spec.ItemName)
@@ -256,8 +263,11 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
 				if item.ItemName != "" && !seen[item.ItemName] && item.EstimatedPrice > 0 {
 					seen[item.ItemName] = true
 					finalItems = append(finalItems, item)
+					log.Printf("[AI Pipeline] [STAGE 2 AI SUCCESS] '%s' -> %.2f TL (Source: %s)", item.ItemName, item.EstimatedPrice, item.SourceMarket)
 				}
 			}
+		} else {
+			log.Printf("[AI Pipeline] [STAGE 2 & 3 AI FAILED] Error: %v -> Will pass to Stage 4 Baseline", err)
 		}
 	}
 
@@ -271,8 +281,9 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
 			}
 		}
 		if !found {
-			log.Printf("[AI Pipeline] Stage 4: Falling back to baseline price for '%s'", spec.ItemName)
-			finalItems = append(finalItems, getBaselinePrice(spec.ItemName))
+			baseEst := getBaselinePrice(spec.ItemName)
+			log.Printf("[AI Pipeline] [STAGE 4 BASELINE FALLBACK] '%s' -> %.2f TL (Source: %s)", spec.ItemName, baseEst.EstimatedPrice, baseEst.SourceMarket)
+			finalItems = append(finalItems, baseEst)
 		}
 	}
 

@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -41,23 +42,29 @@ func (s *MarketPriceService) FetchLiveMarketPrice(productName string) (*ItemPric
 
 	// 1. Fast path: Check 24-hour in-memory cache
 	if cached, hit := s.cacheSvc.Get(cleanName); hit && cached != nil {
+		log.Printf("[MarketPriceService] [24H CACHE HIT] '%s' -> %.2f TL", cleanName, cached.EstimatedPrice)
 		return cached, nil
 	}
 
 	// 2. Primary Scraper: Playwright Headless Browser Scraper
 	if s.playwrightSvc != nil {
-		if pwEst, pwErr := s.playwrightSvc.FetchLivePrice(cleanName); pwErr == nil && pwEst != nil && pwEst.EstimatedPrice > 0 {
+		pwEst, pwErr := s.playwrightSvc.FetchLivePrice(cleanName)
+		if pwErr == nil && pwEst != nil && pwEst.EstimatedPrice > 0 {
+			log.Printf("[MarketPriceService] [PLAYWRIGHT SUCCESS] '%s' -> %.2f TL", cleanName, pwEst.EstimatedPrice)
 			s.cacheSvc.Set(cleanName, *pwEst)
 			return pwEst, nil
 		}
+		log.Printf("[MarketPriceService] [PLAYWRIGHT FAILED] '%s' -> %v (Trying HTTP Fallback)", cleanName, pwErr)
 	}
 
 	// 3. Secondary Fallback Scraper: HTTP scraper path
 	est, err := s.fetchFromAkakce(cleanName)
 	if err == nil && est != nil && est.EstimatedPrice > 0 {
+		log.Printf("[MarketPriceService] [HTTP SCRAPER SUCCESS] '%s' -> %.2f TL", cleanName, est.EstimatedPrice)
 		s.cacheSvc.Set(cleanName, *est)
 		return est, nil
 	}
+	log.Printf("[MarketPriceService] [HTTP SCRAPER FAILED] '%s' -> %v", cleanName, err)
 
 	return nil, fmt.Errorf("could not fetch live price for %s", cleanName)
 }

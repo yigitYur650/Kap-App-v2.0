@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -14,9 +16,25 @@ type PlaywrightPriceService struct {
 }
 
 func NewPlaywrightPriceService() *PlaywrightPriceService {
-	absPath, _ := filepath.Abs("scripts/price_scraper.js")
+	candidates := []string{
+		"scripts/price_scraper.js",
+		"../scripts/price_scraper.js",
+		"../../scripts/price_scraper.js",
+	}
+
+	finalPath := "scripts/price_scraper.js"
+	for _, cand := range candidates {
+		if abs, err := filepath.Abs(cand); err == nil {
+			if _, statErr := os.Stat(abs); statErr == nil {
+				finalPath = abs
+				break
+			}
+		}
+	}
+
+	log.Printf("[PlaywrightPriceService] Initialized with script path: %s", finalPath)
 	return &PlaywrightPriceService{
-		scriptPath: absPath,
+		scriptPath: finalPath,
 	}
 }
 
@@ -30,13 +48,21 @@ func (s *PlaywrightPriceService) FetchLivePrice(query string) (*ItemPriceEstimat
 		return nil, fmt.Errorf("invalid or empty search query")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
 
+	start := time.Now()
 	cmd := exec.CommandContext(ctx, "node", s.scriptPath, "--query="+cleanedQuery)
 	outputBytes, err := cmd.Output()
+	duration := time.Since(start)
+
 	if err != nil {
-		return nil, fmt.Errorf("playwright execution failed: %w", err)
+		stderrMsg := ""
+		if exitErr, ok := err.(*exec.ExitError); ok && len(exitErr.Stderr) > 0 {
+			stderrMsg = fmt.Sprintf(" (stderr: %s)", string(exitErr.Stderr))
+		}
+		log.Printf("[Playwright Scraper] FAILED for '%s' after %v: %v%s", cleanedQuery, duration, err, stderrMsg)
+		return nil, fmt.Errorf("playwright execution failed after %v: %w%s", duration, err, stderrMsg)
 	}
 
 	var res struct {
@@ -48,16 +74,21 @@ func (s *PlaywrightPriceService) FetchLivePrice(query string) (*ItemPriceEstimat
 	}
 
 	if err := json.Unmarshal(outputBytes, &res); err != nil {
+		log.Printf("[Playwright Scraper] JSON parse error for '%s' (output: %s): %v", cleanedQuery, string(outputBytes), err)
 		return nil, fmt.Errorf("failed to parse playwright output: %w", err)
 	}
 
 	if res.Error != "" {
+		log.Printf("[Playwright Scraper] Script reported error for '%s': %s", cleanedQuery, res.Error)
 		return nil, fmt.Errorf("playwright scraper message: %s", res.Error)
 	}
 
 	if res.EstimatedPrice <= 0 {
+		log.Printf("[Playwright Scraper] Invalid estimated price (%.2f) for '%s'", res.EstimatedPrice, cleanedQuery)
 		return nil, fmt.Errorf("invalid estimated price from playwright scraper")
 	}
+
+	log.Printf("[Playwright Scraper] SUCCESS for '%s': %.2f TL (in %v)", cleanedQuery, res.EstimatedPrice, duration)
 
 	category := inferCategoryFromQuery(query)
 
