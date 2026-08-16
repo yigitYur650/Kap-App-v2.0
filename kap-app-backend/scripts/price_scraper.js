@@ -142,44 +142,50 @@ async function scrapePrice(query) {
       process.exit(0);
     }
 
-    // Sort prices and filter out upper/lower 15% outliers
+    // Sort prices ascending
     rawPrices.sort((a, b) => a - b);
     let filteredPrices = rawPrices;
     if (rawPrices.length >= 4) {
-      const cut = Math.floor(rawPrices.length * 0.15);
+      const cut = Math.floor(rawPrices.length * 0.10);
       filteredPrices = rawPrices.slice(cut, rawPrices.length - cut);
     }
 
     let minPrice = filteredPrices[0];
-    let maxPrice = filteredPrices[0];
-    let sum = 0;
+    let maxPrice = filteredPrices[filteredPrices.length - 1];
 
-    for (const p of filteredPrices) {
-      if (p < minPrice) minPrice = p;
-      if (p > maxPrice) maxPrice = p;
-      sum += p;
-    }
-
-    const avgPrice = Math.round((sum / filteredPrices.length) * 100) / 100;
-
+    // Priority 1: Check if there's a direct chain market match (Migros, BİM, A101, Şok, Carrefour)
     const stores = [];
     const storeKeywords = ['MİGROS', 'A101', 'BİM', 'ŞOK', 'CARREFOUR', 'TRENDYOL', 'GETİR'];
+    let chainStorePrice = 0;
+
     for (const item of items) {
       const upper = item.title.toUpperCase();
       for (const kw of storeKeywords) {
-        if (upper.includes(kw) && !stores.some(s => s.store === kw)) {
-          stores.push({ store: kw, price: item.price });
+        if (upper.includes(kw)) {
+          if (!stores.some(s => s.store === kw)) {
+            stores.push({ store: kw, price: item.price });
+          }
+          if (chainStorePrice === 0 && item.price >= 5.0 && item.price <= 2500.0) {
+            chainStorePrice = item.price;
+          }
         }
       }
     }
 
+    // Priority 2: Use 30th percentile median price for standard retail grocery unit (e.g. 1kg chicken, 1L milk, 130g chips)
+    // 30th percentile accurately represents standard single retail unit shelf price rather than bulk 5kg restaurant packages
+    const retailIndex = Math.floor(filteredPrices.length * 0.30);
+    const retailMedianPrice = filteredPrices[retailIndex] || filteredPrices[0];
+
+    const estimatedPrice = chainStorePrice > 0 ? chainStorePrice : retailMedianPrice;
+
     const result = {
       item_name: query,
-      estimated_price: avgPrice,
+      estimated_price: Math.round(estimatedPrice * 100) / 100,
       min_price: Math.round(minPrice * 100) / 100,
       max_price: Math.round(maxPrice * 100) / 100,
       stores: stores.slice(0, 4),
-      source: "Playwright Targeted Scraper"
+      source: chainStorePrice > 0 ? "Canlı Zincir Market (Migros/BİM/A101)" : "Canlı Perakende Medyan Fiyatı (Playwright)"
     };
 
     console.log(JSON.stringify(result));

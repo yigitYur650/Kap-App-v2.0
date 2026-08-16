@@ -190,7 +190,19 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 				}
 			}(spec, cleanName)
 		}
-		wg.Wait()
+
+		stage1Done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(stage1Done)
+		}()
+
+		select {
+		case <-stage1Done:
+			// Completed within 4.5s deadline
+		case <-time.After(4500 * time.Millisecond):
+			appendLog("[STAGE 1 PLAYWRIGHT TIMEOUT] 4.5s Render HTTP deadline reached, passing remaining items to Groq AI")
+		}
 	} else {
 		unresolvedSpecs = items
 	}
