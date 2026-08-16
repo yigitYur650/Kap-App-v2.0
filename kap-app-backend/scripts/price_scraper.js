@@ -65,7 +65,9 @@ async function scrapePrice(query) {
       // Continue even if navigation timeout occurs
     }
 
-    await page.waitForSelector('ul#b > li, span.pt_v8, span.pb_v8, b.p_v8', { timeout: 4000 }).catch(() => {});
+    // 1. Event-based DOM attach listener (Event-driven Playwright wait)
+    await page.waitForSelector('ul#b > li, span.pt_v8, span.pb_v8, b.p_v8', { state: 'attached', timeout: 4000 }).catch(() => {});
+    // 2. Safety margin micro-pause (200ms sleep for innerText stabilization)
     await sleep(200);
 
     let itemsData = { items: [], rawPrices: [] };
