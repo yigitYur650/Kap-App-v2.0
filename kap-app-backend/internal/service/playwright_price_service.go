@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -53,16 +54,13 @@ func (s *PlaywrightPriceService) FetchLivePrice(query string) (*ItemPriceEstimat
 
 	start := time.Now()
 	cmd := exec.CommandContext(ctx, "node", s.scriptPath, "--query="+cleanedQuery)
-	outputBytes, err := cmd.Output()
+	outputBytes, err := cmd.CombinedOutput()
 	duration := time.Since(start)
 
 	if err != nil {
-		stderrMsg := ""
-		if exitErr, ok := err.(*exec.ExitError); ok && len(exitErr.Stderr) > 0 {
-			stderrMsg = fmt.Sprintf(" (stderr: %s)", string(exitErr.Stderr))
-		}
-		log.Printf("[Playwright Scraper] FAILED for '%s' after %v: %v%s", cleanedQuery, duration, err, stderrMsg)
-		return nil, fmt.Errorf("playwright execution failed after %v: %w%s", duration, err, stderrMsg)
+		outputStr := strings.TrimSpace(string(outputBytes))
+		log.Printf("[Playwright Scraper] FAILED for '%s' after %v: %v | Output: %s", cleanedQuery, duration, err, outputStr)
+		return nil, fmt.Errorf("playwright execution failed after %v: %w (output: %s)", duration, err, outputStr)
 	}
 
 	var res struct {

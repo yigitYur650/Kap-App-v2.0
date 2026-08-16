@@ -25,7 +25,15 @@ async function scrapePrice(query) {
   try {
     const launchOpts = {
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--no-zygote',
+        '--single-process'
+      ]
     };
     if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
       launchOpts.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;

@@ -72,8 +72,9 @@ type ItemPriceEstimate struct {
 }
 
 type PriceEstimationResult struct {
-	Items      []ItemPriceEstimate `json:"items"`
-	TotalPrice float64             `json:"total_price"`
+	Items       []ItemPriceEstimate `json:"items"`
+	TotalPrice  float64             `json:"total_price"`
+	PipelineLog []string            `json:"pipeline_log,omitempty"`
 }
 
 type ShoppingRecommendation struct {
@@ -143,6 +144,15 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 
 	var finalItems []ItemPriceEstimate
 	var unresolvedSpecs []ItemSpecDTO
+	var pipelineLogs []string
+	var pipelineMu sync.Mutex
+
+	appendLog := func(msg string) {
+		pipelineMu.Lock()
+		pipelineLogs = append(pipelineLogs, msg)
+		pipelineMu.Unlock()
+		log.Println(msg)
+	}
 
 	// Stage 1: Primary Source — Playwright Live Targeted Web Scraper (3-Worker Concurrency Pool)
 	if s.marketPriceSvc != nil {
@@ -173,9 +183,9 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 					}
 					pwEst.SourceMarket = "Canlı Web Taraması (Playwright)"
 					finalItems = append(finalItems, *pwEst)
-					log.Printf("[AI Pipeline] [STAGE 1 PLAYWRIGHT SUCCESS] '%s' -> %.2f TL (Source: %s)", itemSpec.ItemName, pwEst.EstimatedPrice, pwEst.SourceMarket)
+					appendLog(fmt.Sprintf("[STAGE 1 PLAYWRIGHT SUCCESS] '%s' -> %.2f TL (Source: %s)", itemSpec.ItemName, pwEst.EstimatedPrice, pwEst.SourceMarket))
 				} else {
-					log.Printf("[AI Pipeline] [STAGE 1 PLAYWRIGHT FAILED] '%s' -> Error: %v (Passing to Stage 2: Groq AI)", itemSpec.ItemName, pwErr)
+					appendLog(fmt.Sprintf("[STAGE 1 PLAYWRIGHT FAILED] '%s' -> Error: %v (Passing to Stage 2: Groq AI)", itemSpec.ItemName, pwErr))
 					unresolvedSpecs = append(unresolvedSpecs, itemSpec)
 				}
 			}(spec, cleanName)
@@ -191,7 +201,7 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 		for _, u := range unresolvedSpecs {
 			unresolvedNames = append(unresolvedNames, u.ItemName)
 		}
-		log.Printf("[AI Pipeline] Starting Stage 2 (Groq AI) for %d unresolved items: %v", len(unresolvedSpecs), unresolvedNames)
+		appendLog(fmt.Sprintf("[STAGE 2 GROQ AI] Starting AI estimation for %d unresolved items: %v", len(unresolvedSpecs), unresolvedNames))
 
 		var formattedItems []string
 		for _, spec := range unresolvedSpecs {
@@ -263,11 +273,11 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
 				if item.ItemName != "" && !seen[item.ItemName] && item.EstimatedPrice > 0 {
 					seen[item.ItemName] = true
 					finalItems = append(finalItems, item)
-					log.Printf("[AI Pipeline] [STAGE 2 AI SUCCESS] '%s' -> %.2f TL (Source: %s)", item.ItemName, item.EstimatedPrice, item.SourceMarket)
+					appendLog(fmt.Sprintf("[STAGE 2 AI SUCCESS] '%s' -> %.2f TL (Source: %s)", item.ItemName, item.EstimatedPrice, item.SourceMarket))
 				}
 			}
 		} else {
-			log.Printf("[AI Pipeline] [STAGE 2 & 3 AI FAILED] Error: %v -> Will pass to Stage 4 Baseline", err)
+			appendLog(fmt.Sprintf("[STAGE 2 & 3 AI FAILED] Error: %v -> Passing to Stage 4 Baseline", err))
 		}
 	}
 
@@ -282,12 +292,15 @@ Yalnızca aşağıdaki JSON formatında yanıt ver:
 		}
 		if !found {
 			baseEst := getBaselinePrice(spec.ItemName)
-			log.Printf("[AI Pipeline] [STAGE 4 BASELINE FALLBACK] '%s' -> %.2f TL (Source: %s)", spec.ItemName, baseEst.EstimatedPrice, baseEst.SourceMarket)
+			appendLog(fmt.Sprintf("[STAGE 4 BASELINE FALLBACK] '%s' -> %.2f TL (Source: %s)", spec.ItemName, baseEst.EstimatedPrice, baseEst.SourceMarket))
 			finalItems = append(finalItems, baseEst)
 		}
 	}
 
-	res := &PriceEstimationResult{Items: finalItems}
+	res := &PriceEstimationResult{
+		Items:       finalItems,
+		PipelineLog: pipelineLogs,
+	}
 	s.calculateTotal(res)
 	return res, nil
 }
