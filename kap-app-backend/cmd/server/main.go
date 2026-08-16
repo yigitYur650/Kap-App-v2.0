@@ -18,6 +18,7 @@ import (
 	"kap-app-backend/pkg/supabase"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -40,46 +41,13 @@ func main() {
 		return c.Next()
 	})
 
-	// Dynamic CORS Middleware matching origins against cfg.CORSAllowedOrigins
-	allowedOrigins := strings.Split(cfg.CORSAllowedOrigins, ",")
-	for i := range allowedOrigins {
-		allowedOrigins[i] = strings.TrimSpace(allowedOrigins[i])
-	}
-
-	app.Use(func(c *fiber.Ctx) error {
-		origin := c.Get("Origin")
-		allowOrigin := ""
-
-		if cfg.CORSAllowedOrigins == "*" {
-			allowOrigin = "*"
-		} else if origin != "" {
-			for _, allowed := range allowedOrigins {
-				if allowed == "*" || allowed == origin {
-					allowOrigin = origin
-					break
-				}
-				// Support dynamic localhost / 127.0.0.1 ports for Flutter Web development
-				if (strings.Contains(allowed, "localhost") || strings.Contains(allowed, "127.0.0.1")) &&
-					(strings.HasPrefix(origin, "http://localhost:") || strings.HasPrefix(origin, "http://127.0.0.1:")) {
-					allowOrigin = origin
-					break
-				}
-			}
-		} else if len(allowedOrigins) > 0 {
-			allowOrigin = allowedOrigins[0]
-		}
-
-		if allowOrigin != "" {
-			c.Set("Access-Control-Allow-Origin", allowOrigin)
-		}
-		c.Set("Vary", "Origin")
-		c.Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
-		c.Set("Access-Control-Allow-Headers", "Origin,Content-Type,Authorization,Accept")
-		if c.Method() == "OPTIONS" {
-			return c.SendStatus(204)
-		}
-		return c.Next()
-	})
+	// Official Fiber CORS Middleware (Guarantees CORS headers on all HTTP responses)
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     cfg.CORSAllowedOrigins,
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-Requested-With",
+		AllowMethods:     "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+		AllowCredentials: false,
+	}))
 
 	// Supabase Client
 	sbClient, err := supabase.NewClient(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey)
