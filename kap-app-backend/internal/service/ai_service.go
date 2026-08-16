@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -143,26 +144,42 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 	var finalItems []ItemPriceEstimate
 	var unresolvedSpecs []ItemSpecDTO
 
-	// Stage 1: Primary Source — Playwright Live Targeted Web Scraper
+	// Stage 1: Primary Source — Playwright Live Targeted Web Scraper (3-Worker Concurrency Pool)
 	if s.marketPriceSvc != nil {
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		sem := make(chan struct{}, 3) // Max 3 concurrent Playwright browser workers
+
 		for _, spec := range items {
 			cleanName := sanitizeForPrompt(spec.ItemName)
 			if cleanName == "" {
 				continue
 			}
-			pwEst, pwErr := s.marketPriceSvc.FetchLiveMarketPrice(cleanName)
-			if pwErr == nil && pwEst != nil && pwEst.EstimatedPrice > 0 {
-				pwEst.ItemName = spec.ItemName
-				if spec.Quantity != "" || spec.Unit != "" {
-					pwEst.UnitSpec = fmt.Sprintf("%s %s (Canlı Market)", spec.Quantity, spec.Unit)
+
+			wg.Add(1)
+			go func(itemSpec ItemSpecDTO, query string) {
+				defer wg.Done()
+				sem <- struct{}{}        // Acquire worker slot
+				defer func() { <-sem }() // Release worker slot
+
+				pwEst, pwErr := s.marketPriceSvc.FetchLiveMarketPrice(query)
+
+				mu.Lock()
+				defer mu.Unlock()
+				if pwErr == nil && pwEst != nil && pwEst.EstimatedPrice > 0 {
+					pwEst.ItemName = itemSpec.ItemName
+					if itemSpec.Quantity != "" || itemSpec.Unit != "" {
+						pwEst.UnitSpec = fmt.Sprintf("%s %s (Canlı Market)", itemSpec.Quantity, itemSpec.Unit)
+					}
+					pwEst.SourceMarket = "Canlı Web Taraması (Playwright)"
+					finalItems = append(finalItems, *pwEst)
+					log.Printf("[AI Pipeline] Stage 1 (Playwright) succeeded for '%s': %.2f TL", itemSpec.ItemName, pwEst.EstimatedPrice)
+				} else {
+					unresolvedSpecs = append(unresolvedSpecs, itemSpec)
 				}
-				pwEst.SourceMarket = "Canlı Web Taraması (Playwright)"
-				finalItems = append(finalItems, *pwEst)
-				log.Printf("[AI Pipeline] Stage 1 (Playwright) succeeded for '%s': %.2f TL", spec.ItemName, pwEst.EstimatedPrice)
-			} else {
-				unresolvedSpecs = append(unresolvedSpecs, spec)
-			}
+			}(spec, cleanName)
 		}
+		wg.Wait()
 	} else {
 		unresolvedSpecs = items
 	}
