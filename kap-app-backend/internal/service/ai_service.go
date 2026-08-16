@@ -227,7 +227,13 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 			formattedItems = append(formattedItems, str)
 		}
 
-		prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye'nin en yaygın zincir marketi MİGROS ve BİM/A101 tekil raf etiket fiyatlarını %%100 TUTARLI VE KESİN bilen uzman asistansın.
+		prompt := fmt.Sprintf(`Sen 2026 yılı GÜNCEL Türkiye'nin en yaygın zincir marketi MİGROS, BİM ve A101 TEKİL PERAKENDE RAF ETİKET FİYATLARINI %%100 TUTARLI VE KESİN bilen uzman asistansın.
+
+ÇOK ÖNEMLİ HESAPLAMA VE RAF FİYATI KURALLARI (2026):
+1. ASLA KEDİ/KÖPEK MAMASI, TOPTAN RESTORAN KOLİSİ VEYA 10-20 KG TOPTAN PAKET FİYATI ALMA.
+2. YALNIZCA EV TİPİ STANDART TEKİL PERAKENDE PAKET FİYATINI ESAS AL (Örn: 1 kg Tavuk Göğsü ~195 TL, 1L Süt ~39.50 TL, 1 kg Bulgur ~38 TL, 1 Paket Cips ~45 TL, 15'li Yumurta ~89.50 TL, 1 kg Dana Kıyma ~520 TL).
+3. EĞER MİKTAR BELİRTİLMEDİYSE STANDART 1 EV PAKETİ DİKKATE AL.
+4. ÇOK ÖNEMLİ KURAL: İstenen HER ürün için YALNIZCA 1 ADET nesne oluştur. Aynı ürün için birden fazla market seçeneği ekleme.
 
 GÜNCEL TEK REFERANS MARKET (MİGROS & BİM/A101) RAF FİYATI STANDARTLARI (2026):
 - 1L Tam Yağlı Süt (Sütaş/Pınar/İçim/Dost): 39.50 TL (Migros / BİM Raf Fiyatı)
@@ -241,8 +247,7 @@ GÜNCEL TEK REFERANS MARKET (MİGROS & BİM/A101) RAF FİYATI STANDARTLARI (2026
 - 500g Makarna (Filiz/Nuh’un Ankara/Barilla): 22.50 TL (Migros)
 - 1L Ayçiçek Yağı (Yudum/Sole/Orkide): 75.00 TL (BİM / A101)
 - 1 kg Rize Çay (Çaykur): 195.00 TL (Migros)
-
-ÇOK ÖNEMLİ KURAL: İstenen HER ürün için YALNIZCA 1 ADET nesne oluştur. Aynı ürün için birden fazla market seçeneği ekleme.
+- 1 kg Pilavlık/Köy Bulgur (Duru/Reis/Sole): 38.00 TL (Migros / BİM)
 
 Ürünler: %s
 
