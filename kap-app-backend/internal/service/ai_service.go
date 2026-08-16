@@ -154,11 +154,11 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 		log.Println(msg)
 	}
 
-	// Stage 1: Primary Source — Playwright Live Targeted Web Scraper (3-Worker Concurrency Pool)
+	// Stage 1: Primary Source — Playwright Live Targeted Web Scraper (2-Worker Concurrency Pool)
 	if s.marketPriceSvc != nil {
 		var wg sync.WaitGroup
 		var mu sync.Mutex
-		sem := make(chan struct{}, 3) // Max 3 concurrent Playwright browser workers
+		sem := make(chan struct{}, 2) // Max 2 concurrent Playwright browser workers for low CPU RAM usage
 
 		for _, spec := range items {
 			cleanName := sanitizeForPrompt(spec.ItemName)
