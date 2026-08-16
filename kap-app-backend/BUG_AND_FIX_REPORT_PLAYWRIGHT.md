@@ -100,6 +100,15 @@ Sistem, kullanıcının alışveriş listesindeki ürünlerin fiyatlarını en d
 
 ---
 
+### ❌ Hata 8: 'bulgur' Gibi Ürünlerde DOM Kart Seçici Uyumsuzluğu
+- **Semptom:** `bulgur` aramasında sayfada 57 adet fiyat bulunmasına rağmen script'in *"No prices found for query: bulgur"* hatası fırlatması.
+- **Kök Neden:** `document.querySelectorAll` içerisinde iç içe etiketler (`span.pb_v8`) kart olarak seçildiği için ürün başlığı `titleEl` boş dönüyor ve dizi filtreleniyordu. Ayrıca `page.goto` tamamlandığı an DOM kartları henüz işlenmemiş olabiliyordu.
+- **Çözüm:**
+  1. Script'e `await page.waitForSelector('ul#b > li, span.pt_v8, span.pb_v8, b.p_v8', { timeout: 4000 })` eklendi.
+  2. 2 Aşamalı DOM Ayrıştırma Stratejisi (Strategy 1: Product Cards -> Strategy 2: Direct Price Elements Fallback) eklendi. `bulgur` araması için **110.06 TL** (min 34 TL, max 349.17 TL) canlı verisi %100 doğrulukla çekildi.
+
+---
+
 ## 3. 🧠 Mimarisi ve Ölçeklendirme Analizi
 
 ### Soru 1: Neden Tek Bir Render Sunucusundan Yatay Ölçeklendirme Yapılamaz?
