@@ -34,10 +34,9 @@ WORKDIR /home/appuser/
 
 # Copy binary from builder and assign ownership
 COPY --from=builder --chown=appuser:appgroup /app/server .
-COPY --from=builder --chown=appuser:appgroup /app/package.json /app/package-lock.json* ./
 COPY --from=builder --chown=appuser:appgroup /app/scripts ./scripts
 
-RUN npm install --only=production
+RUN npm init -y && npm install --only=production playwright
 
 USER appuser
 

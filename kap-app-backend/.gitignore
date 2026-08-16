@@ -2,4 +2,7 @@
 service-account.json
 *.json
 !config.json
+!package.json
+!package-lock.json
 *.exe
+
