@@ -199,10 +199,24 @@ func (s *AIService) EstimatePrices(items []ItemSpecDTO) (*PriceEstimationResult,
 
 		select {
 		case <-stage1Done:
-			// Completed within 4.5s deadline
-		case <-time.After(4500 * time.Millisecond):
-			appendLog("[STAGE 1 PLAYWRIGHT TIMEOUT] 4.5s Render HTTP deadline reached, passing remaining items to Groq AI")
+			// Completed within 15s deadline
+		case <-time.After(15000 * time.Millisecond):
+			appendLog("[STAGE 1 PLAYWRIGHT TIMEOUT] 15s Render HTTP deadline reached")
 		}
+
+		// Accurately collect all items that were NOT resolved by Stage 1 Playwright
+		mu.Lock()
+		resolvedMap := make(map[string]bool)
+		for _, fi := range finalItems {
+			resolvedMap[fi.ItemName] = true
+		}
+		unresolvedSpecs = nil
+		for _, spec := range items {
+			if !resolvedMap[spec.ItemName] {
+				unresolvedSpecs = append(unresolvedSpecs, spec)
+			}
+		}
+		mu.Unlock()
 	} else {
 		unresolvedSpecs = items
 	}
