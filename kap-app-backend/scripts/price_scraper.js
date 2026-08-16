@@ -15,6 +15,15 @@ try {
   }
 }
 
+process.on('uncaughtException', (err) => {
+  console.log(JSON.stringify({ error: "Uncaught Exception: " + err.message }));
+  process.exit(0);
+});
+process.on('unhandledRejection', (reason) => {
+  console.log(JSON.stringify({ error: "Unhandled Rejection: " + (reason ? reason.message || reason : "Unknown") }));
+  process.exit(0);
+});
+
 async function scrapePrice(query) {
   if (!query) {
     console.log(JSON.stringify({ error: "Query parameter is required" }));
@@ -28,7 +37,7 @@ async function scrapePrice(query) {
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     };
     if (process.platform === 'linux') {
-      launchOpts.args.push('--disable-gpu', '--disable-software-rasterizer', '--no-zygote', '--single-process');
+      launchOpts.args.push('--disable-gpu', '--disable-software-rasterizer', '--no-zygote');
     }
     if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
       launchOpts.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
