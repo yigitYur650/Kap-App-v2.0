@@ -63,25 +63,26 @@ async function scrapePrice(query) {
     try {
       await page.goto(searchUrl, { 
         waitUntil: 'domcontentloaded', 
-        timeout: 6000,
+        timeout: 8000,
         referer: 'https://www.akakce.com/'
       });
     } catch (e) {
       // Continue even if navigation timeout occurs
     }
 
-    await sleep(500);
+    await page.waitForSelector('ul#b > li, span.pt_v8, span.pb_v8, b.p_v8', { timeout: 4000 }).catch(() => {});
+    await sleep(200);
 
     let itemsData = { items: [], rawPrices: [] };
     for (let attempt = 0; attempt < 2; attempt++) {
       if (page.isClosed()) break;
       try {
         itemsData = await page.evaluate(() => {
-          const cards = Array.from(document.querySelectorAll('li.p-card, div.p-card, ul#b > li, div.prc-box, .p_v8, span.pb_v8, span.pt_v8, b.p_v8'));
           const parsedItems = [];
           const allPrices = [];
-          const priceRegex = /(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:TL|₺)/i;
 
+          // Strategy 1: Target product list cards
+          const cards = Array.from(document.querySelectorAll('ul#b > li, li.p-card, div.p-card, div.prc-box'));
           for (const card of cards) {
             const titleEl = card.querySelector('h3, .pn_v8, a.p-link, .title, strong');
             const priceEl = card.querySelector('.pt_v8, .pb_v8, .p_v8, .price, span.price') || card;
@@ -89,13 +90,36 @@ async function scrapePrice(query) {
             const titleText = titleEl ? titleEl.innerText.trim() : '';
             const priceText = priceEl ? priceEl.innerText.trim() : '';
 
-            const match = priceText.match(priceRegex);
-            if (match) {
-              const val = parseFloat(match[1].replace(',', '.'));
+            const m = priceText.match(/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:TL|₺)?/i);
+            if (m) {
+              let valStr = m[1];
+              if (valStr.includes(',')) {
+                valStr = valStr.replace(/\./g, '').replace(',', '.');
+              }
+              const val = parseFloat(valStr);
               if (!isNaN(val) && val >= 5.0 && val <= 3500.0) {
                 allPrices.push(val);
                 if (titleText) {
                   parsedItems.push({ title: titleText, price: val });
+                }
+              }
+            }
+          }
+
+          // Strategy 2: Fallback direct price element scan if cards didn't yield prices
+          if (allPrices.length === 0) {
+            const priceEls = Array.from(document.querySelectorAll('span.pt_v8, span.pb_v8, b.p_v8, span.price, div.price, span.prc'));
+            for (const el of priceEls) {
+              const txt = el.innerText.trim();
+              const m = txt.match(/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:TL|₺)?/i);
+              if (m) {
+                let valStr = m[1];
+                if (valStr.includes(',')) {
+                  valStr = valStr.replace(/\./g, '').replace(',', '.');
+                }
+                const val = parseFloat(valStr);
+                if (!isNaN(val) && val >= 5.0 && val <= 3500.0) {
+                  allPrices.push(val);
                 }
               }
             }
