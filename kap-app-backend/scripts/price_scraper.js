@@ -54,17 +54,15 @@ async function scrapePrice(query) {
     const page = await context.newPage();
     const searchUrl = `https://www.akakce.com/arama/?q=${encodeURIComponent(query)}`;
     
+    const sleep = ms => new Promise(res => setTimeout(res, ms));
+
     try {
-      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 4500 });
+      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 6000 });
     } catch (e) {
       // Continue even if navigation timeout occurs
     }
 
-    if (!page.isClosed()) {
-      try {
-        await page.waitForTimeout(500);
-      } catch (_) {}
-    }
+    await sleep(500);
 
     let itemsData = { items: [], rawPrices: [] };
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -101,7 +99,7 @@ async function scrapePrice(query) {
           break;
         }
       } catch (evalErr) {
-        await page.waitForTimeout(1000);
+        await sleep(500);
       }
     }
     const { items, rawPrices } = itemsData;
