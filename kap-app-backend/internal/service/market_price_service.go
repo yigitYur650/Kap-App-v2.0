@@ -40,11 +40,11 @@ func (s *MarketPriceService) FetchLiveMarketPrice(productName string) (*ItemPric
 		return nil, fmt.Errorf("empty product name")
 	}
 
-	// 1. Fast path: Check 24-hour in-memory cache
-	if cached, hit := s.cacheSvc.Get(cleanName); hit && cached != nil {
-		log.Printf("[MarketPriceService] [24H CACHE HIT] '%s' -> %.2f TL", cleanName, cached.EstimatedPrice)
-		return cached, nil
-	}
+	// 1. Fast path: Check 24-hour in-memory cache (Temporarily disabled for live Playwright testing)
+	// if cached, hit := s.cacheSvc.Get(cleanName); hit && cached != nil {
+	// 	log.Printf("[MarketPriceService] [24H CACHE HIT] '%s' -> %.2f TL", cleanName, cached.EstimatedPrice)
+	// 	return cached, nil
+	// }
 
 	// 2. Primary Scraper: Playwright Headless Browser Scraper
 	if s.playwrightSvc != nil {
