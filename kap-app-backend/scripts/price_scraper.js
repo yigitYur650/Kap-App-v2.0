@@ -25,16 +25,11 @@ async function scrapePrice(query) {
   try {
     const launchOpts = {
       headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-software-rasterizer',
-        '--no-zygote',
-        '--single-process'
-      ]
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     };
+    if (process.platform === 'linux') {
+      launchOpts.args.push('--disable-gpu', '--disable-software-rasterizer', '--no-zygote', '--single-process');
+    }
     if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
       launchOpts.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
     }
@@ -84,34 +79,36 @@ async function scrapePrice(query) {
           // Strategy 1: Target product list cards
           const cards = Array.from(document.querySelectorAll('ul#b > li, li.p-card, div.p-card, div.prc-box'));
           for (const card of cards) {
-            const titleEl = card.querySelector('h3, .pn_v8, a.p-link, .title, strong');
-            const priceEl = card.querySelector('.pt_v8, .pb_v8, .p_v8, .price, span.price') || card;
-            
-            const titleText = titleEl ? titleEl.innerText.trim() : '';
-            const priceText = priceEl ? priceEl.innerText.trim() : '';
+            try {
+              const titleEl = card.querySelector('h3, .pn_v8, a.p-link, .title, strong');
+              const priceEl = card.querySelector('.pt_v8, .pb_v8, .p_v8, .price, span.price') || card;
+              
+              const titleText = titleEl ? (titleEl.innerText || '').trim() : '';
+              const priceText = priceEl ? (priceEl.innerText || '').trim() : '';
 
-            const m = priceText.match(/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:TL|₺)?/i);
-            if (m) {
-              let valStr = m[1];
-              if (valStr.includes(',')) {
-                valStr = valStr.replace(/\./g, '').replace(',', '.');
-              }
-              const val = parseFloat(valStr);
-              if (!isNaN(val) && val >= 5.0 && val <= 3500.0) {
-                allPrices.push(val);
-                if (titleText) {
-                  parsedItems.push({ title: titleText, price: val });
+              const m = priceText.match(/(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:TL|₺)/i);
+              if (m) {
+                let valStr = m[1];
+                if (valStr.includes(',')) {
+                  valStr = valStr.replace(/\./g, '').replace(',', '.');
+                }
+                const val = parseFloat(valStr);
+                if (!isNaN(val) && val >= 5.0 && val <= 3500.0) {
+                  allPrices.push(val);
+                  if (titleText) {
+                    parsedItems.push({ title: titleText, price: val });
+                  }
                 }
               }
-            }
+            } catch (_) {}
           }
 
-          // Strategy 2: Fallback direct price element scan if cards didn't yield prices
-          if (allPrices.length === 0) {
-            const priceEls = Array.from(document.querySelectorAll('span.pt_v8, span.pb_v8, b.p_v8, span.price, div.price, span.prc'));
-            for (const el of priceEls) {
-              const txt = el.innerText.trim();
-              const m = txt.match(/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:TL|₺)?/i);
+          // Strategy 2: Scan direct price elements to ensure maximum sample size
+          const priceEls = Array.from(document.querySelectorAll('span.pt_v8, span.pb_v8, b.p_v8, span.price, div.price, span.prc, .p_v8'));
+          for (const el of priceEls) {
+            try {
+              const txt = (el.innerText || '').trim();
+              const m = txt.match(/(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:TL|₺)/i);
               if (m) {
                 let valStr = m[1];
                 if (valStr.includes(',')) {
@@ -122,7 +119,7 @@ async function scrapePrice(query) {
                   allPrices.push(val);
                 }
               }
-            }
+            } catch (_) {}
           }
 
           return { items: parsedItems, rawPrices: allPrices };
